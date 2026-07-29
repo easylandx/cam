@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>EasyLandX</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Inter,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    background:linear-gradient(-45deg,#0f172a,#1e293b,#312e81,#0f172a);
+    background-size:400% 400%;
+    animation:bgMove 15s ease infinite;
+    color:white;
+}
+
+/* Animated Background */
+
+@keyframes bgMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.blur1,
+.blur2{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(90px);
+    opacity:.5;
+    z-index:-1;
+}
+
+.blur1{
+    width:300px;
+    height:300px;
+    background:#6d5dfc;
+    top:-80px;
+    left:-80px;
+}
+
+.blur2{
+    width:250px;
+    height:250px;
+    background:#00d4ff;
+    bottom:-60px;
+    right:-60px;
+}
+
+/* Card */
+
+.container{
+
+    width:95%;
+    max-width:600px;
+
+    padding:45px;
+
+    background:rgba(255,255,255,.08);
+
+    border:1px solid rgba(255,255,255,.15);
+
+    border-radius:28px;
+
+    backdrop-filter:blur(20px);
+
+    box-shadow:
+    0 15px 50px rgba(0,0,0,.45);
+
+    text-align:center;
+
+}
+
+/* Logo */
+
+.logo{
+    font-size:70px;
+    margin-bottom:10px;
+}
+
+h1{
+
+    font-size:3.2rem;
+
+    font-weight:800;
+
+    background:linear-gradient(90deg,#7c5cff,#00d4ff,#8effd1);
+
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+
+}
+
+.subtitle{
+
+    margin-top:10px;
+    color:#d7d7d7;
+    font-size:1.05rem;
+    margin-bottom:35px;
+
+}
+
+/* Grid */
+
+.links{
+
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+
+}
+
+@media(max-width:600px){
+
+.links{
+grid-template-columns:1fr;
+}
+
+}
+
+/* Buttons */
+
+a{
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:12px;
+
+padding:18px;
+
+border-radius:18px;
+
+text-decoration:none;
+
+font-weight:700;
+
+font-size:18px;
+
+color:white;
+
+background:rgba(255,255,255,.08);
+
+border:1px solid rgba(255,255,255,.15);
+
+transition:.35s;
+
+position:relative;
+
+overflow:hidden;
+
+}
+
+a::before{
+
+content:"";
+
+position:absolute;
+
+width:180%;
+
+height:180%;
+
+background:linear-gradient(45deg,#7c5cff,#00d4ff);
+
+top:100%;
+left:-30%;
+
+transition:.45s;
+
+transform:rotate(8deg);
+
+opacity:.15;
+
+}
+
+a:hover::before{
+
+top:-40%;
+
+}
+
+a:hover{
+
+transform:translateY(-6px) scale(1.04);
+
+box-shadow:0 12px 30px rgba(0,212,255,.35);
+
+border-color:#55f5ff;
+
+}
+
+.footer{
+
+margin-top:35px;
+
+font-size:.9rem;
+
+opacity:.7;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="blur1"></div>
+<div class="blur2"></div>
+
+<div class="container">
+
+<div class="logo">📸</div>
+
+<h1>EasyLandX</h1>
+
+<div class="subtitle">
+Explore creative AI photography tools
+</div>
+
+<div class="links">
+
+<a href="https://easylandx.github.io/cam/art.html">
+🎨 Art
+</a>
+
+<a href="https://easylandx.github.io/cam/cam.html">
+📷 Camera
+</a>
+
+<a href="https://easylandx.github.io/cam/imag.html">
+✨ Imagine
+</a>
+
+<a href="https://easylandx.github.io/cam/land.html">
+🏞 Landscape
+</a>
+
+<a href="https://easylandx.github.io/cam/mast.html">
+👑 Master
+</a>
+
+<a href="https://easylandx.github.io/cam/self.html">
+🤳 Selfie
+</a>
+
+<a href="https://easylandx.github.io/cam/hist.html">
+🕘 History
+</a>
+
+<a href="https://easylandx.github.io/cam/bird.html">
+🦜 Birds
+</a>
+
+</div>
+
+<div class="footer">
+✨ Built with GitHub Pages • EasyLandX
+</div>
+
+</div>
+
+</body>
+</html>
