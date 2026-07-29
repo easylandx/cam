@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>📸 Camera — Photo, Random & Filter Art</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold: #f6a935;
+    --gold-deep: #e8871a;
+    --cream: #fff6e6;
+    --cream2: #ffe9c2;
+    --ink: #3a2a12;
+    --accent: #ff6f59;
+    --accent2: #2fb8a6;
+    --card: #ffffff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0;
+    min-height: 100%;
+    height: auto;
+    overflow-y: auto;
+    background: linear-gradient(180deg, var(--cream) 0%, var(--cream2) 45%, #ffd98f 100%);
+    font-family: 'Poppins', sans-serif;
+    color: var(--ink);
+  }
+  body{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 90px;
+  }
+  header{
+    text-align:center;
+    margin-bottom: 18px;
+  }
+  header h1{
+    font-size: clamp(1.6rem, 5vw, 2.3rem);
+    margin: 0 0 6px;
+    font-weight: 800;
+    color: var(--gold-deep);
+    letter-spacing: -0.5px;
+  }
+  header p{
+    margin:0;
+    font-size: 0.95rem;
+    color: #8a6a3a;
+    max-width: 480px;
+  }
+  .stage{
+    width: 100%;
+    max-width: 460px;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: 0 14px 40px rgba(180, 120, 30, 0.18);
+    margin-bottom: 20px;
+    border: 3px solid #ffffffaa;
+  }
+  .view-wrap{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3/4;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #1a1a1a;
+    border: 4px solid var(--gold);
+  }
+  video, canvas.display{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .hidden{ display:none !important; }
+  .status{
+    position:absolute;
+    top:10px; left:10px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+  }
+  .flash{
+    position:absolute;
+    inset:0;
+    background:#fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .flash.go{
+    animation: flashfx 0.35s ease-out;
+  }
+  @keyframes flashfx{
+    0%{opacity:0.9;}
+    100%{opacity:0;}
+  }
+  .controls{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content:center;
+    margin-top: 16px;
+  }
+  button{
+    border:none;
+    cursor:pointer;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 0.92rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  button:active{ transform: scale(0.95); }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(232,135,26,0.35);
+  }
+  .btn-secondary{
+    background: #fff;
+    color: var(--ink);
+    border: 2px solid var(--gold);
+  }
+  .btn-accent{
+    background: linear-gradient(135deg, var(--accent2), #1f8f80);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(47,184,166,0.3);
+  }
+  .btn-line{
+    background: linear-gradient(135deg, var(--accent), #e0503d);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(255,111,89,0.3);
+  }
+  button:disabled{
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform:none;
+    box-shadow:none;
+  }
+  .section-title{
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #a5771f;
+    margin: 18px 0 8px;
+    text-align:center;
+  }
+  .style-picker{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom: 4px;
+  }
+  .style-chip{
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--cream2);
+    border: 2px solid transparent;
+    font-size: 0.8rem;
+    font-weight:600;
+    cursor:pointer;
+    color: var(--ink);
+  }
+  .style-chip.active{
+    border-color: var(--accent);
+    background: #fff;
+  }
+  .tip{
+    font-size: 0.78rem;
+    color: #a5824c;
+    text-align:center;
+    max-width: 420px;
+    margin: 10px auto 0;
+    line-height: 1.5;
+  }
+  .footer-space{
+    height: 40px;
+  }
+  .ep-btn{
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #ffe9c2;
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 11px 22px;
+    border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    z-index: 50;
+  }
+  .ep-btn span.dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--gold);
+    display:inline-block;
+  }
+  .copyright{
+    font-size: 0.72rem;
+    color: #b28c52;
+    margin-top: 8px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📸 Camera</h1>
+  <p>Take a photo and play.</p>
+</header>
+
+<div class="stage">
+  <div class="view-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="displayCanvas" class="display hidden"></canvas>
+    <div class="status" id="statusBadge">Starting camera…</div>
+    <div class="flash" id="flash"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-secondary" id="switchBtn">🔄 Switch Camera</button>
+    <button class="btn-primary" id="captureBtn" disabled>📷 Take Photo</button>
+    <button class="btn-primary" id="randomBtn">🎲 Random</button>
+    <button class="btn-secondary" id="retakeBtn" disabled>↩️ Retake</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn-accent" id="saveBtn" disabled>⬇️ Save Photo</button>
+  </div>
+
+  <div class="section-title">FILTER</div>
+  <div class="style-picker">
+    <div class="style-chip active" data-style="faces">😊 Faces</div>
+    <div class="style-chip" data-style="nature">🌻 Nature</div>
+    <div class="style-chip" data-style="blocks">🟩 Color Blocks</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-line" id="lineArtBtn" disabled>🎨 Convert</button>
+    <button class="btn-accent" id="saveLineBtn" disabled>⬇️ Save</button>
+  </div>
+
+  <p class="tip">Tip: Camera access needs HTTPS (or localhost) and your permission. Use "Switch Camera" to toggle between your front (selfie) and back camera. Emoji art can also be saved via your device's screenshot function.</p>
+</div>
+
+<div class="footer-space"></div>
+
+<a class="ep-btn" href="https://easypagex.github.io" target="_blank" rel="noopener">
+  <span class="dot"></span> Built by EasyPageX
+</a>
+
+<script>
+(function(){
+  const video = document.getElementById('video');
+  const displayCanvas = document.getElementById('displayCanvas');
+  const statusBadge = document.getElementById('statusBadge');
+  const flash = document.getElementById('flash');
+
+  const switchBtn = document.getElementById('switchBtn');
+  const captureBtn = document.getElementById('captureBtn');
+  const randomBtn = document.getElementById('randomBtn');
+  const retakeBtn = document.getElementById('retakeBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const lineArtBtn = document.getElementById('lineArtBtn');
+  const saveLineBtn = document.getElementById('saveLineBtn');
+  const styleChips = document.querySelectorAll('.style-chip');
+
+  const dctx = displayCanvas.getContext('2d', { willReadFrequently: true });
+
+  let currentStream = null;
+  let facingMode = 'user'; // selfie/front camera by default
+  let capturedDataURL = null;
+  let lineArtDataURL = null;
+  let selectedStyle = 'faces';
+  let hasLineArt = false;
+
+  function setStatus(text){
+    statusBadge.textContent = text;
+  }
+
+  async function startCamera(mode){
+    setStatus('Starting camera…');
+    if (currentStream){
+      currentStream.getTracks().forEach(t => t.stop());
+    }
+    try {
+      const constraints = {
+        video: {
+          facingMode: { ideal: mode },
+          width: { ideal: 1280 },
+          height: { ideal: 1280 }
+        },
+        audio: false
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      currentStream = stream;
+      video.srcObject = stream;
+      video.classList.remove('hidden');
+      displayCanvas.classList.add('hidden');
+      await video.play();
+      setStatus(mode === 'user' ? 'Front camera live' : 'Back camera live');
+      captureBtn.disabled = false;
+    } catch (err) {
+      setStatus('Camera access denied or unavailable');
+      captureBtn.disabled = true;
+      console.error(err);
+      alert('Could not access the camera. Please allow camera permissions, and make sure this page is served over HTTPS or localhost.');
+    }
+  }
+
+  switchBtn.addEventListener('click', () => {
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    resetToLive();
+    startCamera(facingMode);
+  });
+
+  function resetToLive(){
+    capturedDataURL = null;
+    lineArtDataURL = null;
+    hasLineArt = false;
+    video.classList.remove('hidden');
+    displayCanvas.classList.add('hidden');
+    captureBtn.disabled = false;
+    retakeBtn.disabled = true;
+    saveBtn.disabled = true;
+    lineArtBtn.disabled = true;
+    saveLineBtn.disabled = true;
+  }
+
+  function finishCapture(statusText){
+    video.classList.add('hidden');
+    displayCanvas.classList.remove('hidden');
+
+    flash.classList.remove('go');
+    void flash.offsetWidth;
+    flash.classList.add('go');
+
+    setStatus(statusText);
+    captureBtn.disabled = true;
+    retakeBtn.disabled = false;
+    saveBtn.disabled = false;
+    lineArtBtn.disabled = false;
+    saveLineBtn.disabled = true;
+    hasLineArt = false;
+  }
+
+  captureBtn.addEventListener('click', () => {
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (!w || !h) return;
+
+    displayCanvas.width = w;
+    displayCanvas.height = h;
+    dctx.save();
+    if (facingMode === 'user'){
+      // mirror the selfie camera so it matches what the user sees
+      dctx.translate(w, 0);
+      dctx.scale(-1, 1);
+    }
+    dctx.drawImage(video, 0, 0, w, h);
+    dctx.restore();
+
+    capturedDataURL = displayCanvas.toDataURL('image/png');
+    finishCapture('Photo captured');
+  });
+
+  randomBtn.addEventListener('click', () => {
+    randomBtn.disabled = true;
+    setStatus('Fetching random photo…');
+
+    // pull a random image from picsum.photos instead of the live camera frame
+    const w = 900, h = 1200; // fixed 3:4 size matching the viewfinder
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      displayCanvas.width = w;
+      displayCanvas.height = h;
+      dctx.drawImage(img, 0, 0, w, h);
+      capturedDataURL = displayCanvas.toDataURL('image/png');
+      finishCapture('Random photo loaded');
+      randomBtn.disabled = false;
+    };
+    img.onerror = () => {
+      setStatus('Could not load a random photo — try again');
+      randomBtn.disabled = false;
+    };
+    img.src = `https://picsum.photos/${w}/${h}?random=${Date.now()}`;
+  });
+
+  retakeBtn.addEventListener('click', () => {
+    resetToLive();
+    setStatus(facingMode === 'user' ? 'Front camera live' : 'Back camera live');
+  });
+
+  function downloadDataURL(dataURL, filename){
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  saveBtn.addEventListener('click', () => {
+    if (!capturedDataURL) return;
+    downloadDataURL(capturedDataURL, 'snapline-photo-' + Date.now() + '.png');
+  });
+
+  styleChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      styleChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedStyle = chip.dataset.style;
+      if (capturedDataURL && hasLineArt){
+        // re-render immediately if a photo exists and line art was already made
+        renderLineArt();
+      }
+    });
+  });
+
+  lineArtBtn.addEventListener('click', renderLineArt);
+
+  function renderLineArt(){
+    if (!capturedDataURL) return;
+    const img = new Image();
+    img.onload = () => {
+      const w = img.width, h = img.height;
+      displayCanvas.width = w;
+      displayCanvas.height = h;
+      // draw the source photo to a scratch canvas so we can read its pixels
+      const srcCanvas = document.createElement('canvas');
+      srcCanvas.width = w;
+      srcCanvas.height = h;
+      const sctx = srcCanvas.getContext('2d', { willReadFrequently: true });
+      sctx.drawImage(img, 0, 0, w, h);
+      const imageData = sctx.getImageData(0, 0, w, h);
+      paintEmojiArt(dctx, imageData, w, h, selectedStyle);
+      lineArtDataURL = displayCanvas.toDataURL('image/png');
+      hasLineArt = true;
+      saveLineBtn.disabled = false;
+      setStatus('Emoji art ready — ' + selectedStyle);
+    };
+    img.src = capturedDataURL;
+  }
+
+  saveLineBtn.addEventListener('click', () => {
+    if (!lineArtDataURL) return;
+    downloadDataURL(lineArtDataURL, 'snapline-emoji-art-' + Date.now() + '.png');
+  });
+
+  // ---- Photo-to-emoji-art engine ----
+  // The captured photo is downsampled into a grid of cells, each cell's
+  // average color is computed, and that color is matched against a small
+  // emoji palette — either by brightness (for the "Faces" and "Nature"
+  // moods, like tonal ASCII art) or by nearest hue (for "Color Blocks").
+  // The matching emoji is drawn into that cell, building a mosaic image
+  // made entirely of emoji.
+
+  // average color of a cell, sampling every other pixel for speed
+  function blockColor(data, w, h, cx, cy, cw, ch){
+    let rs = 0, gs = 0, bs = 0, n = 0;
+    const x1 = Math.min(w, cx + cw), y1 = Math.min(h, cy + ch);
+    for (let y = cy; y < y1; y += 2){
+      for (let x = cx; x < x1; x += 2){
+        const idx = (y * w + x) * 4;
+        rs += data[idx]; gs += data[idx+1]; bs += data[idx+2]; n++;
+      }
+    }
+    if (n === 0) return [0, 0, 0];
+    return [rs / n, gs / n, bs / n];
+  }
+
+  function colorDist(a, b){
+    return Math.abs(a[0]-b[0]) + Math.abs(a[1]-b[1]) + Math.abs(a[2]-b[2]);
+  }
+
+  function luminance(r, g, b){
+    return (0.299*r + 0.587*g + 0.114*b) / 255; // 0 (dark) .. 1 (light)
+  }
+
+  // brightness-ordered palettes, darkest first
+  const FACE_PALETTE = ['🖤','😴','😑','😕','🙂','😀','😁','😆','🤩','😎'];
+  const NATURE_PALETTE = ['🌑','🌲','🍄','🍂','🌻','🌤️','☀️','⭐','✨','⬜'];
+
+  // representative colors for the color-block emoji, matched by nearest RGB
+  const BLOCK_PALETTE = [
+    { e: '⬛', c: [30, 30, 30] },
+    { e: '🟫', c: [120, 80, 55] },
+    { e: '🟥', c: [200, 40, 40] },
+    { e: '🟧', c: [235, 130, 30] },
+    { e: '🟨', c: [235, 210, 50] },
+    { e: '🟩', c: [70, 170, 80] },
+    { e: '🟦', c: [50, 110, 210] },
+    { e: '🟪', c: [140, 80, 190] },
+    { e: '⬜', c: [235, 235, 235] }
+  ];
+
+  function nearestBlockEmoji(r, g, b){
+    let best = BLOCK_PALETTE[0], bestDist = Infinity;
+    for (const p of BLOCK_PALETTE){
+      const d = colorDist([r, g, b], p.c);
+      if (d < bestDist){ bestDist = d; best = p; }
+    }
+    return best.e;
+  }
+
+  function emojiConfigFor(style, w){
+    // aim for a column count that keeps emoji legible but still lets the
+    // mosaic read as a picture from a normal viewing distance
+    const cols = style === 'blocks' ? 34 : 28;
+    const cell = Math.max(16, Math.round(w / cols));
+    const bgColor = style === 'nature' ? '#eaf6ef'
+                  : style === 'blocks' ? '#fdf6ec'
+                  : '#14141a';
+    return { cell, bgColor };
+  }
+
+  function paintEmojiArt(ctx, imageData, w, h, style){
+    const { data } = imageData;
+    const cfg = emojiConfigFor(style, w);
+    const cell = cfg.cell;
+    const cols = Math.ceil(w / cell), rows = Math.ceil(h / cell);
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = cfg.bgColor;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${Math.round(cell * 0.9)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+
+    for (let ry = 0; ry < rows; ry++){
+      for (let rx = 0; rx < cols; rx++){
+        const x = rx * cell, y = ry * cell;
+        const cw = Math.min(cell, w - x), ch = Math.min(cell, h - y);
+        const [r, g, b] = blockColor(data, w, h, x, y, cw, ch);
+
+        let emoji;
+        if (style === 'blocks'){
+          emoji = nearestBlockEmoji(r, g, b);
+        } else {
+          const lum = luminance(r, g, b);
+          const palette = style === 'nature' ? NATURE_PALETTE : FACE_PALETTE;
+          const idx = Math.min(palette.length - 1, Math.floor(lum * palette.length));
+          emoji = palette[idx];
+        }
+
+        ctx.fillText(emoji, x + cw / 2, y + ch / 2);
+      }
+    }
+  }
+
+  // init
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    startCamera(facingMode);
+  } else {
+    setStatus('Camera not supported in this browser');
+    alert('Your browser does not support camera access. Please try a modern browser like Safari or Chrome.');
+  }
+})();
+</script>
+
+</body>
+</html>

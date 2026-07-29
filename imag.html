@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📸 Postcard Booth — Invented World Camera</title>
+<style>
+  :root{
+    --body-dark:#0a1a2e;
+    --body-mid:#123152;
+    --body-light:#1f4d78;
+    --screen-bg:#050c16;
+    --cream:#eaf2fb;
+    --cream-dim:#93aec8;
+    --shutter-blue:#3a97e6;
+    --shutter-blue-dark:#1f5a9e;
+    --amber:#f2b25a;
+    --line:#1c3a58;
+    --focus:#6fd4ff;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at top, #16375c 0%, #0c2038 60%, #060f1c 100%);
+    font-family:'Inter', system-ui, -apple-system, sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .hud-font{
+    font-family:'JetBrains Mono','Courier New', monospace;
+    letter-spacing:0.06em;
+  }
+
+  .rig{
+    width:100%;
+    max-width:460px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+
+  header{
+    text-align:center;
+  }
+  header .kicker{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.35em;
+    color:var(--amber);
+    margin:0 0 6px;
+  }
+  header h1{
+    font-size:26px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:13px;
+    color:var(--cream-dim);
+  }
+
+  .camera-body{
+    width:100%;
+    background:
+      linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius:22px;
+    padding:18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      inset 0 -6px 12px rgba(0,0,0,0.4);
+    border:1px solid #061225;
+    position:relative;
+  }
+
+  .top-strip{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 6px 12px;
+    font-size:10px;
+    color:var(--cream-dim);
+  }
+  .lens-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--shutter-blue);
+    box-shadow:0 0 8px 1px rgba(58,151,230,0.6);
+    display:inline-block;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+
+  .viewfinder{
+    position:relative;
+    background:var(--screen-bg);
+    border-radius:12px;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .viewfinder svg{
+    width:100%;
+    height:100%;
+  }
+
+  .placeholder-text{
+    color:#3c5470;
+    font-size:12px;
+    text-align:center;
+    padding:20px;
+    line-height:1.6;
+  }
+
+  /* corner reticles */
+  .reticle{
+    position:absolute;
+    width:22px;
+    height:22px;
+    border-color:var(--focus);
+    opacity:0.85;
+    pointer-events:none;
+  }
+  .reticle.tl{top:10px;left:10px;border-top:2px solid;border-left:2px solid;}
+  .reticle.tr{top:10px;right:10px;border-top:2px solid;border-right:2px solid;}
+  .reticle.bl{bottom:10px;left:10px;border-bottom:2px solid;border-left:2px solid;}
+  .reticle.br{bottom:10px;right:10px;border-bottom:2px solid;border-right:2px solid;}
+
+  .rec-indicator{
+    position:absolute;
+    top:12px;
+    left:38px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:10px;
+    color:#6fd4ff;
+    opacity:0;
+    transition:opacity 0.15s;
+  }
+  .rec-indicator.flash{opacity:1;}
+  .rec-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#6fd4ff;
+  }
+
+  .frame-count{
+    position:absolute;
+    bottom:12px;
+    right:38px;
+    font-size:10px;
+    color:var(--focus);
+  }
+
+  .flash-overlay{
+    position:absolute;
+    inset:0;
+    background:#fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .flash-overlay.go{
+    animation:flashPop 260ms ease-out;
+  }
+  @keyframes flashPop{
+    0%{opacity:0.9;}
+    100%{opacity:0;}
+  }
+
+  .grain{
+    position:absolute;
+    inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity:0.18;
+    mix-blend-mode:overlay;
+    pointer-events:none;
+  }
+
+  .controls-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:22px;
+    padding:20px 6px 6px;
+  }
+
+  .shutter-btn{
+    width:78px;
+    height:78px;
+    border-radius:50%;
+    border:none;
+    background:
+      radial-gradient(circle at 35% 30%, #7fc2f2, var(--shutter-blue) 55%, var(--shutter-blue-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-blue-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.35);
+    cursor:pointer;
+    position:relative;
+    transition:transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active{
+    transform:translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-blue-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after{
+    content:'';
+    position:absolute;
+    inset:10px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.28);
+  }
+  .shutter-ring{
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1px solid #06121f;
+  }
+  .shutter-wrap{
+    position:relative;
+  }
+
+  .side-readout{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:10px;
+    color:var(--cream-dim);
+    min-width:74px;
+  }
+  .side-readout span.val{color:var(--focus);}
+
+  .hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--cream-dim);
+    padding-top:4px;
+  }
+
+  .auto-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    width:100%;
+    margin-top:12px;
+    padding:11px 16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.03);
+    color:var(--cream-dim);
+    font-size:11px;
+    cursor:pointer;
+    transition:background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover{
+    border-color:var(--amber);
+  }
+  .auto-btn.active{
+    background:rgba(58,151,230,0.16);
+    border-color:var(--shutter-blue);
+    color:var(--cream);
+  }
+  .auto-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--line);
+    flex-shrink:0;
+  }
+  .auto-btn.active .auto-dot{
+    background:var(--shutter-blue);
+    animation:autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(58,151,230,0.6); }
+    50%{ box-shadow:0 0 0 5px rgba(58,151,230,0); }
+  }
+
+  .easypagex-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    color:var(--body-dark);
+    background:var(--amber);
+    padding:12px 24px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    box-shadow:0 8px 18px -6px rgba(242,178,90,0.55);
+    transition:transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 22px -6px rgba(242,178,90,0.7);
+  }
+  .easypagex-btn:active{
+    transform:translateY(0);
+  }
+  .easypagex-btn svg{width:16px;height:16px;}
+
+  footer{
+    padding-top:6px;
+    padding-bottom:4px;
+    font-size:10px;
+    color:var(--cream-dim);
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .flash-overlay.go{ animation:none; }
+    .shutter-btn{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL SP-01 · DREAMFILM SIM</p>
+    <h1>Wonder Booth</h1>
+    <p>Point, click, capture a marvel from a world that doesn't exist — 21 invented monuments, 16 imagined natural wonders.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE</span>
+      <span>f/1.8 &nbsp;·&nbsp; ISO 400</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font">
+        VIEWFINDER EMPTY<br>
+        press shutter to capture an imagined wonder
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/125</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>ROLL LEFT</span>
+        <span class="val" id="framesLeft">037</span>
+      </div>
+    </div>
+    <p class="hint">tap the blue button to take a photo</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer>© 2026 EasyPageX · every place on this roll is imaginary</footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const framesLeftEl = document.getElementById('framesLeft');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+  const hintEl = document.querySelector('.hint');
+
+  let frameNumber = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1400;
+
+  /* ---------------- shutter click sound (Web Audio API, no assets) ---------------- */
+  let audioCtx = null;
+  function getCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq){
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      data[i] = (Math.random()*2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound(){
+    playClickBurst(0,     0.045, 0.7, 2400);
+    playClickBurst(0.07,  0.035, 0.55, 1600);
+  }
+
+  /* ---------------- helpers ---------------- */
+
+  function rand(min, max){ return Math.random()*(max-min)+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- sky / ground scene ---------------- */
+
+  const THEMES = {
+    day:   { skyTop:'#bfe3f0', skyBot:'#eaf6f2', sun:'#ffe066', ground:'#bfe0a0' },
+    dawn:  { skyTop:'#ffd9a0', skyBot:'#ffb6a3', sun:'#fff2c2', ground:'#e3c9a0' },
+    dusk:  { skyTop:'#6b5a94', skyBot:'#f2955a', sun:'#ffcf7a', ground:'#8d7a63' },
+    night: { skyTop:'#12142c', skyBot:'#2c2f5c', sun:'#f4f1e4', ground:'#232640' }
+  };
+
+  const GROUND_COLORS = {
+    water: { day:'#7fb8d9', dawn:'#e8a98c', dusk:'#5a5a8c', night:'#16233f' },
+    sand:  { day:'#e3c48a', dawn:'#e8c48a', dusk:'#c9a06a', night:'#4a3f2c' },
+    snow:  { day:'#eef3f5', dawn:'#f2e3d8', dusk:'#cfc2c9', night:'#3a3f52' }
+  };
+
+  function sceneBg(theme, groundType){
+    const t = THEMES[theme];
+    const groundColor = (groundType && GROUND_COLORS[groundType]) ? GROUND_COLORS[groundType][theme] : t.ground;
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="230" fill="${t.skyTop}"/>`;
+    s += `<rect x="0" y="180" width="300" height="140" fill="${t.skyBot}" opacity="0.65"/>`;
+    s += `<circle cx="${theme==='night'?68:232}" cy="66" r="${theme==='night'?20:26}" fill="${t.sun}" opacity="${theme==='night'?0.9:0.85}"/>`;
+    if(theme==='night' || theme==='dusk'){
+      for(let i=0;i<16;i++){
+        s += `<circle cx="${rand(0,300).toFixed(0)}" cy="${rand(0,170).toFixed(0)}" r="${rand(0.5,1.6).toFixed(1)}" fill="#fff" opacity="${rand(0.3,0.9).toFixed(2)}"/>`;
+      }
+    } else {
+      for(let i=0;i<3;i++){
+        const cx = rand(20,280), cy = rand(35,110);
+        s += `<ellipse cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" rx="26" ry="10" fill="#fff" opacity="0.5"/><ellipse cx="${(cx+18).toFixed(0)}" cy="${(cy+4).toFixed(0)}" rx="18" ry="8" fill="#fff" opacity="0.45"/>`;
+      }
+    }
+    s += `<rect x="0" y="310" width="300" height="90" fill="${groundColor}"/>`;
+    if(groundType==='water'){
+      for(let i=0;i<4;i++){
+        s += `<path d="M${10+i*70},${330+(i%2)*10} Q${40+i*70},${325+(i%2)*10} ${70+i*70},${330+(i%2)*10}" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.3"/>`;
+      }
+    }
+    return s;
+  }
+
+  function caption(name, sub, tag){
+    let s = '';
+    s += `<rect x="0" y="344" width="300" height="56" fill="#0a1626" opacity="0.75"/>`;
+    s += `<rect x="0" y="344" width="300" height="2" fill="#3a97e6" opacity="0.7"/>`;
+    s += `<text x="150" y="373" text-anchor="middle" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#eaf2fb" letter-spacing="0.4">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="391" text-anchor="middle" font-family="'Courier New', monospace" font-size="9.5" fill="#9fb8d1" letter-spacing="1.2">${escapeXml(sub.toUpperCase())}</text>`;
+    return s;
+  }
+
+  function renderScene(landmark){
+    const theme = pick(['day','day','day','dawn','dusk','night']);
+    let s = sceneBg(theme, landmark.ground);
+    s += landmark.draw();
+    s += caption(landmark.name, landmark.sub, landmark.tag);
+    return `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+  }
+
+  /* ---------------- 14 invented monuments (none of these exist) ---------------- */
+
+  const INVENTED_MONUMENTS = [
+    { name:'The Glasswing Spire', sub:'Novaris Reach', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<defs><linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eaf6ff"/><stop offset="100%" stop-color="#4fa8e0"/></linearGradient></defs>`;
+      s += `<polygon points="150,60 175,150 165,150 190,320 110,320 135,150 125,150" fill="url(#gGlass)" stroke="#2f6fa0" stroke-width="1.5" opacity="0.92"/>`;
+      s += `<polygon points="150,60 165,150 150,150 135,150" fill="#fff" opacity="0.35"/>`;
+      s += `<polygon points="110,320 60,300 100,220 135,150" fill="#8fd0f2" opacity="0.55" stroke="#2f6fa0" stroke-width="1"/>`;
+      s += `<polygon points="190,320 240,300 200,220 165,150" fill="#8fd0f2" opacity="0.55" stroke="#2f6fa0" stroke-width="1"/>`;
+      for(let i=0;i<10;i++){ s += `<circle cx="${rand(90,210).toFixed(0)}" cy="${rand(70,180).toFixed(0)}" r="${rand(0.8,2).toFixed(1)}" fill="#fff" opacity="${rand(0.4,0.9).toFixed(2)}"/>`; }
+      return s;
+    }},
+    { name:'Thousand-Bell Ziggurat', sub:'Kaldrun Wastes', tag:'invented', ground:'sand', draw:()=>{
+      let s = '';
+      const levels = 6;
+      for(let i=0;i<levels;i++){
+        const w = 190-i*26;
+        const y = 320-30-i*24;
+        s += `<rect x="${(150-w/2).toFixed(1)}" y="${y}" width="${w}" height="24" fill="${i%2===0?'#c9a15a':'#b8904a'}" stroke="#7a5a2e" stroke-width="1.3"/>`;
+        for(let b=0;b<3;b++){
+          const bx = 150-w/2 + (w/4)*(b+1);
+          s += `<circle cx="${bx.toFixed(1)}" cy="${(y+27).toFixed(1)}" r="3.5" fill="#e8c877" stroke="#7a5a2e" stroke-width="0.6"/>`;
+        }
+      }
+      return s;
+    }},
+    { name:'Skybridge of Aerothane', sub:'The Cloud City', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<path d="M50,320 L70,150 L90,320 Z" fill="#7fa8c9" stroke="#4a6f8f" stroke-width="1.5"/>`;
+      s += `<path d="M210,320 L230,140 L250,320 Z" fill="#7fa8c9" stroke="#4a6f8f" stroke-width="1.5"/>`;
+      s += `<path d="M75,190 Q150,240 225,175" fill="none" stroke="#4a3f2c" stroke-width="3"/>`;
+      s += `<path d="M75,200 Q150,250 225,185" fill="none" stroke="#4a3f2c" stroke-width="2" opacity="0.7"/>`;
+      for(let i=0;i<8;i++){
+        const t = i/7;
+        const x = 75+(225-75)*t;
+        const y = 195+Math.sin(t*Math.PI)*50;
+        s += `<line x1="${x.toFixed(1)}" y1="${(y-6).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(y+6).toFixed(1)}" stroke="#4a3f2c" stroke-width="1.5"/>`;
+      }
+      s += `<ellipse cx="150" cy="260" rx="60" ry="14" fill="#fff" opacity="0.55"/>`;
+      return s;
+    }},
+    { name:'The Obsidian Crown', sub:'Vharek Citadel', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<polygon points="80,320 90,220 110,260 130,190 150,240 170,190 190,260 210,220 220,320" fill="#2a2740" stroke="#0f0e1c" stroke-width="1.5"/>`;
+      s += `<polygon points="110,260 130,190 150,240" fill="#463f6b" opacity="0.7"/>`;
+      s += `<polygon points="150,240 170,190 190,260" fill="#463f6b" opacity="0.7"/>`;
+      for(let i=0;i<5;i++){ s += `<rect x="${100+i*22}" y="290" width="6" height="10" fill="#7fd4ff" opacity="0.85"/>`; }
+      return s;
+    }},
+    { name:'Lantern Stacks of Old Cobrenna', sub:'Cobrenna Delta', tag:'invented', draw:()=>{
+      let s = '';
+      const colors = ['#e88a5a','#e8c25a','#e85a7a','#7ad4c9'];
+      const xs = [80,130,180,230];
+      xs.forEach((x,i)=>{
+        const h = 70+(i%2)*30;
+        for(let j=0;j<4;j++){
+          s += `<ellipse cx="${x}" cy="${(320-j*(h/4)-h/8).toFixed(1)}" rx="18" ry="14" fill="${colors[(i+j)%colors.length]}" stroke="#5c3a2c" stroke-width="1" opacity="0.9"/>`;
+        }
+      });
+      return s;
+    }},
+    { name:'The Mirrorwell Temple', sub:'Isle of Yuen', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="150" cy="300" rx="110" ry="20" fill="#8fd0e8" opacity="0.6"/>`;
+      s += `<rect x="110" y="240" width="80" height="60" fill="#e8e2d0" stroke="#b6ac90" stroke-width="1.5"/>`;
+      s += `<path d="M100,240 Q150,200 200,240 Z" fill="#d8cfae" stroke="#b6ac90" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="215" r="8" fill="#f2c25a"/>`;
+      s += `<rect x="115" y="300" width="70" height="16" fill="#e8e2d0" opacity="0.3"/>`;
+      return s;
+    }},
+    { name:'The Coiled Aqueduct', sub:'Sarn Province', tag:'invented', draw:()=>{
+      let s = '';
+      for(let i=0;i<5;i++){
+        const r = 100-i*16;
+        s += `<path d="M${150-r},320 Q150,${(320-r*1.3).toFixed(1)} ${150+r},320" fill="none" stroke="#a9895f" stroke-width="8" opacity="${(0.9-i*0.12).toFixed(2)}"/>`;
+      }
+      s += `<rect x="20" y="312" width="260" height="8" fill="#8a6a45"/>`;
+      return s;
+    }},
+    { name:'Sundial Colossus', sub:'Rhemet Plains', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="135" y="180" width="30" height="140" fill="#b6a07a" stroke="#7a6a48" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="150" r="30" fill="#c9b58a" stroke="#7a6a48" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="150" r="10" fill="#8a7a5a"/>`;
+      s += `<line x1="150" y1="150" x2="190" y2="110" stroke="#4a3f2c" stroke-width="3"/>`;
+      s += `<ellipse cx="150" cy="320" rx="80" ry="10" fill="#9c8a63" opacity="0.5"/>`;
+      return s;
+    }},
+    { name:'The Floating Market Towers', sub:'Doth Lagoon', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      const xs = [80,150,220];
+      xs.forEach((x,i)=>{
+        const h = 60+i*10;
+        s += `<line x1="${x-4}" y1="320" x2="${x-4}" y2="${320-h}" stroke="#5c4a35" stroke-width="4"/>`;
+        s += `<line x1="${x+4}" y1="320" x2="${x+4}" y2="${320-h}" stroke="#5c4a35" stroke-width="4"/>`;
+        s += `<rect x="${x-20}" y="${320-h-24}" width="40" height="24" fill="#e0a860" stroke="#8a6a3a" stroke-width="1.3"/>`;
+        s += `<path d="M${x-22},${320-h-24} Q${x},${320-h-44} ${x+22},${320-h-24} Z" fill="#d97a5a"/>`;
+      });
+      return s;
+    }},
+    { name:'Copper Dome Observatory', sub:'Ashvale Heights', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="100" y="250" width="100" height="70" fill="#d8c9a8" stroke="#a9895f" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="230" r="46" fill="#5aa88f" stroke="#3a7a63" stroke-width="1.5"/>`;
+      s += `<rect x="145" y="150" width="10" height="80" fill="#3a7a63" transform="rotate(-25 150 230)"/>`;
+      s += `<circle cx="150" cy="230" r="8" fill="#c9e8dc"/>`;
+      return s;
+    }},
+    { name:'The Bone Bridge', sub:'Kryv Hollow', tag:'invented', draw:()=>{
+      let s = '';
+      for(let i=0;i<5;i++){
+        const x = 60+i*45;
+        s += `<path d="M${x},320 Q${x+22},240 ${x+45},320" fill="none" stroke="#e2ddc9" stroke-width="10" stroke-linecap="round"/>`;
+      }
+      s += `<rect x="40" y="312" width="220" height="10" fill="#c9c3ac"/>`;
+      return s;
+    }},
+    { name:'Windmill Cathedral', sub:"Farrow's End", tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="110" y="220" width="80" height="100" fill="#e8dfc8" stroke="#b6ac8a" stroke-width="1.5"/>`;
+      s += `<path d="M110,220 Q150,180 190,220 Z" fill="#d8cfae" stroke="#b6ac8a" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="190" r="26" fill="none" stroke="#7a6a48" stroke-width="3"/>`;
+      for(let i=0;i<4;i++){
+        const ang = i*90*Math.PI/180;
+        const x2 = 150+Math.cos(ang)*26, y2 = 190+Math.sin(ang)*26;
+        s += `<line x1="150" y1="190" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#7a6a48" stroke-width="4"/>`;
+      }
+      return s;
+    }},
+    { name:'Ember Forge Towers', sub:'Drammoth Foundry', tag:'invented', draw:()=>{
+      let s = '';
+      [110,190].forEach(x=>{
+        s += `<rect x="${x-14}" y="150" width="28" height="170" fill="#5c5450" stroke="#332e2b" stroke-width="1.5"/>`;
+        s += `<ellipse cx="${x}" cy="150" rx="16" ry="8" fill="#e86a3a" opacity="0.9"/>`;
+        for(let i=0;i<4;i++){ s += `<circle cx="${(x+rand(-8,8)).toFixed(0)}" cy="${(130-i*14-rand(0,10)).toFixed(0)}" r="${rand(2,4).toFixed(1)}" fill="#f2955a" opacity="${(0.7-i*0.12).toFixed(2)}"/>`; }
+      });
+      return s;
+    }},
+    { name:'The Paperfold Pagoda', sub:'Minsei Heights', tag:'invented', draw:()=>{
+      let s = '';
+      const colors = ['#e85a6a','#e8c25a','#7ad4c9','#8a7ae8'];
+      for(let i=0;i<5;i++){
+        const w = 170-i*26;
+        const y = 290-i*34;
+        s += `<path d="M${(150-w/2).toFixed(1)},${y+18} L150,${y-14} L${(150+w/2).toFixed(1)},${y+18} Z" fill="${colors[i%colors.length]}" stroke="#4a3f2c" stroke-width="1.3"/>`;
+      }
+      s += `<rect x="140" y="290" width="20" height="30" fill="#8a6a45"/>`;
+      return s;
+    }},
+    { name:'The Clockwork Cathedral', sub:'Gearford Reach', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="110" y="220" width="80" height="100" fill="#c9d4e0" stroke="#7a8fa0" stroke-width="1.5"/>`;
+      s += `<path d="M110,220 Q150,180 190,220 Z" fill="#b6c4d4" stroke="#7a8fa0" stroke-width="1.5"/>`;
+      s += `<circle cx="150" cy="195" r="24" fill="#e8ded0" stroke="#7a5a2e" stroke-width="2"/>`;
+      s += `<line x1="150" y1="195" x2="150" y2="178" stroke="#4a3f2c" stroke-width="2"/>`;
+      s += `<line x1="150" y1="195" x2="164" y2="200" stroke="#4a3f2c" stroke-width="2"/>`;
+      for(let i=0;i<3;i++){
+        const gx = 125+i*25, gy = 260;
+        s += `<circle cx="${gx}" cy="${gy}" r="10" fill="none" stroke="#8a6a3a" stroke-width="3"/>`;
+        for(let t=0;t<8;t++){
+          const ang = t*45*Math.PI/180;
+          s += `<line x1="${(gx+Math.cos(ang)*10).toFixed(1)}" y1="${(gy+Math.sin(ang)*10).toFixed(1)}" x2="${(gx+Math.cos(ang)*14).toFixed(1)}" y2="${(gy+Math.sin(ang)*14).toFixed(1)}" stroke="#8a6a3a" stroke-width="2"/>`;
+        }
+      }
+      return s;
+    }},
+    { name:'The Woven Sky Temple', sub:'Threadmoor', tag:'invented', draw:()=>{
+      let s = '';
+      const colors = ['#e85a7a','#e8c25a','#7ad4c9','#8a7ae8','#f2955a'];
+      for(let i=0;i<8;i++){
+        const t = i/7;
+        const x1 = 90+t*120, y1 = 320;
+        const x2 = 150, y2 = 160;
+        s += `<path d="M${x1.toFixed(1)},${y1} Q${((x1+x2)/2).toFixed(1)},${((y1+y2)/2-30).toFixed(1)} ${x2},${y2}" fill="none" stroke="${colors[i%colors.length]}" stroke-width="3" opacity="0.85"/>`;
+      }
+      s += `<ellipse cx="150" cy="320" rx="70" ry="14" fill="#8a6a45" opacity="0.4"/>`;
+      return s;
+    }},
+    { name:'The Salt Glass Lighthouse', sub:'Point Kessa', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      s += `<rect x="135" y="140" width="30" height="180" fill="#e8e2d0" stroke="#b6ac90" stroke-width="1.5"/>`;
+      for(let i=0;i<6;i++){ s += `<rect x="132" y="${160+i*26}" width="36" height="4" fill="#cfc7ae"/>`; }
+      s += `<polygon points="130,140 150,110 170,140" fill="#c9a15a" stroke="#7a5a2e" stroke-width="1.3"/>`;
+      s += `<ellipse cx="150" cy="130" rx="14" ry="8" fill="#f2e88a" opacity="0.85"/>`;
+      s += `<polygon points="150,130 260,90 260,150" fill="#f2e88a" opacity="0.25"/>`;
+      return s;
+    }},
+    { name:'The Inkwell Archive Tower', sub:'Quillhaven', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="120" y="180" width="60" height="140" fill="#3a5f6f" stroke="#1f3a45" stroke-width="1.5"/>`;
+      s += `<ellipse cx="150" cy="180" rx="30" ry="10" fill="#4a6f80"/>`;
+      for(let i=0;i<4;i++){
+        const x = 130+i*10;
+        s += `<path d="M${x},320 Q${x-4},${300-i*8} ${x},${280-i*10}" fill="none" stroke="#1c2f38" stroke-width="2" opacity="0.6"/>`;
+      }
+      s += `<rect x="132" y="200" width="36" height="6" fill="#e8ded0" opacity="0.8"/>`;
+      s += `<rect x="132" y="220" width="36" height="6" fill="#e8ded0" opacity="0.7"/>`;
+      return s;
+    }},
+    { name:'The Sunken Bell Court', sub:'Meridian Deep', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="270" width="300" height="50" fill="#3a7a9c" opacity="0.55"/>`;
+      s += `<rect x="110" y="230" width="80" height="70" fill="#8a9caa" stroke="#4a5f6f" stroke-width="1.5" opacity="0.85"/>`;
+      s += `<circle cx="150" cy="220" r="18" fill="#c9a15a" opacity="0.9"/>`;
+      for(let i=0;i<3;i++){ s += `<path d="M${60+i*70},295 Q${75+i*70},285 ${90+i*70},295" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.4"/>`; }
+      return s;
+    }},
+    { name:'The Kite Spire', sub:'Windhollow', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<rect x="144" y="150" width="12" height="170" fill="#8a7a5a" stroke="#5c4f34" stroke-width="1.3"/>`;
+      const colors = ['#e85a7a','#7ad4c9','#f2c25a','#8a7ae8'];
+      for(let i=0;i<4;i++){
+        const kx = 110+i*30, ky = 100+(i%2)*30;
+        s += `<polygon points="${kx},${ky-16} ${kx+12},${ky} ${kx},${ky+16} ${kx-12},${ky}" fill="${colors[i%colors.length]}" stroke="#4a3f2c" stroke-width="1"/>`;
+        s += `<path d="M${kx},${ky+16} Q${kx+10},${ky+40} 150,150" fill="none" stroke="#4a3f2c" stroke-width="1" opacity="0.5"/>`;
+      }
+      return s;
+    }},
+    { name:'The Amber Vault', sub:'Drossandra Hollow', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="150" cy="260" rx="90" ry="60" fill="#e8a850" stroke="#a9701f" stroke-width="1.5" opacity="0.9"/>`;
+      s += `<ellipse cx="150" cy="260" rx="60" ry="40" fill="#f2c877" opacity="0.6"/>`;
+      s += `<rect x="130" y="300" width="40" height="20" fill="#8a6a3a"/>`;
+      for(let i=0;i<6;i++){ s += `<circle cx="${rand(100,200).toFixed(0)}" cy="${rand(230,280).toFixed(0)}" r="${rand(2,4).toFixed(1)}" fill="#fff" opacity="0.4"/>`; }
+      return s;
+    }}
+  ];
+
+  /* ---------------- 16 invented natural wonders (also none of these exist) ---------------- */
+
+  const INVENTED_NATURAL = [
+    { name:'The Singing Dunes', sub:'Velmara Waste', tag:'invented', ground:'sand', draw:()=>{
+      let s = '';
+      const colors = ['#e8c88a','#e0b878','#d8a868'];
+      for(let i=0;i<3;i++){
+        s += `<path d="M20,${300-i*22} Q100,${250-i*26} 180,${290-i*20} Q240,${260-i*18} 280,${290-i*16}" fill="none" stroke="${colors[i]}" stroke-width="14" opacity="0.85" stroke-linecap="round"/>`;
+      }
+      for(let i=0;i<3;i++){ s += `<path d="M${60+i*40},200 Q${75+i*40},185 ${90+i*40},200" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.5"/>`; }
+      return s;
+    }},
+    { name:'Glassfrost Caverns', sub:'Northreach', tag:'invented', ground:'snow', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="230" width="300" height="90" fill="#0e1f30"/>`;
+      for(let i=0;i<6;i++){
+        const x = 30+i*45;
+        const h = rand(30,80);
+        s += `<polygon points="${x-6},230 ${x},${(230+h).toFixed(1)} ${x+6},230" fill="#9fe3f2" opacity="0.8"/>`;
+        s += `<polygon points="${x-8},320 ${x},${(320-h*0.7).toFixed(1)} ${x+8},320" fill="#bfeff5" opacity="0.85"/>`;
+      }
+      return s;
+    }},
+    { name:'Emberfall Falls', sub:'Kestrion Highlands', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<path d="M40,320 L80,180 L220,180 L260,320 Z" fill="#3a2f2c" opacity="0.4"/>`;
+      for(let i=0;i<4;i++){
+        const x = 110+i*20;
+        s += `<path d="M${x},190 Q${x+(i%2?8:-8)},250 ${x},320" fill="none" stroke="#f2954a" stroke-width="6" opacity="0.85"/>`;
+      }
+      s += `<ellipse cx="150" cy="315" rx="70" ry="14" fill="#f2b25a" opacity="0.4"/>`;
+      return s;
+    }},
+    { name:'Twin Moons Reef', sub:'Coralline Strait', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      const colors = ['#e88a9a','#f2c25a','#7ad4c9','#8fd4e8'];
+      for(let i=0;i<8;i++){ s += `<ellipse cx="${rand(60,240).toFixed(0)}" cy="${rand(320,395).toFixed(0)}" rx="${rand(10,22).toFixed(0)}" ry="${rand(6,10).toFixed(0)}" fill="${colors[i%colors.length]}" opacity="0.8"/>`; }
+      s += `<circle cx="90" cy="90" r="18" fill="#eef4fb" opacity="0.9"/>`;
+      s += `<circle cx="180" cy="70" r="12" fill="#dfe8f5" opacity="0.8"/>`;
+      return s;
+    }},
+    { name:'The Whisperwood Canopy', sub:'Sylvenmoor', tag:'invented', draw:()=>{
+      let s = '';
+      const colors = ['#7ad48a','#5ab86a','#9ae09a'];
+      const xs = [70,120,170,220];
+      xs.forEach((x,i)=>{
+        const h = 90+(i%2)*20;
+        s += `<rect x="${x-6}" y="${(320-h*0.4).toFixed(1)}" width="12" height="${(h*0.4).toFixed(1)}" fill="#8a6a45"/>`;
+        s += `<ellipse cx="${x}" cy="${(320-h*0.4).toFixed(1)}" rx="34" ry="20" fill="${colors[i%colors.length]}" stroke="#3a5f3f" stroke-width="1.3"/>`;
+      });
+      return s;
+    }},
+    { name:'Crystalpeak Range', sub:'Ivory Reach', tag:'invented', ground:'snow', draw:()=>{
+      let s = '';
+      const colors = ['#c9e8f5','#a9d4ea','#8fc0e0'];
+      const peaks = [{x:70,h:130},{x:120,h:170},{x:170,h:140},{x:220,h:110}];
+      peaks.forEach((p,i)=>{
+        s += `<polygon points="${p.x-30},320 ${p.x},${(320-p.h).toFixed(1)} ${p.x+30},320" fill="${colors[i%colors.length]}" stroke="#5a8fae" stroke-width="1.3" opacity="0.92"/>`;
+        s += `<polygon points="${p.x-6},${(320-p.h+10).toFixed(1)} ${p.x},${(320-p.h).toFixed(1)} ${p.x+6},${(320-p.h+10).toFixed(1)}" fill="#fff" opacity="0.6"/>`;
+      });
+      return s;
+    }},
+    { name:'The Ashen Geysers', sub:'Norr Flats', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="150" cy="318" rx="120" ry="14" fill="#5c5450"/>`;
+      [90,150,210].forEach(x=>{
+        s += `<ellipse cx="${x}" cy="315" rx="14" ry="6" fill="#3a3430"/>`;
+        for(let i=0;i<10;i++){ s += `<circle cx="${(x+rand(-14,14)).toFixed(0)}" cy="${(300-rand(0,140)).toFixed(0)}" r="${rand(2,5).toFixed(1)}" fill="#cfc8b8" opacity="${rand(0.3,0.7).toFixed(2)}"/>`; }
+      });
+      return s;
+    }},
+    { name:'Bloomvale Terraces', sub:'Ilvenna Hills', tag:'invented', draw:()=>{
+      let s = '';
+      const colors = ['#8ac97a','#a0d488','#7ab86a'];
+      for(let i=0;i<5;i++){
+        const y = 180+i*30;
+        s += `<path d="M20,${y} Q150,${y-16} 280,${y} L280,${y+22} Q150,${y+6} 20,${y+22} Z" fill="${colors[i%colors.length]}" stroke="#4c6f3f" stroke-width="1"/>`;
+        for(let j=0;j<6;j++){ s += `<circle cx="${40+j*44}" cy="${y+10}" r="2.5" fill="#f2c2d4"/>`; }
+      }
+      return s;
+    }},
+    { name:'The Salt Spires of Kethra', sub:'Kethra Flats', tag:'invented', ground:'snow', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="300" width="300" height="20" fill="#e8e4d8"/>`;
+      for(let i=0;i<5;i++){
+        const x = 60+i*40;
+        const h = rand(60,120);
+        s += `<polygon points="${x-8},320 ${x},${(320-h).toFixed(1)} ${x+8},320" fill="#f2ede0" stroke="#cfcabf" stroke-width="1.3"/>`;
+      }
+      for(let i=0;i<6;i++){ s += `<line x1="${20+i*46}" y1="320" x2="${10+i*46}" y2="340" stroke="#cfcabf" stroke-width="1"/>`; }
+      return s;
+    }},
+    { name:'Driftglass Bay', sub:'Coast of Perrin', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      const colors = ['#8fd4c9','#e8b88a','#e8899a','#8fc0e0'];
+      for(let i=0;i<3;i++){ s += `<path d="M0,${290+i*10} Q150,${270+i*14} 300,${290+i*10}" fill="none" stroke="#fff" stroke-width="2" opacity="0.4"/>`; }
+      for(let i=0;i<10;i++){ s += `<circle cx="${rand(30,270).toFixed(0)}" cy="${rand(300,340).toFixed(0)}" r="${rand(3,7).toFixed(1)}" fill="${colors[i%colors.length]}" opacity="0.85"/>`; }
+      return s;
+    }},
+    { name:'Thundermaw', sub:'The Hollow Mountain', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<path d="M30,320 L100,150 Q150,190 200,150 L270,320 Z" fill="#5c6570" stroke="#333a42" stroke-width="1.5"/>`;
+      s += `<ellipse cx="150" cy="230" rx="34" ry="46" fill="#161a1f"/>`;
+      s += `<path d="M150,120 L138,150 L154,150 L142,180" fill="none" stroke="#f2e88a" stroke-width="3" stroke-linecap="round"/>`;
+      return s;
+    }},
+    { name:'Starlit Marsh', sub:'Ilvenna Lowlands', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="290" width="300" height="30" fill="#16324a" opacity="0.6"/>`;
+      for(let i=0;i<20;i++){ s += `<circle cx="${rand(20,280).toFixed(0)}" cy="${rand(260,340).toFixed(0)}" r="${rand(1,3).toFixed(1)}" fill="#bfe8ff" opacity="${rand(0.4,0.95).toFixed(2)}"/>`; }
+      for(let i=0;i<4;i++){ s += `<path d="M${40+i*60},320 Q${50+i*60},280 ${40+i*60},250" fill="none" stroke="#3a6f5c" stroke-width="3" opacity="0.7"/>`; }
+      return s;
+    }},
+    { name:'The Ember Reef', sub:'Vashtai Deep', tag:'invented', ground:'water', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="0" width="300" height="320" fill="#0a2a3f" opacity="0.35"/>`;
+      const colors = ['#f2955a','#e85a5a','#f2c25a'];
+      for(let i=0;i<7;i++){
+        const x = 40+i*32;
+        const h = rand(30,70);
+        s += `<path d="M${x-8},320 Q${x},${(320-h).toFixed(1)} ${x+8},320" fill="none" stroke="${colors[i%colors.length]}" stroke-width="6" opacity="0.85" stroke-linecap="round"/>`;
+      }
+      return s;
+    }},
+    { name:'Glowmoss Gorge', sub:'Ferngale Canyon', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<path d="M20,320 L80,140 L120,320 Z" fill="#3a4a3f" stroke="#1f2c22" stroke-width="1.5"/>`;
+      s += `<path d="M280,320 L220,150 L180,320 Z" fill="#3a4a3f" stroke="#1f2c22" stroke-width="1.5"/>`;
+      for(let i=0;i<12;i++){ s += `<circle cx="${rand(30,110).toFixed(0)}" cy="${rand(160,310).toFixed(0)}" r="${rand(1.5,3.5).toFixed(1)}" fill="#8fe89a" opacity="${rand(0.4,0.9).toFixed(2)}"/>`; }
+      for(let i=0;i<12;i++){ s += `<circle cx="${rand(190,270).toFixed(0)}" cy="${rand(170,310).toFixed(0)}" r="${rand(1.5,3.5).toFixed(1)}" fill="#8fe89a" opacity="${rand(0.4,0.9).toFixed(2)}"/>`; }
+      return s;
+    }},
+    { name:'The Mirage Flats', sub:'Verdance Basin', tag:'invented', ground:'sand', draw:()=>{
+      let s = '';
+      s += `<rect x="0" y="300" width="300" height="20" fill="#e3c48a"/>`;
+      for(let i=0;i<5;i++){ s += `<path d="M${20+i*54},300 Q${40+i*54},290 ${60+i*54},300" fill="none" stroke="#fff" stroke-width="2" opacity="0.35"/>`; }
+      s += `<polygon points="120,260 150,180 180,260" fill="#e8a08a" opacity="0.4"/>`;
+      s += `<polygon points="120,300 150,340 180,300" fill="#e8a08a" opacity="0.2"/>`;
+      return s;
+    }},
+    { name:'Prism Falls', sub:'Kaldenwood Ravine', tag:'invented', draw:()=>{
+      let s = '';
+      s += `<path d="M60,320 L100,140 L200,140 L240,320 Z" fill="#4a5f4a" opacity="0.35"/>`;
+      const colors = ['#e85a5a','#f2955a','#f2e05a','#7ad48a','#5ad4e8','#8a7ae8'];
+      colors.forEach((c,i)=>{
+        const x = 120+i*10;
+        s += `<path d="M${x},150 Q${x+(i%2?6:-6)},240 ${x},320" fill="none" stroke="${c}" stroke-width="4" opacity="0.8"/>`;
+      });
+      return s;
+    }}
+  ];
+
+  const LANDMARKS = INVENTED_MONUMENTS.concat(INVENTED_NATURAL);
+  const ROLL_SIZE = LANDMARKS.length;
+
+  /* ---------------- film-roll deck (random order, no repeats until reshuffled) ---------------- */
+
+  let deck = [];
+  function reshuffle(){ deck = shuffle(LANDMARKS.slice()); }
+  function nextLandmark(){
+    if(deck.length === 0) reshuffle();
+    return deck.pop();
+  }
+  reshuffle();
+  framesLeftEl.textContent = String(deck.length).padStart(3,'0');
+
+  /* ---------------- capture flow ---------------- */
+
+  function takePhoto(){
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    frameNumber++;
+    frameCountEl.textContent = 'NO. ' + String(frameNumber).padStart(3,'0');
+
+    recIndicator.classList.add('flash');
+    setTimeout(()=> recIndicator.classList.remove('flash'), 900);
+
+    const landmark = nextLandmark();
+    framesLeftEl.textContent = String(deck.length).padStart(3,'0');
+
+    setTimeout(()=>{
+      const svgMarkup = renderScene(landmark);
+      viewfinder.querySelector('.placeholder-text')?.remove();
+      const existingSvg = viewfinder.querySelector('svg');
+      if(existingSvg) existingSvg.remove();
+      viewfinder.insertAdjacentHTML('afterbegin', svgMarkup);
+    }, 90);
+  }
+
+  shutterBtn.addEventListener('click', takePhoto);
+  shutterBtn.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); takePhoto(); }
+  });
+
+  function startAuto(){
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON (every 1s)';
+    if(hintEl) hintEl.textContent = 'auto-capturing every 1 second — tap AUTO SHUTTER to stop';
+    takePhoto();
+    autoTimer = setInterval(takePhoto, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto(){
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(hintEl) hintEl.textContent = 'tap the blue button to take a photo';
+    if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  autoBtn.addEventListener('click', ()=>{
+    if(autoActive) stopAuto(); else startAuto();
+  });
+
+})();
+</script>
+</body>
+</html>

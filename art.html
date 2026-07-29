@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖼️ Gallery Booth — World Art Camera</title>
+<style>
+  :root{
+    --body-dark:#5c2a10;
+    --body-mid:#8a3c14;
+    --body-light:#c2591c;
+    --screen-bg:#140c07;
+    --cream:#fbead6;
+    --cream-dim:#e3b78c;
+    --shutter-orange:#e8622c;
+    --shutter-orange-dark:#b8431a;
+    --amber:#f2a544;
+    --line:#6b3a1a;
+    --focus:#ffb347;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at top, #b8521e 0%, #6b2f10 55%, #180d07 100%);
+    font-family:'Inter', system-ui, -apple-system, sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+
+  .hud-font{
+    font-family:'JetBrains Mono','Courier New', monospace;
+    letter-spacing:0.06em;
+  }
+
+  .rig{
+    width:100%;
+    max-width:460px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+
+  header{
+    text-align:center;
+  }
+  header .kicker{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.35em;
+    color:var(--amber);
+    margin:0 0 6px;
+  }
+  header h1{
+    font-size:26px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    margin:6px 0 0;
+    font-size:13px;
+    color:var(--cream-dim);
+  }
+
+  .camera-body{
+    width:100%;
+    background:
+      linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius:22px;
+    padding:18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -6px 12px rgba(0,0,0,0.35);
+    border:1px solid #2c1408;
+    position:relative;
+  }
+
+  .top-strip{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 6px 12px;
+    font-size:10px;
+    color:var(--cream-dim);
+  }
+  .lens-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--shutter-orange);
+    box-shadow:0 0 8px 1px rgba(232,98,44,0.6);
+    display:inline-block;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+
+  .viewfinder{
+    position:relative;
+    background:var(--screen-bg);
+    border-radius:12px;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .viewfinder svg{
+    width:100%;
+    height:100%;
+  }
+
+  .placeholder-text{
+    color:#6b5140;
+    font-size:12px;
+    text-align:center;
+    padding:20px;
+    line-height:1.6;
+  }
+
+  /* corner reticles */
+  .reticle{
+    position:absolute;
+    width:22px;
+    height:22px;
+    border-color:var(--focus);
+    opacity:0.85;
+    pointer-events:none;
+  }
+  .reticle.tl{top:10px;left:10px;border-top:2px solid;border-left:2px solid;}
+  .reticle.tr{top:10px;right:10px;border-top:2px solid;border-right:2px solid;}
+  .reticle.bl{bottom:10px;left:10px;border-bottom:2px solid;border-left:2px solid;}
+  .reticle.br{bottom:10px;right:10px;border-bottom:2px solid;border-right:2px solid;}
+
+  .rec-indicator{
+    position:absolute;
+    top:12px;
+    left:38px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-size:10px;
+    color:#ff7a45;
+    opacity:0;
+    transition:opacity 0.15s;
+  }
+  .rec-indicator.flash{opacity:1;}
+  .rec-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#ff7a45;
+  }
+
+  .frame-count{
+    position:absolute;
+    bottom:12px;
+    right:38px;
+    font-size:10px;
+    color:var(--focus);
+  }
+
+  .flash-overlay{
+    position:absolute;
+    inset:0;
+    background:#fff;
+    opacity:0;
+    pointer-events:none;
+  }
+  .flash-overlay.go{
+    animation:flashPop 260ms ease-out;
+  }
+  @keyframes flashPop{
+    0%{opacity:0.9;}
+    100%{opacity:0;}
+  }
+
+  .grain{
+    position:absolute;
+    inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity:0.18;
+    mix-blend-mode:overlay;
+    pointer-events:none;
+  }
+
+  .controls-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:22px;
+    padding:20px 6px 6px;
+  }
+
+  .shutter-btn{
+    width:78px;
+    height:78px;
+    border-radius:50%;
+    border:none;
+    background:
+      radial-gradient(circle at 35% 30%, #f28a5f, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor:pointer;
+    position:relative;
+    transition:transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active{
+    transform:translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after{
+    content:'';
+    position:absolute;
+    inset:10px;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,0.25);
+  }
+  .shutter-ring{
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1px solid #200f06;
+  }
+  .shutter-wrap{
+    position:relative;
+  }
+
+  .side-readout{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    font-size:10px;
+    color:var(--cream-dim);
+    min-width:74px;
+  }
+  .side-readout span.val{color:var(--focus);}
+
+  .hint{
+    text-align:center;
+    font-size:11px;
+    color:var(--cream-dim);
+    padding-top:4px;
+  }
+
+  .auto-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    width:100%;
+    margin-top:12px;
+    padding:11px 16px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.04);
+    color:var(--cream-dim);
+    font-size:11px;
+    cursor:pointer;
+    transition:background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover{
+    border-color:var(--amber);
+  }
+  .auto-btn.active{
+    background:rgba(232,98,44,0.16);
+    border-color:var(--shutter-orange);
+    color:var(--cream);
+  }
+  .auto-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--line);
+    flex-shrink:0;
+  }
+  .auto-btn.active .auto-dot{
+    background:var(--shutter-orange);
+    animation:autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(232,98,44,0.6); }
+    50%{ box-shadow:0 0 0 5px rgba(232,98,44,0); }
+  }
+
+  .easypagex-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    text-decoration:none;
+    color:var(--body-dark);
+    background:var(--amber);
+    padding:12px 24px;
+    border-radius:999px;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    box-shadow:0 8px 18px -6px rgba(242,165,68,0.55);
+    transition:transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 22px -6px rgba(242,165,68,0.7);
+  }
+  .easypagex-btn:active{
+    transform:translateY(0);
+  }
+  .easypagex-btn svg{width:16px;height:16px;}
+
+  footer{
+    padding-top:6px;
+    padding-bottom:4px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .flash-overlay.go{ animation:none; }
+    .shutter-btn{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL GB-01 · GALLERY SIM</p>
+    <h1>Gallery Booth</h1>
+    <p>Point, click, capture a masterpiece — 37 iconic paintings across five movements.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE</span>
+      <span>f/2.8 &nbsp;·&nbsp; ISO 200</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font">
+        VIEWFINDER EMPTY<br>
+        press shutter to capture a masterpiece
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/60</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>ROLL LEFT</span>
+        <span class="val" id="framesLeft">037</span>
+      </div>
+    </div>
+    <p class="hint">tap the orange button to take a photo</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const framesLeftEl = document.getElementById('framesLeft');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+  const hintEl = document.querySelector('.hint');
+
+  let frameNumber = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1400;
+
+  /* ---------------- shutter click sound (Web Audio API, no assets) ---------------- */
+  let audioCtx = null;
+  function getCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq){
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      data[i] = (Math.random()*2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound(){
+    playClickBurst(0,     0.045, 0.7, 2400);
+    playClickBurst(0.07,  0.035, 0.55, 1600);
+  }
+
+  /* ---------------- helpers ---------------- */
+
+  function rand(min, max){ return Math.random()*(max-min)+min; }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- gallery wall + frame + caption plate ---------------- */
+  /* Every artwork is rendered as a simplified, abstracted color-and-motif
+     impression (palette + iconic silhouette) rather than a literal copy of
+     the original painting — a stylized homage, like a museum postcard sketch. */
+
+  const SPOTLIGHTS = ['#f2c98a','#f2b06a','#e8d9b0','#f7dca0'];
+
+  function wallAndFrame(bg){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#3a2a1c"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#4a3826" opacity="0.5"/>`;
+    const glow = pick(SPOTLIGHTS);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.16"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#241609" opacity="0.6"/>`;
+    // frame shadow
+    s += `<rect x="26" y="24" width="252" height="270" fill="#000" opacity="0.35"/>`;
+    // outer wood/gold frame
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#7a4a1e" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#d9a441" stroke-width="6"/>`;
+    // mat liner
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1a120a"/>`;
+    // canvas
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, artist, category){
+    let s = '';
+    s += `<rect x="0" y="344" width="300" height="56" fill="#15110c" opacity="0.78"/>`;
+    s += `<rect x="0" y="344" width="300" height="2" fill="#f2a544" opacity="0.7"/>`;
+    s += `<text x="150" y="368" text-anchor="middle" font-family="Georgia, serif" font-size="15" font-weight="700" fill="#fbead6" letter-spacing="0.3">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="384" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#e3b78c">${escapeXml(artist)}</text>`;
+    s += `<text x="150" y="396" text-anchor="middle" font-family="'Courier New', monospace" font-size="8" fill="#b08e6a" letter-spacing="1.4">${escapeXml(category.toUpperCase())}</text>`;
+    return s;
+  }
+
+  function renderScene(art){
+    let s = wallAndFrame(art.bg);
+    s += art.draw();
+    s += caption(art.name, art.artist, art.category);
+    return `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+  }
+
+  /* ---------------- Renaissance & Baroque (8) ---------------- */
+
+  const CLASSICAL = [
+    { name:'Mona Lisa', artist:'Leonardo da Vinci', category:'Renaissance', bg:'#4a3c28', draw:()=>{
+      let s = '';
+      s += `<path d="M90,90 Q90,230 150,255 Q210,230 210,90 Q210,45 150,42 Q90,45 90,90 Z" fill="#c9a877" stroke="#5c4326" stroke-width="1.5"/>`;
+      s += `<path d="M90,95 Q60,150 75,240" fill="none" stroke="#3a2e1c" stroke-width="16" opacity="0.85" stroke-linecap="round"/>`;
+      s += `<path d="M210,95 Q240,150 225,240" fill="none" stroke="#3a2e1c" stroke-width="16" opacity="0.85" stroke-linecap="round"/>`;
+      s += `<path d="M120,150 Q150,170 180,150" fill="none" stroke="#5c4326" stroke-width="2.5" stroke-linecap="round"/>`;
+      s += `<ellipse cx="128" cy="115" rx="6" ry="4" fill="#3a2e1c" opacity="0.7"/><ellipse cx="172" cy="115" rx="6" ry="4" fill="#3a2e1c" opacity="0.7"/>`;
+      s += `<path d="M40,240 Q150,270 260,240 L260,275 Q150,290 40,275 Z" fill="#7a6a4a" opacity="0.6"/>`;
+      s += `<path d="M39,150 Q100,110 150,150 Q200,110 257,150" fill="none" stroke="#8a7a5a" stroke-width="2" opacity="0.4"/>`;
+      return s;
+    }},
+    { name:'The Last Supper', artist:'Leonardo da Vinci', category:'Renaissance', bg:'#8a7355', draw:()=>{
+      let s = '';
+      s += `<path d="M39,37 L150,80 L257,37" fill="none" stroke="#5c4a30" stroke-width="1.5" opacity="0.6"/>`;
+      s += `<path d="M39,273 L150,180 L257,273" fill="none" stroke="#5c4a30" stroke-width="1.5" opacity="0.6"/>`;
+      s += `<rect x="45" y="195" width="210" height="14" fill="#c9b57a" stroke="#7a6540" stroke-width="1.5"/>`;
+      for(let i=0;i<13;i++){
+        const x = 55 + i*16;
+        const h = 55 + (i%3===0?10:0);
+        s += `<ellipse cx="${x}" cy="${195-h}" rx="7" ry="9" fill="#e0c9a0"/>`;
+        s += `<path d="M${x-9},${195-h+8} Q${x},${195-h+2} ${x+9},${195-h+8} L${x+9},195 L${x-9},195 Z" fill="${i%2===0?'#7a3a2a':'#3a4a6a'}" opacity="0.85"/>`;
+      }
+      return s;
+    }},
+    { name:'The Creation of Adam', artist:'Michelangelo', category:'Renaissance Fresco', bg:'#c9a876', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="90" cy="150" rx="55" ry="42" fill="#d9be8a" opacity="0.85"/>`;
+      s += `<path d="M60,150 Q95,140 125,150" fill="none" stroke="#7a5a30" stroke-width="9" stroke-linecap="round"/>`;
+      s += `<path d="M170,150 Q195,140 210,145" fill="none" stroke="#7a5a30" stroke-width="9" stroke-linecap="round"/>`;
+      s += `<circle cx="128" cy="150" r="4" fill="#3a2a18"/>`;
+      s += `<ellipse cx="215" cy="130" rx="45" ry="35" fill="#e0967a" opacity="0.5"/>`;
+      return s;
+    }},
+    { name:'The Birth of Venus', artist:'Sandro Botticelli', category:'Renaissance', bg:'#bcd8dc', draw:()=>{
+      let s = '';
+      s += `<rect x="39" y="37" width="218" height="130" fill="#cfe4e6"/>`;
+      s += `<rect x="39" y="167" width="218" height="106" fill="#e8dcc4"/>`;
+      s += `<path d="M150,110 Q90,140 100,210 Q110,255 150,260 Q190,255 200,210 Q210,140 150,110 Z" fill="#f2e4c9" stroke="#c9a877" stroke-width="1.5"/>`;
+      s += `<ellipse cx="150" cy="170" rx="16" ry="46" fill="#e8c9a0"/>`;
+      s += `<path d="M134,140 Q150,110 166,140 Q175,190 150,220 Q125,190 134,140 Z" fill="#d9a441" opacity="0.7"/>`;
+      return s;
+    }},
+    { name:'Girl with a Pearl Earring', artist:'Johannes Vermeer', category:'Dutch Golden Age', bg:'#171512', draw:()=>{
+      let s = '';
+      s += `<path d="M105,90 Q100,180 130,235 Q150,250 175,232 L175,90 Z" fill="#d9be9a" stroke="#7a5c3a" stroke-width="1.3"/>`;
+      s += `<path d="M100,80 Q95,50 140,45 Q195,42 195,90 Q195,110 175,110 L175,80 Q160,60 130,68 Q108,74 100,80 Z" fill="#d9a441" stroke="#a9762a" stroke-width="1.3"/>`;
+      s += `<path d="M170,100 Q210,105 200,150 Q192,170 175,165" fill="#3a5f8a" stroke="#254060" stroke-width="1.3"/>`;
+      s += `<ellipse cx="150" cy="205" rx="7" ry="10" fill="#e8e4d8" stroke="#b0a890" stroke-width="1"/>`;
+      s += `<ellipse cx="132" cy="128" rx="4" ry="5" fill="#2a2118"/>`;
+      return s;
+    }},
+    { name:'The Night Watch', artist:'Rembrandt van Rijn', category:'Dutch Golden Age', bg:'#221a10', draw:()=>{
+      let s = '';
+      for(let i=0;i<6;i++){
+        const x = 55 + i*32;
+        s += `<ellipse cx="${x}" cy="${190+((i%2)*10)}" rx="17" ry="55" fill="#2a2016" opacity="0.9"/>`;
+        s += `<line x1="${x}" y1="90" x2="${x+(i%2===0?10:-10)}" y2="230" stroke="#4a3a24" stroke-width="2" opacity="0.6"/>`;
+      }
+      s += `<ellipse cx="150" cy="180" rx="22" ry="62" fill="#c9a441"/>`;
+      s += `<circle cx="150" cy="130" r="14" fill="#e8c99a"/>`;
+      s += `<ellipse cx="105" cy="215" rx="16" ry="50" fill="#8a1c1c" opacity="0.9"/>`;
+      return s;
+    }},
+    { name:'Las Meninas', artist:'Diego Velázquez', category:'Spanish Golden Age', bg:'#3a2e20', draw:()=>{
+      let s = '';
+      s += `<rect x="180" y="60" width="34" height="44" fill="#8a7a5a" stroke="#4a3a24" stroke-width="1.3"/>`;
+      s += `<rect x="40" y="45" width="30" height="90" fill="#2a2015" opacity="0.7"/>`;
+      s += `<ellipse cx="150" cy="200" rx="26" ry="55" fill="#e8e0d0" stroke="#b0a486" stroke-width="1.3"/>`;
+      s += `<circle cx="150" cy="140" r="12" fill="#e8c99a"/>`;
+      s += `<ellipse cx="95" cy="220" rx="15" ry="42" fill="#7a5c3a" opacity="0.85"/>`;
+      s += `<ellipse cx="205" cy="220" rx="15" ry="42" fill="#5c4a2a" opacity="0.85"/>`;
+      s += `<rect x="60" y="235" width="60" height="4" fill="#1a1410" opacity="0.5"/>`;
+      return s;
+    }},
+    { name:'The Garden of Earthly Delights', artist:'Hieronymus Bosch', category:'Northern Renaissance', bg:'#cfe0b4', draw:()=>{
+      let s = '';
+      s += `<rect x="39" y="37" width="72" height="236" fill="#cfe0b4"/>`;
+      s += `<rect x="112" y="37" width="76" height="236" fill="#e8c9d4"/>`;
+      s += `<rect x="189" y="37" width="68" height="236" fill="#5c2a2a"/>`;
+      s += `<line x1="111" y1="37" x2="111" y2="273" stroke="#3a2a1a" stroke-width="1.5"/>`;
+      s += `<line x1="188" y1="37" x2="188" y2="273" stroke="#3a2a1a" stroke-width="1.5"/>`;
+      for(let i=0;i<8;i++){
+        s += `<circle cx="${rand(120,180).toFixed(0)}" cy="${rand(60,250).toFixed(0)}" r="${rand(3,8).toFixed(0)}" fill="${pick(['#e8a4c4','#f2c26a','#8fd48a','#e88a7a'])}" opacity="0.85"/>`;
+      }
+      for(let i=0;i<6;i++){
+        s += `<circle cx="${rand(195,250).toFixed(0)}" cy="${rand(60,250).toFixed(0)}" r="${rand(3,6).toFixed(0)}" fill="${pick(['#f2a544','#e84a3a'])}" opacity="0.8"/>`;
+      }
+      return s;
+    }}
+  ];
+
+  /* ---------------- Impressionism & Post-Impressionism (8) ---------------- */
+
+  const IMPRESSIONIST = [
+    { name:'The Starry Night', artist:'Vincent van Gogh', category:'Post-Impressionism', bg:'#1b2a52', draw:()=>{
+      let s = '';
+      for(let i=0;i<5;i++){
+        const cx = rand(60,240), cy = rand(60,130), r = rand(14,26);
+        s += `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="${r.toFixed(0)}" fill="none" stroke="#f2e08a" stroke-width="3" opacity="0.7"/>`;
+      }
+      s += `<circle cx="205" cy="80" r="22" fill="#f7e79a"/>`;
+      s += `<path d="M115,273 Q120,140 105,80 Q100,60 112,45" fill="none" stroke="#0e1a10" stroke-width="12" stroke-linecap="round"/>`;
+      s += `<path d="M39,255 Q100,235 150,250 Q200,232 257,250 L257,273 L39,273 Z" fill="#26365c"/>`;
+      for(let i=0;i<5;i++){ s += `<rect x="${60+i*30}" y="248" width="10" height="14" fill="#f2c26a" opacity="0.8"/>`; }
+      return s;
+    }},
+    { name:'Sunflowers', artist:'Vincent van Gogh', category:'Post-Impressionism', bg:'#e0a83a', draw:()=>{
+      let s = '';
+      s += `<path d="M120,200 L120,273 L180,273 L180,200 Z" fill="#c9822a" stroke="#8a5418" stroke-width="1.5"/>`;
+      const heads = [{x:110,y:130},{x:160,y:100},{x:195,y:150},{x:125,y:80},{x:175,y:190}];
+      heads.forEach(h=>{
+        for(let i=0;i<10;i++){
+          const ang = (i/10)*Math.PI*2;
+          s += `<ellipse cx="${(h.x+Math.cos(ang)*16).toFixed(0)}" cy="${(h.y+Math.sin(ang)*16).toFixed(0)}" rx="10" ry="5" fill="#f2c22a" stroke="#c9962e" stroke-width="0.8" transform="rotate(${(ang*180/Math.PI).toFixed(0)} ${(h.x+Math.cos(ang)*16).toFixed(0)} ${(h.y+Math.sin(ang)*16).toFixed(0)})"/>`;
+        }
+        s += `<circle cx="${h.x}" cy="${h.y}" r="10" fill="#7a5218"/>`;
+      });
+      return s;
+    }},
+    { name:'Impression, Sunrise', artist:'Claude Monet', category:'Impressionism', bg:'#8a97a0', draw:()=>{
+      let s = '';
+      s += `<rect x="39" y="37" width="218" height="140" fill="#a8b4bc" opacity="0.8"/>`;
+      s += `<circle cx="150" cy="110" r="20" fill="#f2955a" opacity="0.9"/>`;
+      s += `<line x1="150" y1="130" x2="150" y2="180" stroke="#f2955a" stroke-width="6" opacity="0.5"/>`;
+      for(let i=0;i<3;i++){ s += `<ellipse cx="${90+i*60}" cy="200" rx="20" ry="6" fill="#1a2028" opacity="0.7"/>`; }
+      s += `<rect x="39" y="200" width="218" height="73" fill="#7a8890" opacity="0.7"/>`;
+      return s;
+    }},
+    { name:'Water Lilies', artist:'Claude Monet', category:'Impressionism', bg:'#3a6058', draw:()=>{
+      let s = '';
+      for(let i=0;i<9;i++){
+        const cx = rand(60,240), cy = rand(60,250);
+        s += `<ellipse cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" rx="18" ry="9" fill="#4a8a68" opacity="0.75"/>`;
+        s += `<circle cx="${cx.toFixed(0)}" cy="${cy.toFixed(0)}" r="4" fill="${pick(['#f2c2d8','#f7f0e0'])}" opacity="0.9"/>`;
+      }
+      for(let i=0;i<4;i++){ s += `<path d="M39,${80+i*45} Q150,${70+i*45} 257,${80+i*45}" fill="none" stroke="#8ac4b4" stroke-width="2" opacity="0.3"/>`; }
+      return s;
+    }},
+    { name:'A Sunday Afternoon on La Grande Jatte', artist:'Georges Seurat', category:'Pointillism', bg:'#8fae7a', draw:()=>{
+      let s = '';
+      for(let i=0;i<220;i++){
+        s += `<circle cx="${rand(39,257).toFixed(1)}" cy="${rand(37,273).toFixed(1)}" r="1.6" fill="${pick(['#8fae7a','#c9c26a','#e8dca0','#5c8a6a','#f2ede0'])}" opacity="0.85"/>`;
+      }
+      s += `<ellipse cx="110" cy="200" rx="12" ry="40" fill="#2a2a2a" opacity="0.85"/>`;
+      s += `<path d="M110,165 Q140,168 138,190" fill="none" stroke="#c9302a" stroke-width="4" opacity="0.8"/>`;
+      s += `<ellipse cx="190" cy="210" rx="10" ry="34" fill="#3a3a3a" opacity="0.8"/>`;
+      return s;
+    }},
+    { name:'The Scream', artist:'Edvard Munch', category:'Expressionism', bg:'#e2703a', draw:()=>{
+      let s = '';
+      for(let i=0;i<4;i++){ s += `<path d="M39,${70+i*22} Q150,${50+i*22} 257,${75+i*22}" fill="none" stroke="#c9502a" stroke-width="6" opacity="0.55"/>`; }
+      s += `<path d="M39,220 Q150,190 257,225" fill="none" stroke="#3a3a5a" stroke-width="10" opacity="0.8"/>`;
+      s += `<ellipse cx="150" cy="180" rx="30" ry="42" fill="#d9c9a0" stroke="#7a5a3a" stroke-width="1.5"/>`;
+      s += `<ellipse cx="138" cy="172" rx="7" ry="10" fill="#2a2016"/><ellipse cx="164" cy="172" rx="7" ry="10" fill="#2a2016"/>`;
+      s += `<ellipse cx="150" cy="205" rx="9" ry="12" fill="#2a2016"/>`;
+      s += `<path d="M120,220 Q135,195 150,205 Q165,195 180,220" fill="none" stroke="#d9c9a0" stroke-width="8" stroke-linecap="round"/>`;
+      return s;
+    }},
+    { name:'The Card Players', artist:'Paul Cézanne', category:'Post-Impressionism', bg:'#5c4a38', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="150" cy="220" rx="50" ry="14" fill="#8a6a48" stroke="#3a2c1c" stroke-width="1.3"/>`;
+      s += `<ellipse cx="95" cy="180" rx="16" ry="46" fill="#3a4a5c" opacity="0.9"/>`;
+      s += `<ellipse cx="205" cy="180" rx="16" ry="46" fill="#4a3a2c" opacity="0.9"/>`;
+      s += `<circle cx="95" cy="120" r="12" fill="#c9a877"/><circle cx="205" cy="120" r="12" fill="#c9a877"/>`;
+      s += `<rect x="118" y="205" width="14" height="20" fill="#e8e0cc" stroke="#7a6a50" stroke-width="1"/>`;
+      s += `<rect x="168" y="205" width="14" height="20" fill="#e8e0cc" stroke="#7a6a50" stroke-width="1"/>`;
+      return s;
+    }},
+    { name:'The Café Terrace at Night', artist:'Vincent van Gogh', category:'Post-Impressionism', bg:'#182848', draw:()=>{
+      let s = '';
+      s += `<rect x="39" y="37" width="218" height="70" fill="#182848"/>`;
+      for(let i=0;i<14;i++){ s += `<circle cx="${rand(45,250).toFixed(0)}" cy="${rand(40,100).toFixed(0)}" r="1.4" fill="#f7f0d0" opacity="0.9"/>`; }
+      s += `<path d="M55,150 Q150,110 245,150 L245,180 L55,180 Z" fill="#f2c22a"/>`;
+      for(let i=0;i<5;i++){ s += `<circle cx="${70+i*30}" cy="${160-Math.abs(2-i)*6}" r="5" fill="#f7e79a" opacity="0.9"/>`; }
+      s += `<rect x="39" y="180" width="218" height="93" fill="#3a4a68"/>`;
+      for(let i=0;i<5;i++){ s += `<circle cx="${70+i*30}" cy="230" r="10" fill="#20304a"/>`; }
+      return s;
+    }}
+  ];
+
+  /* ---------------- Modern Art, Cubism & Surrealism (8) ---------------- */
+
+  const MODERN = [
+    { name:'Guernica', artist:'Pablo Picasso', category:'Cubism', bg:'#c9c9c1', draw:()=>{
+      let s = '';
+      s += `<path d="M70,273 L95,160 L130,200 L150,150 L175,205 L205,155 L230,273 Z" fill="#8a8a80" opacity="0.85"/>`;
+      s += `<ellipse cx="105" cy="130" rx="26" ry="18" fill="#3a3a34"/>`;
+      s += `<path d="M79,130 L60,120 L79,140 Z" fill="#1a1a16"/>`;
+      s += `<ellipse cx="190" cy="150" rx="20" ry="30" fill="#5a5a50"/>`;
+      s += `<circle cx="150" cy="65" r="14" fill="#f2ede0"/>`;
+      s += `<path d="M150,55 L150,75 M140,65 L160,65" stroke="#1a1a16" stroke-width="1.5"/>`;
+      return s;
+    }},
+    { name:"Les Demoiselles d'Avignon", artist:'Pablo Picasso', category:'Cubism', bg:'#c9846c', draw:()=>{
+      let s = '';
+      const xs=[70,115,160,205];
+      xs.forEach((x,i)=>{
+        s += `<path d="M${x-24},273 L${x-18},150 L${x},130 L${x+18},150 L${x+24},273 Z" fill="${i%2===0?'#d9a082':'#c9846c'}" stroke="#7a4530" stroke-width="1.3"/>`;
+        s += `<path d="M${x-10},155 L${x},140 L${x+10},155 L${x+6},175 L${x-6},175 Z" fill="#e8c2a8" stroke="#7a4530" stroke-width="1"/>`;
+      });
+      return s;
+    }},
+    { name:'The Persistence of Memory', artist:'Salvador Dalí', category:'Surrealism', bg:'#e0c9a0', draw:()=>{
+      let s = '';
+      s += `<path d="M39,220 Q150,190 257,215 L257,273 L39,273 Z" fill="#c9a877"/>`;
+      s += `<rect x="80" y="150" width="60" height="40" fill="#7a8a94" opacity="0.8"/>`;
+      s += `<ellipse cx="120" cy="205" rx="30" ry="10" fill="#f2c98a" stroke="#a9762a" stroke-width="1.3"/>`;
+      s += `<path d="M90,205 Q120,225 150,200" fill="none" stroke="#3a2a18" stroke-width="1.5"/>`;
+      s += `<path d="M170,150 Q195,145 210,160 Q225,175 205,190 Q185,200 175,180 Q168,165 170,150 Z" fill="#e8b878" stroke="#a9762a" stroke-width="1.3"/>`;
+      s += `<circle cx="60" cy="150" r="20" fill="#c9603a" stroke="#7a3018" stroke-width="1.3"/>`;
+      return s;
+    }},
+    { name:'The Son of Man', artist:'René Magritte', category:'Surrealism', bg:'#8ec0e0', draw:()=>{
+      let s = '';
+      for(let i=0;i<3;i++){ s += `<ellipse cx="${80+i*70}" cy="${70+i*10}" rx="30" ry="12" fill="#fff" opacity="0.5"/>`; }
+      s += `<path d="M110,110 L190,110 L200,273 L100,273 Z" fill="#1a1a1a"/>`;
+      s += `<path d="M100,110 Q150,85 200,110 L200,120 L100,120 Z" fill="#0e0e0e"/>`;
+      s += `<ellipse cx="150" cy="100" rx="34" ry="10" fill="#0e0e0e"/>`;
+      s += `<circle cx="150" cy="150" r="24" fill="#5c8a3a" stroke="#3a5c22" stroke-width="1.5"/>`;
+      s += `<path d="M150,130 L150,110" stroke="#3a5c22" stroke-width="2"/>`;
+      return s;
+    }},
+    { name:'The Kiss', artist:'Gustav Klimt', category:'Symbolism / Art Nouveau', bg:'#c9962e', draw:()=>{
+      let s = '';
+      for(let i=0;i<16;i++){ s += `<circle cx="${rand(39,257).toFixed(0)}" cy="${rand(37,273).toFixed(0)}" r="${rand(2,5).toFixed(0)}" fill="${pick(['#a9762a','#e8c060','#d9a441'])}" opacity="0.5"/>`; }
+      s += `<path d="M110,273 Q100,150 150,120 Q200,150 190,273 Z" fill="#d9a441" stroke="#8a6018" stroke-width="1.3"/>`;
+      s += `<circle cx="128" cy="110" r="16" fill="#e8c9a0"/><circle cx="165" cy="105" r="15" fill="#e8c9a0"/>`;
+      for(let i=0;i<10;i++){ s += `<rect x="${115+(i%5)*10}" y="${140+Math.floor(i/5)*70}" width="7" height="7" fill="${pick(['#3a5c22','#c9302a','#f2ede0'])}" opacity="0.85"/>`; }
+      return s;
+    }},
+    { name:'Nighthawks', artist:'Edward Hopper', category:'American Realism', bg:'#141e2c', draw:()=>{
+      let s = '';
+      s += `<path d="M39,150 L220,150 L257,180 L257,273 L39,273 Z" fill="#1c2838"/>`;
+      s += `<rect x="60" y="170" width="150" height="60" fill="#f2c98a" opacity="0.25"/>`;
+      s += `<ellipse cx="110" cy="220" rx="10" ry="30" fill="#2a2018"/>`;
+      s += `<ellipse cx="150" cy="222" rx="10" ry="28" fill="#3a2c1a"/>`;
+      s += `<ellipse cx="185" cy="220" rx="10" ry="30" fill="#1a140e"/>`;
+      s += `<rect x="70" y="235" width="120" height="8" fill="#8a6a3a" opacity="0.7"/>`;
+      return s;
+    }},
+    { name:'American Gothic', artist:'Grant Wood', category:'Regionalism', bg:'#8ec0d8', draw:()=>{
+      let s = '';
+      s += `<rect x="115" y="90" width="70" height="90" fill="#e8e0c9" stroke="#a9a084" stroke-width="1.3"/>`;
+      s += `<path d="M115,90 L150,50 L185,90 Z" fill="#d9d0b4"/>`;
+      s += `<rect x="140" y="105" width="20" height="30" fill="#3a5060"/>`;
+      s += `<ellipse cx="115" cy="230" rx="20" ry="50" fill="#3a3a3a"/>`;
+      s += `<ellipse cx="185" cy="230" rx="20" ry="50" fill="#5c4a3a"/>`;
+      s += `<circle cx="115" cy="170" r="13" fill="#d9b088"/><circle cx="185" cy="170" r="13" fill="#d9b088"/>`;
+      s += `<line x1="100" y1="200" x2="100" y2="273" stroke="#2a2a2a" stroke-width="3"/>`;
+      s += `<line x1="92" y1="200" x2="92" y2="215" stroke="#2a2a2a" stroke-width="2"/><line x1="108" y1="200" x2="108" y2="215" stroke="#2a2a2a" stroke-width="2"/>`;
+      return s;
+    }},
+    { name:'Composition 8', artist:'Wassily Kandinsky', category:'Abstract', bg:'#e8e0cc', draw:()=>{
+      let s = '';
+      s += `<circle cx="110" cy="110" r="30" fill="#e8c22a"/>`;
+      s += `<circle cx="180" cy="160" r="20" fill="#3a5c8a"/>`;
+      s += `<path d="M60,220 L140,190 L120,250 Z" fill="#c9302a"/>`;
+      s += `<line x1="39" y1="80" x2="257" y2="130" stroke="#1a1a1a" stroke-width="2"/>`;
+      s += `<line x1="80" y1="250" x2="230" y2="230" stroke="#1a1a1a" stroke-width="2"/>`;
+      s += `<circle cx="220" cy="90" r="8" fill="#1a1a1a"/><circle cx="150" cy="230" r="6" fill="#5c8a3a"/>`;
+      return s;
+    }}
+  ];
+
+  /* ---------------- Abstract Expressionism & Pop Art (5) ---------------- */
+
+  const ABSTRACT_POP = [
+    { name:'Marilyn Diptych', artist:'Andy Warhol', category:'Pop Art', bg:'#f2a8c4', draw:()=>{
+      let s = '';
+      const colors = ['#f2a8c4','#f2c22a','#5abcc4','#e8623a','#8fd48a','#c98ae8'];
+      for(let r=0;r<2;r++){
+        for(let c=0;c<3;c++){
+          const x = 65+c*70, y = 90+r*100;
+          s += `<rect x="${x-32}" y="${y-45}" width="64" height="90" fill="${colors[(r*3+c)%colors.length]}"/>`;
+          s += `<ellipse cx="${x}" cy="${y-8}" rx="18" ry="24" fill="#f2e0c9"/>`;
+          s += `<path d="M${x-18},${y-16} Q${x},${y-38} ${x+18},${y-16}" fill="#2a1c10"/>`;
+          s += `<circle cx="${x-6}" cy="${y-10}" r="2" fill="#2a1c10"/><circle cx="${x+6}" cy="${y-10}" r="2" fill="#2a1c10"/>`;
+        }
+      }
+      return s;
+    }},
+    { name:'No. 5, 1948', artist:'Jackson Pollock', category:'Abstract Expressionism', bg:'#c9a876', draw:()=>{
+      let s = '';
+      for(let i=0;i<28;i++){
+        const x1=rand(39,257),y1=rand(37,273),x2=rand(39,257),y2=rand(37,273);
+        s += `<path d="M${x1.toFixed(0)},${y1.toFixed(0)} Q${((x1+x2)/2+rand(-30,30)).toFixed(0)},${((y1+y2)/2+rand(-30,30)).toFixed(0)} ${x2.toFixed(0)},${y2.toFixed(0)}" fill="none" stroke="${pick(['#1a1410','#e8e0cc','#8a6a3a','#3a2c1a'])}" stroke-width="${rand(1,3).toFixed(1)}" opacity="0.75"/>`;
+      }
+      return s;
+    }},
+    { name:'Whaam!', artist:'Roy Lichtenstein', category:'Pop Art', bg:'#e8503a', draw:()=>{
+      let s = '';
+      s += `<path d="M150,60 L172,130 L230,110 L182,160 L220,220 L155,180 L140,250 L120,175 L60,200 L110,145 L70,90 L135,115 Z" fill="#f2c22a" stroke="#1a1a1a" stroke-width="2"/>`;
+      for(let i=0;i<20;i++){ s += `<circle cx="${rand(45,250).toFixed(0)}" cy="${rand(45,265).toFixed(0)}" r="3" fill="#1a1a1a" opacity="0.2"/>`; }
+      s += `<text x="150" y="150" text-anchor="middle" font-family="Impact, sans-serif" font-size="26" fill="#1a1a1a" font-weight="700">WHAAM!</text>`;
+      return s;
+    }},
+    { name:"Campbell's Soup Cans", artist:'Andy Warhol', category:'Pop Art', bg:'#f2ede0', draw:()=>{
+      let s = '';
+      for(let r=0;r<2;r++){
+        for(let c=0;c<3;c++){
+          const x=65+c*70, y=90+r*105;
+          s += `<rect x="${x-24}" y="${y-38}" width="48" height="76" rx="4" fill="#e8e0d0" stroke="#8a8070" stroke-width="1.3"/>`;
+          s += `<rect x="${x-24}" y="${y-14}" width="48" height="20" fill="#c9302a"/>`;
+          s += `<text x="${x}" y="${y}" text-anchor="middle" font-family="Georgia, serif" font-size="7" fill="#f2ede0" font-weight="700">SOUP</text>`;
+          s += `<rect x="${x-24}" y="${y-38}" width="48" height="8" fill="#d9a441" opacity="0.8"/>`;
+        }
+      }
+      return s;
+    }},
+    { name:'Woman I', artist:'Willem de Kooning', category:'Abstract Expressionism', bg:'#e0c040', draw:()=>{
+      let s = '';
+      s += `<path d="M100,273 Q90,150 130,90 Q150,60 175,90 Q210,150 200,273 Z" fill="#e8a878" stroke="#8a3a1a" stroke-width="2" opacity="0.9"/>`;
+      s += `<path d="M115,110 Q150,90 185,112" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round"/>`;
+      s += `<ellipse cx="132" cy="128" rx="12" ry="8" fill="#fff" opacity="0.9"/><circle cx="132" cy="128" r="4" fill="#1a1a1a"/>`;
+      s += `<ellipse cx="172" cy="126" rx="12" ry="8" fill="#fff" opacity="0.9"/><circle cx="172" cy="126" r="4" fill="#1a1a1a"/>`;
+      s += `<path d="M120,165 Q150,190 185,162" fill="none" stroke="#c9302a" stroke-width="10" stroke-linecap="round"/>`;
+      for(let i=0;i<8;i++){ s += `<path d="M${rand(90,210).toFixed(0)},${rand(200,270).toFixed(0)} l${rand(-20,20).toFixed(0)},${rand(-20,20).toFixed(0)}" stroke="${pick(['#3a5c8a','#8fae5a'])}" stroke-width="3" opacity="0.6"/>`; }
+      return s;
+    }}
+  ];
+
+  /* ---------------- Historic, Romantic & Global Vistas (8) ---------------- */
+
+  const HISTORIC = [
+    { name:'The Great Wave off Kanagawa', artist:'Hokusai', category:'Ukiyo-e Woodblock', bg:'#dce8ec', draw:()=>{
+      let s = '';
+      s += `<path d="M39,150 Q120,220 39,273 L257,273 Q200,200 220,150 Q170,190 130,150 Q100,190 39,150 Z" fill="#3a6a94" stroke="#1a3a5c" stroke-width="1.5"/>`;
+      s += `<path d="M39,150 Q80,130 130,150 Q100,160 90,180 Q70,165 39,175 Z" fill="#f2ede0" opacity="0.9"/>`;
+      s += `<path d="M170,140 Q200,120 230,145 Q210,150 205,165 Q188,150 170,155 Z" fill="#f2ede0" opacity="0.9"/>`;
+      s += `<path d="M120,240 L200,250 L200,258 L120,255 Z" fill="#5c4a3a"/>`;
+      s += `<path d="M160,60 L200,120 L120,120 Z" fill="#c9c9c1" opacity="0.7"/>`;
+      return s;
+    }},
+    { name:'Liberty Leading the People', artist:'Eugène Delacroix', category:'Romanticism', bg:'#8a8070', draw:()=>{
+      let s = '';
+      for(let i=0;i<4;i++){ s += `<circle cx="${rand(60,240).toFixed(0)}" cy="${rand(80,150).toFixed(0)}" r="${rand(20,35).toFixed(0)}" fill="#a89c8a" opacity="0.4"/>`; }
+      s += `<ellipse cx="150" cy="190" rx="20" ry="70" fill="#e8d0a8"/>`;
+      s += `<line x1="150" y1="120" x2="130" y2="55" stroke="#5c4a30" stroke-width="3"/>`;
+      s += `<rect x="115" y="55" width="15" height="18" fill="#2a4a8a"/><rect x="130" y="55" width="15" height="18" fill="#e8e4d8"/><rect x="145" y="55" width="15" height="18" fill="#c9302a"/>`;
+      s += `<ellipse cx="105" cy="230" rx="15" ry="35" fill="#3a3a3a" opacity="0.85"/>`;
+      s += `<ellipse cx="195" cy="235" rx="15" ry="35" fill="#5c4a30" opacity="0.85"/>`;
+      return s;
+    }},
+    { name:'The Wanderer Above the Sea of Fog', artist:'Caspar David Friedrich', category:'Romanticism', bg:'#b8c4cc', draw:()=>{
+      let s = '';
+      s += `<path d="M39,230 Q100,210 150,225 Q200,208 257,228 L257,273 L39,273 Z" fill="#dfe9ec" opacity="0.85"/>`;
+      s += `<path d="M39,180 Q120,150 200,175 Q230,160 257,175" fill="none" stroke="#8ea0a8" stroke-width="10" opacity="0.5"/>`;
+      s += `<path d="M100,140 Q160,100 220,150" fill="none" stroke="#6a7c86" stroke-width="14" opacity="0.4"/>`;
+      s += `<ellipse cx="150" cy="215" rx="10" ry="34" fill="#1c1a18"/>`;
+      s += `<rect x="144" y="200" width="12" height="3" fill="#1c1a18"/>`;
+      return s;
+    }},
+    { name:'The Fighting Temeraire', artist:'J.M.W. Turner', category:'Romanticism', bg:'#e0855a', draw:()=>{
+      let s = '';
+      s += `<rect x="39" y="200" width="218" height="73" fill="#e0855a" opacity="0.5"/>`;
+      s += `<circle cx="120" cy="120" r="34" fill="#f2c98a" opacity="0.8"/>`;
+      s += `<path d="M150,270 L150,120 L165,270 Z" fill="#4a3a30" opacity="0.85"/>`;
+      s += `<line x1="150" y1="120" x2="150" y2="70" stroke="#4a3a30" stroke-width="2"/>`;
+      s += `<line x1="150" y1="90" x2="130" y2="100" stroke="#4a3a30" stroke-width="1.5"/>`;
+      s += `<path d="M190,255 L215,250 L215,262 L190,265 Z" fill="#1a1410"/>`;
+      s += `<line x1="204" y1="250" x2="204" y2="235" stroke="#1a1410" stroke-width="2"/>`;
+      return s;
+    }},
+    { name:'The Third of May 1808', artist:'Francisco Goya', category:'Romanticism', bg:'#221e1a', draw:()=>{
+      let s = '';
+      s += `<rect x="150" y="140" width="16" height="20" fill="#f2e9c9"/>`;
+      s += `<ellipse cx="158" cy="150" rx="55" ry="45" fill="#f2e08a" opacity="0.35"/>`;
+      s += `<ellipse cx="150" cy="200" rx="14" ry="45" fill="#e8e0d0"/>`;
+      s += `<path d="M136,175 L150,150 L164,175" fill="none" stroke="#e8e0d0" stroke-width="8" stroke-linecap="round"/>`;
+      for(let i=0;i<5;i++){ s += `<rect x="${190+i*8}" y="185" width="3" height="30" fill="#1a1614"/>`; }
+      s += `<ellipse cx="100" cy="235" rx="20" ry="30" fill="#0e0c0a" opacity="0.85"/>`;
+      return s;
+    }},
+    { name:'Portrait of Adele Bloch-Bauer I', artist:'Gustav Klimt', category:'Symbolism / Art Nouveau', bg:'#c9962e', draw:()=>{
+      let s = '';
+      for(let i=0;i<20;i++){ s += `<rect x="${rand(39,247).toFixed(0)}" y="${rand(37,265).toFixed(0)}" width="8" height="8" fill="${pick(['#a9762a','#e8c060','#d9a441','#7a5418'])}" opacity="0.55"/>`; }
+      s += `<path d="M115,273 Q100,160 150,130 Q200,160 185,273 Z" fill="#e8c060" stroke="#8a6018" stroke-width="1.3"/>`;
+      s += `<circle cx="150" cy="115" r="20" fill="#e8c9a0"/>`;
+      s += `<path d="M130,95 Q150,75 170,95 Q175,110 150,115 Q125,110 130,95 Z" fill="#3a2a1a"/>`;
+      for(let i=0;i<6;i++){ s += `<circle cx="${125+i*10}" cy="${190+((i%2)*40)}" r="5" fill="${pick(['#3a5c22','#c9302a'])}" opacity="0.75"/>`; }
+      return s;
+    }},
+    { name:'The Two Fridas', artist:'Frida Kahlo', category:'Surrealism / Mexican Modernism', bg:'#8a9cac', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="105" cy="200" rx="30" ry="70" fill="#f2ede0" stroke="#a9a084" stroke-width="1.3"/>`;
+      s += `<ellipse cx="195" cy="200" rx="30" ry="70" fill="#3a5c8a" stroke="#1a3a5c" stroke-width="1.3"/>`;
+      s += `<circle cx="105" cy="110" r="16" fill="#d9a878"/><circle cx="195" cy="110" r="16" fill="#d9a878"/>`;
+      s += `<path d="M105,150 Q150,140 195,150" fill="none" stroke="#c9302a" stroke-width="3"/>`;
+      s += `<circle cx="150" cy="150" r="8" fill="#c9302a" opacity="0.85"/>`;
+      s += `<path d="M97,102 Q105,90 113,102" fill="none" stroke="#1a1410" stroke-width="2"/><path d="M187,102 Q195,90 203,102" fill="none" stroke="#1a1410" stroke-width="2"/>`;
+      return s;
+    }},
+    { name:'The Arnolfini Portrait', artist:'Jan van Eyck', category:'Northern Renaissance', bg:'#3a4a3a', draw:()=>{
+      let s = '';
+      s += `<ellipse cx="112" cy="200" rx="24" ry="68" fill="#1a1a1a"/>`;
+      s += `<path d="M170,150 Q160,220 190,270 L220,270 Q210,200 195,150 Z" fill="#4a6a3a" stroke="#2a4020" stroke-width="1.3"/>`;
+      s += `<circle cx="112" cy="118" r="13" fill="#e8c9a0"/><circle cx="185" cy="128" r="13" fill="#e8c9a0"/>`;
+      s += `<circle cx="150" cy="120" r="16" fill="#e8e0d0" stroke="#a9a084" stroke-width="1.3"/>`;
+      s += `<line x1="150" y1="65" x2="150" y2="105" stroke="#5c4a30" stroke-width="2"/>`;
+      s += `<circle cx="140" cy="70" r="4" fill="#d9a441"/><circle cx="160" cy="70" r="4" fill="#d9a441"/>`;
+      return s;
+    }}
+  ];
+
+  const ARTWORKS = CLASSICAL.concat(IMPRESSIONIST, MODERN, ABSTRACT_POP, HISTORIC);
+
+  /* ---------------- film-roll deck (random order, no repeats until reshuffled) ---------------- */
+
+  let deck = [];
+  function reshuffle(){ deck = shuffle(ARTWORKS.slice()); }
+  function nextArtwork(){
+    if(deck.length === 0) reshuffle();
+    return deck.pop();
+  }
+  reshuffle();
+  framesLeftEl.textContent = String(deck.length).padStart(3,'0');
+
+  /* ---------------- capture flow ---------------- */
+
+  function takePhoto(){
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    frameNumber++;
+    frameCountEl.textContent = 'NO. ' + String(frameNumber).padStart(3,'0');
+
+    recIndicator.classList.add('flash');
+    setTimeout(()=> recIndicator.classList.remove('flash'), 900);
+
+    const art = nextArtwork();
+    framesLeftEl.textContent = String(deck.length).padStart(3,'0');
+
+    setTimeout(()=>{
+      const svgMarkup = renderScene(art);
+      viewfinder.querySelector('.placeholder-text')?.remove();
+      const existingSvg = viewfinder.querySelector('svg');
+      if(existingSvg) existingSvg.remove();
+      viewfinder.insertAdjacentHTML('afterbegin', svgMarkup);
+    }, 90);
+  }
+
+  shutterBtn.addEventListener('click', takePhoto);
+  shutterBtn.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); takePhoto(); }
+  });
+
+  function startAuto(){
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON (every 1s)';
+    if(hintEl) hintEl.textContent = 'auto-capturing every 1 second — tap AUTO SHUTTER to stop';
+    takePhoto();
+    autoTimer = setInterval(takePhoto, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto(){
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(hintEl) hintEl.textContent = 'tap the orange button to take a photo';
+    if(autoTimer){ clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  autoBtn.addEventListener('click', ()=>{
+    if(autoActive) stopAuto(); else startAuto();
+  });
+
+})();
+</script>
+</body>
+</html>
