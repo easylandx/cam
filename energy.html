@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Renewable Energy Systems &amp; Green Tech Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #334155;
+    --focus: #7dd3fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #090d16 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #7dd3fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  <footer></footer>
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL TECH-21 · GREEN POWER EDITION</p>
+    <h1>Renewable Energy Systems</h1>
+    <p>Press shutter to examine 21 green power generation technologies and their origins.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>TECH SYSTEM</span>
+      <span>f/1.8 &nbsp;·&nbsp; GRID</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine renewable systems
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">POWER</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to cycle through technologies</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24', '#c084fc'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#070d1a"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0f172a" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#02060a" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0b1320"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#070d1a" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    lines = [];
+    curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Renewable Energy Systems SVG Visualizations ---------------- */
+  const TECHS = [
+    {
+      name: 'Darrieus VAWT',
+      region: 'Paris (France / Western Europe)',
+      desc: 'An omnidirectional wind turbine featuring curved C-shaped rotor blades capturing wind without active yaw orientation.',
+      bg: '#0f2942',
+      draw: () => `<line x1="150" y1="70" x2="150" y2="230" stroke="#94a3b8" stroke-width="4"/><path d="M150,70 Q90,150 150,230" fill="none" stroke="#38bdf8" stroke-width="5"/><path d="M150,70 Q210,150 150,230" fill="none" stroke="#38bdf8" stroke-width="5"/><ellipse cx="150" cy="150" rx="30" ry="10" fill="none" stroke="#7dd3fc" stroke-dasharray="4,4"/>`
+    },
+    {
+      name: 'Enhanced Geothermal Systems',
+      region: 'Fenton Hill, New Mexico (USA / North America)',
+      desc: 'Pumps high-pressure water through artificial fractures in hot crystalline basement rock to generate commercial steam.',
+      bg: '#3b1a12',
+      draw: () => `<rect x="130" y="80" width="40" height="150" fill="#78350f"/><line x1="140" y1="80" x2="140" y2="230" stroke="#ef4444" stroke-width="3"/><line x1="160" y1="80" x2="160" y2="230" stroke="#3b82f6" stroke-width="3"/><circle cx="150" cy="150" r="25" fill="#ea580c" opacity="0.6"/>`
+    },
+    {
+      name: 'Concentrated Solar Power Tower',
+      region: 'Solar Two, California (USA / North America)',
+      desc: 'Fields of dual-axis tracking heliostats focus sunlight onto a central receiver tower filled with molten salt.',
+      bg: '#3b2f12',
+      draw: () => `<rect x="144" y="100" width="12" height="130" fill="#cbd5e1"/><circle cx="150" cy="100" r="14" fill="#facc15"/><line x1="100" y1="210" x2="200" y2="210" stroke="#eab308" stroke-width="4"/><line x1="110" y1="180" x2="190" y2="180" stroke="#eab308" stroke-width="4"/>`
+    },
+    {
+      name: 'Tidal Stream Subsea Turbines',
+      region: 'Strangford Lough (Northern Ireland / British Isles)',
+      desc: 'Bi-directional underwater axial-flow turbines driven by predictable, high-velocity coastal tidal currents.',
+      bg: '#082f49',
+      draw: () => `<rect x="130" y="160" width="40" height="60" fill="#334155"/><line x1="150" y1="110" x2="150" y2="160" stroke="#64748b" stroke-width="8"/><circle cx="150" cy="110" r="35" fill="none" stroke="#38bdf8" stroke-width="6"/><line x1="150" y1="75" x2="150" y2="145" stroke="#7dd3fc" stroke-width="4"/>`
+    },
+    {
+      name: 'Perovskite-Silicon Tandem Cells',
+      region: 'Oxford University (England / Western Europe)',
+      desc: 'Multi-junction photovoltaic cells combining traditional silicon with crystal perovskite layers for high conversion efficiencies.',
+      bg: '#1e1b4b',
+      draw: () => `<rect x="100" y="90" width="100" height="120" rx="6" fill="#312e81"/><rect x="110" y="100" width="80" height="45" fill="#6366f1"/><rect x="110" y="155" width="80" height="45" fill="#e0e7ff"/><line x1="100" y1="150" x2="200" y2="150" stroke="#facc15" stroke-width="3"/>`
+    },
+    {
+      name: 'Pumped-Storage Hydro Infrastructure',
+      region: 'Cruachan Power Station (Scotland / UK)',
+      desc: 'Pumps water uphill to a high reservoir during low-demand periods and releases it through turbines during peaks.',
+      bg: '#042f2e',
+      draw: () => `<path d="M100,80 L200,80 L180,130 L120,130 Z" fill="#0ea5e9"/><path d="M120,190 L180,190 L200,240 L100,240 Z" fill="#0369a1"/><path d="M140,130 L140,190 L160,190 L160,130 Z" fill="#94a3b8"/>`
+    },
+    {
+      name: 'Wave Energy Attenuator',
+      region: 'Aguçadoura (Portugal / Southern Europe)',
+      desc: 'A semi-submerged articulated cylinder generating electricity by capturing hydraulic pressure changes from ocean waves.',
+      bg: '#0c4a6e',
+      draw: () => `<path d="M80,150 Q115,120 150,150 Q185,180 220,150" fill="none" stroke="#38bdf8" stroke-width="12" stroke-linecap="round"/><circle cx="115" cy="135" r="6" fill="#bae6fd"/><circle cx="185" cy="165" r="6" fill="#bae6fd"/>`
+    },
+    {
+      name: 'Microbial Fuel Cell Bio-Energy',
+      region: 'Wastewater Treatment Facilities (Global)',
+      desc: 'Bio-electrochemical systems harvesting electrical energy directly from organic wastewater using active bacteria.',
+      bg: '#143826',
+      draw: () => `<rect x="110" y="100" width="80" height="110" rx="8" fill="#166534"/><line x1="150" y1="100" x2="150" y2="210" stroke="#4ade80" stroke-width="3" stroke-dasharray="6,6"/><circle cx="130" cy="150" r="10" fill="#86efac"/><circle cx="170" cy="150" r="10" fill="#86efac"/>`
+    },
+    {
+      name: 'Rooftop Building-Integrated PV',
+      region: 'Freiburg (Germany / Central Europe)',
+      desc: 'Solar energy generation systems embedded directly into building envelopes, replacing conventional roofing.',
+      bg: '#291811',
+      draw: () => `<path d="M100,160 L150,100 L200,160 Z" fill="#b45309"/><rect x="115" y="130" width="70" height="60" fill="#1e3a8a"/><line x1="150" y1="130" x2="150" y2="190" stroke="#93c5fd" stroke-width="2"/><line x1="115" y1="160" x2="185" y2="160" stroke="#93c5fd" stroke-width="2"/>`
+    },
+    {
+      name: 'Offshore Floating Wind Turbines',
+      region: 'Kårstø (Norway / Northern Europe)',
+      desc: 'Deep-water wind turbines mounted on large ballasted spar-buoys anchored to the sea floor with tensioned lines.',
+      bg: '#082f49',
+      draw: () => `<line x1="150" y1="90" x2="150" y2="210" stroke="#cbd5e1" stroke-width="6"/><rect x="142" y="180" width="16" height="40" fill="#0284c7"/><circle cx="150" cy="90" r="35" fill="none" stroke="#38bdf8" stroke-width="4"/><line x1="115" y1="90" x2="185" y2="90" stroke="#7dd3fc" stroke-width="4"/>`
+    },
+    {
+      name: 'Ocean Thermal Energy Conversion',
+      region: 'Kona, Hawaii (USA / North America)',
+      desc: 'Exploits the deep-to-surface temperature gradient of tropical ocean waters to run a closed Rankine cycle turbine.',
+      bg: '#03263b',
+      draw: () => `<rect x="135" y="90" width="30" height="130" fill="#0284c7"/><circle cx="150" cy="155" r="18" fill="#e0f2fe"/><path d="M120,110 L180,200" stroke="#f59e0b" stroke-width="4"/>`
+    },
+    {
+      name: 'Airborne Wind Energy (KiteGen)',
+      region: 'Turin (Italy / Southern Europe)',
+      desc: 'High-altitude tethered kite system flying cross-wind patterns to drive ground-based electric generators.',
+      bg: '#172554',
+      draw: () => `<polygon points="150,80 135,110 165,110" fill="#f43f5e"/><line x1="150" y1="110" x2="150" y2="210" stroke="#94a3b8" stroke-width="2"/><rect x="140" y="210" width="20" height="15" fill="#334155"/>`
+    },
+    {
+      name: 'Biogas Anaerobic Digestion Plants',
+      region: 'Agricultural Bioreactors (Denmark / Northern Europe)',
+      desc: 'Sealed industrial tanks utilizing methanogenic microbial communities to turn organic waste into high-purity methane.',
+      bg: '#1b2e1b',
+      draw: () => `<rect x="110" y="110" width="80" height="90" rx="40" fill="#15803d"/><circle cx="150" cy="100" r="15" fill="#22c55e"/><line x1="120" y1="150" x2="180" y2="150" stroke="#86efac" stroke-width="4"/>`
+    },
+    {
+      name: 'Salinity Gradient (Osmotic) Power',
+      region: 'Statkraft Pilot Plant (Norway / Northern Europe)',
+      desc: 'Harvests chemical potential energy released when fresh river water and saline ocean water mix across membranes.',
+      bg: '#0d233a',
+      draw: () => `<rect x="100" y="110" width="100" height="90" fill="#0284c7"/><line x1="150" y1="110" x2="150" y2="200" stroke="#facc15" stroke-width="6" stroke-dasharray="8,4"/><line x1="115" y1="150" x2="185" y2="150" stroke="#ffffff" stroke-width="2"/>`
+    },
+    {
+      name: 'Solar Chimney (Updraft Tower)',
+      region: 'Manzanares Prototype (Spain / Southern Europe)',
+      desc: 'A massive greenhouse canopy combined with a tall central concrete chimney using buoyant heated air currents.',
+      bg: '#3a2e12',
+      draw: () => `<ellipse cx="150" cy="200" rx="70" ry="15" fill="#ca8a04"/><rect x="144" y="90" width="12" height="120" fill="#71717a"/><circle cx="150" cy="90" r="12" fill="#38bdf8"/>`
+    },
+    {
+      name: 'In-Stream Hydro Kinetic Turbines',
+      region: 'Mississippi River (USA / North America)',
+      desc: 'Submersible low-head hydro turbines anchored directly into free-flowing river channels without disruptive dams.',
+      bg: '#042a38',
+      draw: () => `<line x1="90" y1="150" x2="210" y2="150" stroke="#0284c7" stroke-width="6"/><circle cx="150" cy="150" r="30" fill="none" stroke="#38bdf8" stroke-width="4"/><line x1="130" y1="130" x2="170" y2="170" stroke="#7dd3fc" stroke-width="4"/>`
+    },
+    {
+      name: 'Compressed Air Energy Storage (CAES)',
+      region: 'Huntorf (Germany / Central Europe)',
+      desc: 'Grid-scale storage plant compressing surplus electrical power and storing it inside massive underground salt caverns.',
+      bg: '#271f16',
+      draw: () => `<ellipse cx="150" cy="160" rx="55" ry="35" fill="#78350f"/><rect x="135" y="80" width="30" height="50" fill="#52525b"/><line x1="150" y1="80" x2="150" y2="130" stroke="#38bdf8" stroke-width="4"/>`
+    },
+    {
+      name: 'Floating Solar PV Arrays',
+      region: 'Hydropower Reservoirs (Japan / East Asia)',
+      desc: 'Modular photovoltaic panel arrays mounted on buoyant pontoons over calm inland water bodies.',
+      bg: '#092336',
+      draw: () => `<rect x="95" y="160" width="110" height="16" rx="6" fill="#0284c7"/><rect x="105" y="130" width="90" height="35" fill="#1e3a8a"/><line x1="115" y1="130" x2="115" y2="165" stroke="#93c5fd" stroke-width="2"/><line x1="150" y1="130" x2="150" y2="165" stroke="#93c5fd" stroke-width="2"/><line x1="185" y1="130" x2="185" y2="165" stroke="#93c5fd" stroke-width="2"/>`
+    },
+    {
+      name: 'Waste-to-Energy Incineration Systems',
+      region: 'Copenhagen (Denmark / Northern Europe)',
+      desc: 'High-temperature municipal waste combustion facilities generating combined district heating and electricity.',
+      bg: '#331d16',
+      draw: () => `<rect x="110" y="120" width="80" height="100" fill="#52525b"/><polygon points="110,120 150,80 190,120" fill="#71717a"/><path d="M165,80 Q175,50 160,35" fill="none" stroke="#a1a1aa" stroke-width="4"/>`
+    },
+    {
+      name: 'Direct Air Capture & Storage (DACCS)',
+      region: 'Hellisheiði (Iceland / North Atlantic)',
+      desc: 'Industrial air-contactor facilities permanently mineralizing captured carbon dioxide deep underground in basalt.',
+      bg: '#1b2533',
+      draw: () => `<rect x="115" y="90" width="70" height="120" rx="8" fill="#334155"/><circle cx="150" cy="150" r="25" fill="#0284c7"/><line x1="150" y1="210" x2="150" y2="240" stroke="#166534" stroke-width="6"/>`
+    },
+    {
+      name: 'Thermoelectric Generator Waste-Heat',
+      region: 'Industrial Smelters (Global Industrial)',
+      desc: 'Solid-state semiconductor devices converting industrial waste heat directly into electricity via the Seebeck effect.',
+      bg: '#381611',
+      draw: () => `<rect x="105" y="110" width="90" height="80" fill="#b91c1c"/><rect x="120" y="125" width="60" height="50" fill="#facc15"/><line x1="150" y1="90" x2="150" y2="110" stroke="#ef4444" stroke-width="4"/><line x1="150" y1="190" x2="150" y2="210" stroke="#38bdf8" stroke-width="4"/>`
+    }
+  ];
+
+  function renderCurrent(){
+    const t = TECHS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(t.bg, currentIndex)}
+        ${t.draw()}
+        ${caption(t.name, t.region, t.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % TECHS.length;
+    renderCurrent();
+
+    const rec = viewfinder.querySelector('#recIndicator');
+    const flash = viewfinder.querySelector('#flashOverlay');
+    const fc = viewfinder.querySelector('#frameCount');
+
+    if(rec) rec.classList.add('flash');
+    if(flash) {
+      flash.classList.remove('go');
+      void flash.offsetWidth;
+      flash.classList.add('go');
+    }
+    if(fc) fc.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+
+    setTimeout(() => {
+      if(rec) rec.classList.remove('flash');
+    }, 700);
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
