@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Ancient Trees Edition</title>
+<style>
+  :root {
+    --body-dark: #0f1c13;
+    --body-mid: #1b3322;
+    --body-light: #2d5a37;
+    --screen-bg: #08100a;
+    --cream: #f2f5e8;
+    --cream-dim: #a3b899;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #2d4a34;
+    --focus: #f59e0b;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #2d5a37 0%, #1b3322 55%, #08100a 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #08100a;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--shutter-orange);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.75;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #f59e0b, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.4);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.4);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #08100a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--shutter-orange);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #08100a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL AT-21 · ARBOREAL EXPEDITION</p>
+    <h1>Legendary Ancient Trees</h1>
+    <p>Point, click, capture living monuments paired with ancient ecosystems.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER EMPTY<br>
+        press shutter to explore ancient canopy
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/60</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span class="val">SEQUENCE</span>
+      </div>
+    </div>
+    <p class="hint">tap the orange button to take a photo</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1400;
+
+  /* ---------------- Web Audio API Shutter Sound Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 1800);
+    playClickBurst(0.07, 0.035, 0.55, 1200);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const GLOWS = ['#f59e0b','#a3e635','#34d399','#fbbf24'];
+  function pickGlow(idx){ return GLOWS[idx % GLOWS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Forest Frame System ---------------- */
+  function forestAndFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#08100a"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#1b3322" opacity="0.5"/>`;
+    const glow = pickGlow(index);
+    s += `<ellipse cx="150" cy="10" rx="180" ry="80" fill="${glow}" opacity="0.18"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#030804" opacity="0.8"/>`;
+    s += `<rect x="26" y="24" width="252" height="270" fill="#000" opacity="0.4"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#2d5a37" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#122417"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(tree, location, extra){
+    let s = '';
+    s += `<rect x="0" y="344" width="300" height="56" fill="#0d170f" opacity="0.95"/>`;
+    s += `<rect x="0" y="344" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="365" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#f2f5e8" letter-spacing="0.3">${escapeXml(tree)}</text>`;
+    s += `<text x="150" y="380" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#a3b899">${escapeXml(location)}</text>`;
+    s += `<text x="150" y="394" text-anchor="middle" font-family="'Courier New', monospace" font-size="7.5" fill="#f59e0b" letter-spacing="1.1">${escapeXml(extra.toUpperCase())}</text>`;
+    return s;
+  }
+
+  /* ---------------- 21 Ancient Tree SVG Portraits ---------------- */
+  const ANCIENT_TREES = [
+    {
+      tree: 'Methuselah (Bristlecone Pine)',
+      location: 'Ancient Bristlecone Pine Forest, White Mountains',
+      extra: 'California, United States',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,260 L250,260 L220,220 L80,220 Z" fill="#292524"/>`;
+        s += `<path d="M140,250 Q160,180 130,130 Q110,90 145,50 Q155,90 150,130 Q180,180 160,250 Z" fill="#78350f"/>`;
+        s += `<path d="M130,130 Q90,110 70,120" fill="none" stroke="#78350f" stroke-width="8" stroke-linecap="round"/>`;
+        s += `<path d="M145,90 Q190,70 210,80" fill="none" stroke="#78350f" stroke-width="6" stroke-linecap="round"/>`;
+        s += `<circle cx="70" cy="120" r="15" fill="#365314" opacity="0.8"/>`;
+        s += `<circle cx="210" cy="80" r="18" fill="#365314" opacity="0.8"/>`;
+        s += `<circle cx="145" cy="50" r="12" fill="#365314" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'General Sherman (Giant Sequoia)',
+      location: 'Giant Forest, Sequoia National Park',
+      extra: 'California, United States',
+      bg: '#0f291e',
+      draw: () => {
+        let s = '';
+        s += `<path d="M110,270 L190,270 L175,80 L125,80 Z" fill="#9a3412"/>`;
+        s += `<path d="M125,80 Q150,40 175,80 Z" fill="#15803d"/>`;
+        s += `<polygon points="90,180 128,150 128,190" fill="#9a3412"/>`;
+        s += `<polygon points="210,170 172,140 172,180" fill="#9a3412"/>`;
+        s += `<circle cx="100" cy="160" r="30" fill="#166534" opacity="0.9"/>`;
+        s += `<circle cx="200" cy="150" r="32" fill="#166534" opacity="0.9"/>`;
+        s += `<circle cx="150" cy="90" r="45" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Hyperion (Coast Redwood)',
+      location: 'Redwood National and State Parks',
+      extra: 'California, United States',
+      bg: '#062016',
+      draw: () => {
+        let s = '';
+        s += `<rect x="140" y="40" width="20" height="230" fill="#7c2d12"/>`;
+        s += `<polygon points="150,30 110,120 190,120" fill="#14532d"/>`;
+        s += `<polygon points="150,80 100,180 200,180" fill="#14532d"/>`;
+        s += `<polygon points="150,140 90,250 210,250" fill="#166534"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Gran Abuelo (Patagonian Cypress)',
+      location: 'Alerce Costero National Park Coastal Rainforest',
+      extra: 'Chile',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M115,270 Q145,160 135,80 L165,80 Q155,160 185,270 Z" fill="#451a03"/>`;
+        s += `<ellipse cx="150" cy="80" rx="35" ry="25" fill="#065f46"/>`;
+        s += `<ellipse cx="130" cy="120" rx="40" ry="20" fill="#047857"/>`;
+        s += `<ellipse cx="170" cy="160" rx="45" ry="22" fill="#065f46"/>`;
+        s += `<path d="M135,180 Q100,200 80,240" fill="none" stroke="#451a03" stroke-width="8"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Old Tjikko (Norway Spruce)',
+      location: 'Fulufjället Mountain Subalpine Scrub',
+      extra: 'Sweden',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M30,250 L270,250 L250,220 L50,220 Z" fill="#334155"/>`;
+        s += `<line x1="150" y1="240" x2="150" y2="80" stroke="#78350f" stroke-width="6"/>`;
+        s += `<polygon points="150,60 135,120 165,120" fill="#064e3b"/>`;
+        s += `<polygon points="150,100 130,170 170,170" fill="#064e3b"/>`;
+        s += `<polygon points="150,150 120,230 180,230" fill="#047857"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Jōmon Sugi (Japanese Cedar)',
+      location: 'Yakushima Island Primeval Temperate Rainforest',
+      extra: 'Japan',
+      bg: '#022c22',
+      draw: () => {
+        let s = '';
+        s += `<path d="M100,270 Q150,200 120,120 L180,120 Q150,200 200,270 Z" fill="#78350f"/>`;
+        s += `<circle cx="150" cy="110" r="55" fill="#065f46" opacity="0.95"/>`;
+        s += `<circle cx="110" cy="140" r="40" fill="#047857" opacity="0.9"/>`;
+        s += `<circle cx="190" cy="140" r="40" fill="#047857" opacity="0.9"/>`;
+        s += `<path d="M70,270 Q120,250 150,270 Q180,250 230,270" fill="none" stroke="#15803d" stroke-width="10"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Pando (Quaking Aspen Colony)',
+      location: 'Fishlake National Forest, Colorado Plateau',
+      extra: 'Utah, United States',
+      bg: '#2e1000',
+      draw: () => {
+        let s = '';
+        const trunks = [70, 110, 150, 190, 230];
+        trunks.forEach((x, i) => {
+          s += `<rect x="${x-4}" y="100" width="8" height="160" fill="#e2e8f0"/>`;
+          s += `<circle cx="${x}" cy="${110 - (i%2)*20}" r="25" fill="#eab308" opacity="0.85"/>`;
+        });
+        return s;
+      }
+    },
+    {
+      tree: 'Sarv-e Abarkuh (Mediterranean Cypress)',
+      location: 'Zagros Foothills & Arid Basin Oasis',
+      extra: 'Iran',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<rect x="142" y="200" width="16" height="70" fill="#78350f"/>`;
+        s += `<ellipse cx="150" cy="130" rx="35" ry="100" fill="#15803d"/>`;
+        s += `<ellipse cx="150" cy="130" rx="25" ry="90" fill="#166534"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'The Major Oak (English Oak)',
+      location: 'Sherwood Forest Ancient Woodland',
+      extra: 'Nottinghamshire, England',
+      bg: '#14281d',
+      draw: () => {
+        let s = '';
+        s += `<path d="M100,270 Q150,180 150,150 Q150,180 200,270 Z" fill="#543210"/>`;
+        s += `<line x1="120" y1="210" x2="70" y2="240" stroke="#78350f" stroke-width="8"/>`;
+        s += `<line x1="180" y1="210" x2="230" y2="240" stroke="#78350f" stroke-width="8"/>`;
+        s += `<circle cx="150" cy="110" r="65" fill="#15803d"/>`;
+        s += `<circle cx="90" cy="130" r="45" fill="#166534"/>`;
+        s += `<circle cx="210" cy="130" r="45" fill="#166534"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Tane Mahuta (Kauri)',
+      location: 'Waipoua Kauri Forest',
+      extra: 'Northland, New Zealand',
+      bg: '#092b00',
+      draw: () => {
+        let s = '';
+        s += `<rect x="110" y="110" width="80" height="160" fill="#a16207"/>`;
+        s += `<path d="M110,110 Q60,70 40,60 M190,110 Q240,70 260,60" stroke="#a16207" stroke-width="14" fill="none"/>`;
+        s += `<circle cx="150" cy="60" r="70" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'El Árbol del Tule (Montezuma Cypress)',
+      location: 'Santa María del Tule Riparian Valley',
+      extra: 'Oaxaca, Mexico',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,270 C80,160 220,160 240,270 Z" fill="#78350f"/>`;
+        s += `<circle cx="150" cy="120" r="80" fill="#166534"/>`;
+        s += `<circle cx="80" cy="150" r="50" fill="#15803d"/>`;
+        s += `<circle cx="220" cy="150" r="50" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Chestnut Tree of One Hundred Horses',
+      location: 'Mount Etna Volcanic Slope Woodlands',
+      extra: 'Sicily, Italy',
+      bg: '#2a0800',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,270 Q90,180 120,270 M130,270 Q160,170 180,270 M190,270 Q210,190 240,270" fill="none" stroke="#78350f" stroke-width="18"/>`;
+        s += `<ellipse cx="150" cy="120" rx="95" ry="55" fill="#15803d" opacity="0.9"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Llangernyw Yew (Common Yew)',
+      location: 'North Wales Pastoral & Yew Ecosystem',
+      extra: 'Wales, United Kingdom',
+      bg: '#022c22',
+      draw: () => {
+        let s = '';
+        s += `<path d="M80,270 L120,150 L180,150 L220,270 Z" fill="#451a03"/>`;
+        s += `<ellipse cx="150" cy="200" rx="30" ry="50" fill="#022c22"/>`;
+        s += `<circle cx="150" cy="110" r="60" fill="#065f46"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Jaya Sri Maha Bodhi (Sacred Fig)',
+      location: 'Mahamewna Dry-Zone Garden Canopy',
+      extra: 'Anuradhapura, Sri Lanka',
+      bg: '#1e1b4b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M130,270 Q160,190 140,140" stroke="#78350f" stroke-width="12" fill="none"/>`;
+        s += `<line x1="140" y1="180" x2="200" y2="230" stroke="#9a3412" stroke-width="6"/>`;
+        s += `<circle cx="140" cy="100" r="50" fill="#65a30d"/>`;
+        s += `<circle cx="200" cy="230" r="20" fill="#65a30d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Patriarcha da Floresta (Jequitibá-rosa)',
+      location: 'Santa Rita do Passa Quatro Reserve',
+      extra: 'Brazil',
+      bg: '#022c22',
+      draw: () => {
+        let s = '';
+        s += `<path d="M130,270 L145,90 L155,90 L170,270 Z" fill="#78350f"/>`;
+        s += `<circle cx="150" cy="70" r="60" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'The Senator (Bald Cypress)',
+      location: 'Central Florida Subtropical Swamp Forest',
+      extra: 'Florida, United States',
+      bg: '#082f49',
+      draw: () => {
+        let s = '';
+        s += `<rect x="0" y="230" width="300" height="40" fill="#0c4a6e"/>`;
+        s += `<path d="M120,250 L140,50 L160,50 L180,250 Z" fill="#78350f"/>`;
+        s += `<ellipse cx="150" cy="60" rx="30" ry="40" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Te Matua Ngahere (Kauri)',
+      location: 'Waipoua Primeval Coastal Rainforest',
+      extra: 'Northland, New Zealand',
+      bg: '#052e16',
+      draw: () => {
+        let s = '';
+        s += `<rect x="100" y="100" width="100" height="170" fill="#854d0e"/>`;
+        s += `<circle cx="150" cy="70" r="65" fill="#166534"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Avenue of the Baobabs (Grandidier\'s)',
+      location: 'Menabe Region Dry Deciduous Forest Belt',
+      extra: 'Madagascar',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<path d="M120,270 Q130,120 110,80 L190,80 Q170,120 180,270 Z" fill="#a16207"/>`;
+        s += `<path d="M110,80 Q80,50 60,60 M190,80 Q220,50 240,60 M150,80 L150,40" stroke="#a16207" stroke-width="8" fill="none"/>`;
+        s += `<circle cx="60" cy="60" r="15" fill="#65a30d"/>`;
+        s += `<circle cx="240" cy="60" r="15" fill="#65a30d"/>`;
+        s += `<circle cx="150" cy="40" r="18" fill="#65a30d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Dragon\'s Blood Tree (Dracaena cinnabari)',
+      location: 'Socotra Island High-Altitude Xerophytic Shrubland',
+      extra: 'Yemen',
+      bg: '#291e07',
+      draw: () => {
+        let s = '';
+        s += `<path d="M145,270 L145,160 M145,180 L100,120 M145,180 L190,120" stroke="#78350f" stroke-width="10" fill="none"/>`;
+        s += `<path d="M60,110 Q150,70 240,110 Q150,125 60,110 Z" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'The Great Banyan (Ficus benghalensis)',
+      location: 'Lower Gangetic Plains Eco-region',
+      extra: 'West Bengal, India',
+      bg: '#14281d',
+      draw: () => {
+        let s = '';
+        for(let x=60; x<=240; x+=30){
+          s += `<line x1="${x}" y1="120" x2="${x}" y2="270" stroke="#78350f" stroke-width="5"/>`;
+        }
+        s += `<ellipse cx="150" cy="110" rx="110" ry="45" fill="#15803d"/>`;
+        return s;
+      }
+    },
+    {
+      tree: 'Angel Oak (Southern Live Oak)',
+      location: 'Johns Island Lowcountry Maritime Forest',
+      extra: 'South Carolina, United States',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M130,270 L150,160 L170,270 Z" fill="#543210"/>`;
+        s += `<path d="M150,180 Q80,190 40,240 M150,180 Q220,190 260,240" stroke="#543210" stroke-width="12" fill="none"/>`;
+        s += `<circle cx="150" cy="110" r="65" fill="#166534"/>`;
+        s += `<circle cx="50" cy="220" r="25" fill="#15803d"/>`;
+        s += `<circle cx="250" cy="220" r="25" fill="#15803d"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Render Engine ---------------- */
+  function renderCard(item, index) {
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += forestAndFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.tree, item.location, item.extra);
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function capture() {
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 600);
+
+    frameNumber++;
+    const numStr = String(frameNumber).padStart(3, '0');
+    frameCountEl.textContent = `NO. ${numStr}`;
+
+    const currentItem = ANCIENT_TREES[currentIndex];
+    placeholderText.style.display = 'none';
+
+    const existingSvg = viewfinder.querySelector('svg');
+    if (existingSvg) existingSvg.remove();
+
+    viewfinder.insertAdjacentHTML('afterbegin', renderCard(currentItem, currentIndex));
+
+    // Advance sequentially to the next tree, cycling back to start after the last
+    currentIndex = (currentIndex + 1) % ANCIENT_TREES.length;
+  }
+
+  shutterBtn.addEventListener('click', capture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    autoBtn.classList.toggle('active', autoActive);
+    autoBtn.setAttribute('aria-pressed', autoActive ? 'true' : 'false');
+    autoLabel.textContent = autoActive ? 'AUTO SHUTTER · ON' : 'AUTO SHUTTER · OFF';
+
+    if (autoActive) {
+      capture();
+      autoTimer = setInterval(capture, AUTO_INTERVAL_MS);
+    } else {
+      clearInterval(autoTimer);
+    }
+  });
+})();
+</script>
+</body>
+</html>
