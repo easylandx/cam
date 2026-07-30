@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Timbre Gallery — 21 Musical Instruments</title>
+<style>
+  :root {
+    --body-dark: #101e2b;
+    --body-mid: #143542;
+    --body-light: #1c5263;
+    --screen-bg: #071217;
+    --cream: #d6f2fb;
+    --cream-dim: #8ccbe3;
+    --shutter-orange: #2ce8d9;
+    --shutter-orange-dark: #1ab8aa;
+    --amber: #44f2e6;
+    --line: #1a566b;
+    --focus: #47fff3;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1eb8a5 0%, #105a6b 55%, #071318 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -6px 12px rgba(0,0,0,0.35);
+    border: 1px solid #081d2c;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--shutter-orange);
+    box-shadow: 0 0 8px 1px rgba(44,232,217,0.6);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: #40626b;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #45f0ff;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #45f0ff;
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #5ff2e8, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.25);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #061c20;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(44,232,217,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--shutter-orange);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(44,232,217,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(44,232,217,0); }
+  }
+
+  .sample-play-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--shutter-orange-dark);
+    background: rgba(44,232,217,0.10);
+    color: var(--cream);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+  }
+  .sample-play-btn:hover:not(:disabled) {
+    background: rgba(44,232,217,0.2);
+    border-color: var(--shutter-orange);
+  }
+  .sample-play-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    border-color: var(--line);
+    background: rgba(255,255,255,0.03);
+  }
+  .sample-play-btn.sampling {
+    opacity: 1;
+    background: rgba(44,232,217,0.22);
+    border-color: var(--shutter-orange);
+  }
+  .sample-play-icon {
+    font-size: 10px;
+    color: var(--shutter-orange);
+    line-height: 1;
+  }
+  .sample-play-btn.sampling .sample-play-icon {
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--body-dark);
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(68,242,230,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(68,242,230,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL INST-21 · TIMBRE BOOTH</p>
+    <h1>Acoustic Gallery</h1>
+    <p>Point, click, capture sound — 21 instruments &amp; their vivid timbral signatures.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE AUDIO</span>
+      <span>44.1kHz &nbsp;·&nbsp; 24-BIT</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER EMPTY<br>
+        press shutter to sample an instrument timbre
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>SAMPLED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/60</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span class="val">SEQUENCE</span>
+      </div>
+    </div>
+    <p class="hint">tap the teal button to capture an instrument</p>
+
+    <button class="sample-play-btn hud-font" id="sampleBtn" disabled>
+      <span class="sample-play-icon" id="samplePlayIcon">&#9654;</span>
+      <span id="sampleBtnLabel">PLAY 8s TIMBRE SAMPLE</span>
+    </button>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SAMPLER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+  const sampleBtn = document.getElementById('sampleBtn');
+  const sampleBtnLabel = document.getElementById('sampleBtnLabel');
+  const samplePlayIcon = document.getElementById('samplePlayIcon');
+
+  let frameNumber = 0;
+  let currentIndex = 0; // Sequential tracking index
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  let displayedInstrumentIndex = null; // instrument currently shown in viewfinder
+  let isSampling = false;
+  const SAMPLE_DURATION_S = 8;
+
+  /* ---------------- Web Audio API Sound Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Note Name → Frequency Helper ---------------- */
+  const NOTE_INDEX = { C:0,'C#':1,Db:1, D:2,'D#':3,Eb:3, E:4, F:5,'F#':6,Gb:6, G:7,'G#':8,Ab:8, A:9,'A#':10,Bb:10, B:11 };
+  function noteFreq(name) {
+    if (typeof name === 'number') return name;
+    const m = String(name).match(/^([A-G])([#b]?)(-?\d+)$/);
+    if (!m) return 440;
+    const semitone = NOTE_INDEX[m[1] + m[2]];
+    const octave = parseInt(m[3], 10);
+    const midi = (octave + 1) * 12 + semitone;
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  /* ---------------- 8-Second Instrument Timbre Sample Engine (stoppable) ---------------- */
+  // Sustained-tone voice: bowed/blown/reed/drone-style instruments — glides through a note sequence
+  function playSustainSample(preset, session) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + 0.05;
+    const duration = SAMPLE_DURATION_S;
+    const attack = preset.attack ?? 0.4;
+    const release = preset.release ?? 0.6;
+    const peak = preset.peakGain ?? 0.22;
+
+    const notes = (preset.notes && preset.notes.length) ? preset.notes : ['A4'];
+    const freqs = notes.map(noteFreq);
+    const segCount = freqs.length;
+    const segDur = duration / segCount;
+    const glideTime = preset.glide === false ? 0 : Math.min(0.16, segDur * 0.35);
+
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.linearRampToValueAtTime(peak, start + attack);
+    if (preset.articulate) {
+      for (let i = 1; i < segCount; i++) {
+        const t = start + segDur * i;
+        master.gain.setValueAtTime(peak, t - 0.045);
+        master.gain.linearRampToValueAtTime(peak * 0.5, t - 0.015);
+        master.gain.linearRampToValueAtTime(peak, t + 0.025);
+      }
+    }
+    master.gain.setValueAtTime(peak, start + duration - release);
+    master.gain.linearRampToValueAtTime(0.0001, start + duration);
+    master.connect(ctx.destination);
+    session.gainNodes.push(master);
+
+    const voiceGain = ctx.createGain();
+    voiceGain.gain.value = 1;
+    voiceGain.connect(master);
+
+    if (preset.tremoloRate) {
+      const tLfo = ctx.createOscillator();
+      tLfo.frequency.value = preset.tremoloRate;
+      const tGain = ctx.createGain();
+      tGain.gain.value = preset.tremoloDepth ?? 0.2;
+      tLfo.connect(tGain);
+      tGain.connect(voiceGain.gain);
+      tLfo.start(start);
+      tLfo.stop(start + duration + 0.1);
+    }
+
+    let target = voiceGain;
+    if (preset.filterFreq) {
+      const filt = ctx.createBiquadFilter();
+      filt.type = preset.filterType || 'lowpass';
+      filt.frequency.value = preset.filterFreq;
+      filt.Q.value = preset.filterQ ?? 1;
+      filt.connect(voiceGain);
+      target = filt;
+    }
+
+    let vibDetuneGain = null;
+    if (preset.vibratoRate) {
+      const vLfo = ctx.createOscillator();
+      vLfo.frequency.value = preset.vibratoRate;
+      vibDetuneGain = ctx.createGain();
+      vibDetuneGain.gain.value = preset.vibratoDepth ?? 4;
+      vLfo.connect(vibDetuneGain);
+      vLfo.start(start);
+      vLfo.stop(start + duration + 0.1);
+    }
+
+    (preset.oscillators || [{ type: 'sawtooth', ratio: 1, gain: 1 }]).forEach(o => {
+      const osc = ctx.createOscillator();
+      osc.type = o.type;
+      osc.frequency.setValueAtTime(freqs[0] * o.ratio, start);
+      for (let i = 1; i < segCount; i++) {
+        const t = start + segDur * i;
+        if (glideTime > 0) {
+          osc.frequency.setValueAtTime(freqs[i - 1] * o.ratio, t);
+          osc.frequency.linearRampToValueAtTime(freqs[i] * o.ratio, t + glideTime);
+        } else {
+          osc.frequency.setValueAtTime(freqs[i] * o.ratio, t);
+        }
+      }
+      if (vibDetuneGain) vibDetuneGain.connect(osc.detune);
+      const g = ctx.createGain();
+      g.gain.value = o.gain;
+      osc.connect(g);
+      g.connect(target);
+      osc.start(start);
+      osc.stop(start + duration + 0.1);
+    });
+
+    if (preset.noiseMix) {
+      const avgFreq = freqs.reduce((a, b) => a + b, 0) / freqs.length;
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const nf = ctx.createBiquadFilter();
+      nf.type = 'bandpass';
+      nf.frequency.value = avgFreq * (preset.noiseFreqRatio || 4);
+      nf.Q.value = 0.8;
+      const ng = ctx.createGain();
+      ng.gain.value = preset.noiseMix;
+      noise.connect(nf).connect(ng).connect(target);
+      noise.start(start);
+      noise.stop(start + duration);
+    }
+  }
+
+  // Plucked/struck voice: repeats short decaying notes across the 8s window
+  function scheduleOnePluck(ctx, startTime, freq, preset, session) {
+    const decay = preset.decay || 0.6;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, startTime);
+    g.gain.linearRampToValueAtTime(preset.peakGain ?? 0.35, startTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, startTime + decay);
+    g.connect(ctx.destination);
+    session.gainNodes.push(g);
+
+    let target = g;
+    if (preset.filterFreq) {
+      const filt = ctx.createBiquadFilter();
+      filt.type = preset.filterType || 'lowpass';
+      filt.frequency.value = preset.filterFreq;
+      filt.Q.value = preset.filterQ ?? 1;
+      filt.connect(g);
+      target = filt;
+    }
+
+    (preset.oscillators || [{ type: 'triangle', ratio: 1, gain: 1 }]).forEach(o => {
+      const osc = ctx.createOscillator();
+      osc.type = o.type;
+      osc.frequency.value = freq * o.ratio;
+      const og = ctx.createGain();
+      og.gain.value = o.gain;
+      osc.connect(og);
+      og.connect(target);
+      osc.start(startTime);
+      osc.stop(startTime + decay + 0.05);
+    });
+
+    if (preset.noiseMix) {
+      const nDur = Math.min(0.05, decay);
+      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * nDur));
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let k = 0; k < bufferSize; k++) data[k] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(preset.noiseMix, startTime);
+      ng.gain.exponentialRampToValueAtTime(0.0001, startTime + nDur);
+      noise.connect(ng).connect(target);
+      noise.start(startTime);
+    }
+  }
+
+  function playPluckSample(preset, session) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + 0.05;
+    const duration = SAMPLE_DURATION_S;
+    const interval = preset.interval || 0.8;
+    const notes = (preset.notes && preset.notes.length) ? preset.notes.map(noteFreq) : [preset.baseFreq || 220];
+    let t = 0, i = 0;
+    while (t < duration - 0.05) {
+      scheduleOnePluck(ctx, start + t, notes[i % notes.length], preset, session);
+      t += interval;
+      i++;
+    }
+  }
+
+  // Gong voice: one or more strikes blooming into a long inharmonic metallic wash
+  function playGongSample(preset, session) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + 0.05;
+    const duration = SAMPLE_DURATION_S;
+    const strikes = preset.strikes || [{ at: 0, baseFreq: preset.baseFreq || 90, gainMul: 1 }];
+
+    strikes.forEach(strike => {
+      const strikeStart = start + (strike.at || 0);
+      const strikeDur = duration - (strike.at || 0);
+      if (strikeDur <= 0.2) return;
+      const gm = strike.gainMul ?? 1;
+
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, strikeStart);
+      master.gain.linearRampToValueAtTime(0.32 * gm, strikeStart + 0.05);
+      master.gain.exponentialRampToValueAtTime(0.0001, strikeStart + strikeDur);
+      master.connect(ctx.destination);
+      session.gainNodes.push(master);
+
+      const partials = [1, 1.48, 2.02, 2.85, 3.76, 4.92];
+      partials.forEach((ratio, idx) => {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = strike.baseFreq * ratio;
+        const g = ctx.createGain();
+        const peak = 0.5 / (idx + 1);
+        g.gain.setValueAtTime(0.0001, strikeStart);
+        g.gain.linearRampToValueAtTime(peak, strikeStart + 0.03 + idx * 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, strikeStart + strikeDur - Math.min(idx * 0.3, strikeDur * 0.5));
+        osc.connect(g).connect(master);
+        osc.start(strikeStart);
+        osc.stop(strikeStart + strikeDur + 0.1);
+      });
+
+      const bufferSize = Math.floor(ctx.sampleRate * strikeDur);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const nf = ctx.createBiquadFilter();
+      nf.type = 'bandpass';
+      nf.frequency.value = strike.baseFreq * 3;
+      nf.Q.value = 0.6;
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, strikeStart);
+      ng.gain.linearRampToValueAtTime(0.06 * gm, strikeStart + 0.5);
+      ng.gain.exponentialRampToValueAtTime(0.0001, strikeStart + strikeDur);
+      noise.connect(nf).connect(ng).connect(master);
+      noise.start(strikeStart);
+      noise.stop(strikeStart + strikeDur);
+    });
+  }
+
+  // Theremin voice: continuous sine gliding freely through a named-note melody
+  function playThereminSample(preset, session) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + 0.05;
+    const duration = SAMPLE_DURATION_S;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, start);
+    master.gain.linearRampToValueAtTime(0.24, start + 0.3);
+    master.gain.setValueAtTime(0.24, start + duration - 0.5);
+    master.gain.linearRampToValueAtTime(0.0001, start + duration);
+    master.connect(ctx.destination);
+    session.gainNodes.push(master);
+
+    const notes = (preset.notes && preset.notes.length) ? preset.notes : ['A4', 'C5', 'E5', 'A4'];
+    const freqs = notes.map(noteFreq);
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freqs[0], start);
+    const segDur = duration / freqs.length;
+    freqs.forEach((f, idx) => {
+      osc.frequency.linearRampToValueAtTime(f, start + segDur * (idx + 1));
+    });
+
+    const vLfo = ctx.createOscillator();
+    vLfo.frequency.value = 6;
+    const vGain = ctx.createGain();
+    vGain.gain.value = 6;
+    vLfo.connect(vGain).connect(osc.frequency);
+    vLfo.start(start);
+    vLfo.stop(start + duration + 0.1);
+
+    osc.connect(master);
+    osc.start(start);
+    osc.stop(start + duration + 0.1);
+  }
+
+  function playInstrumentSample(preset, session) {
+    switch (preset.engine) {
+      case 'pluck': playPluckSample(preset, session); break;
+      case 'gong': playGongSample(preset, session); break;
+      case 'theremin': playThereminSample(preset, session); break;
+      default: playSustainSample(preset, session);
+    }
+  }
+
+  /* ---------------- Per-Instrument Timbre Presets (index matches INSTRUMENTS) ---------------- */
+  const SOUND_PRESETS = [
+    { // 1. Cello — C natural-minor phrase, legato bowing
+      engine: 'sustain', notes: ['C3','D3','Eb3','F3','G3','Ab3','G3','F3'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.6 }, { type: 'triangle', ratio: 1, gain: 0.4 }, { type: 'sine', ratio: 2, gain: 0.15 }],
+      vibratoRate: 5, vibratoDepth: 3.5, filterType: 'lowpass', filterFreq: 900, filterQ: 1, noiseMix: 0.03, attack: 0.5, release: 0.8, peakGain: 0.22
+    },
+    { // 2. Oboe — Bb major scale, tongued articulation
+      engine: 'sustain', notes: ['Bb4','C5','D5','Eb5','F5','Eb5','D5','C5'], articulate: true,
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.5 }, { type: 'square', ratio: 3, gain: 0.08 }],
+      vibratoRate: 5.5, vibratoDepth: 5, filterType: 'bandpass', filterFreq: 1600, filterQ: 3, noiseMix: 0.06, attack: 0.12, release: 0.3, peakGain: 0.16
+    },
+    { // 3. Didgeridoo — droning root with overtone/vowel-shift accents
+      engine: 'sustain', notes: ['D2','D2','A2','D2','F#2','D2','A2','D2'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.7 }, { type: 'square', ratio: 1, gain: 0.15 }],
+      tremoloRate: 3.2, tremoloDepth: 0.35, filterType: 'lowpass', filterFreq: 500, noiseMix: 0.18, attack: 0.3, release: 0.5, peakGain: 0.26
+    },
+    { // 4. Harpsichord — C major arpeggio run
+      engine: 'pluck', notes: ['C4','E4','G4','C5','B4','G4','E4','D4'], interval: 0.45,
+      oscillators: [{ type: 'square', ratio: 1, gain: 0.5 }, { type: 'square', ratio: 2, gain: 0.2 }],
+      decay: 0.35, filterType: 'highpass', filterFreq: 200, peakGain: 0.3
+    },
+    { // 5. French Horn — F major scale, noble and sweeping
+      engine: 'sustain', notes: ['F3','G3','A3','Bb3','C4','Bb3','A3','G3'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.6 }, { type: 'sine', ratio: 1, gain: 0.3 }],
+      vibratoRate: 4.5, vibratoDepth: 2.5, filterType: 'lowpass', filterFreq: 1400, noiseMix: 0.02, attack: 0.4, release: 0.6, peakGain: 0.22
+    },
+    { // 6. Bassoon — Bb major scale, low register, lightly tongued
+      engine: 'sustain', notes: ['Bb2','C3','D3','Eb3','F3','Eb3','D3','C3'], articulate: true,
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.65 }, { type: 'triangle', ratio: 2, gain: 0.2 }],
+      vibratoRate: 4.8, vibratoDepth: 2, filterType: 'lowpass', filterFreq: 700, noiseMix: 0.07, attack: 0.3, release: 0.5, peakGain: 0.24
+    },
+    { // 7. Koto — A major pentatonic run
+      engine: 'pluck', notes: ['A3','B3','D4','E4','F#4','A4','F#4','E4'], interval: 0.85,
+      oscillators: [{ type: 'triangle', ratio: 1, gain: 0.6 }, { type: 'sine', ratio: 2, gain: 0.15 }],
+      decay: 1.1, filterType: 'lowpass', filterFreq: 2600, peakGain: 0.28
+    },
+    { // 8. Steelpan — C major calypso run
+      engine: 'pluck', notes: ['C4','E4','G4','B4','C5','A4','G4','E4'], interval: 0.75,
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.55 }, { type: 'sine', ratio: 2.76, gain: 0.2 }, { type: 'sine', ratio: 4.5, gain: 0.1 }],
+      decay: 1.2, peakGain: 0.28
+    },
+    { // 9. Sitar — D harmonic-minor raga-like run with buzz
+      engine: 'pluck', notes: ['D4','Eb4','F#4','G4','A4','Bb4','A4','F#4'], interval: 0.55,
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.4 }, { type: 'square', ratio: 1.01, gain: 0.25 }, { type: 'sine', ratio: 3, gain: 0.1 }],
+      decay: 1.3, filterType: 'bandpass', filterFreq: 1800, filterQ: 2, peakGain: 0.24
+    },
+    { // 10. Timpani — pitched orchestral rolls across three tuned drums
+      engine: 'pluck', notes: ['E2','G2','E2','A2','G2','E2'], interval: 1.3,
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.8 }],
+      decay: 1.3, noiseMix: 0.3, filterType: 'lowpass', filterFreq: 400, peakGain: 0.35
+    },
+    { // 11. Accordion — A major scale with bellows tremolo
+      engine: 'sustain', notes: ['A3','B3','C#4','D4','E4','D4','C#4','B3'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.4 }, { type: 'sawtooth', ratio: 1.25, gain: 0.3 }, { type: 'sawtooth', ratio: 1.5, gain: 0.25 }],
+      vibratoRate: 6, vibratoDepth: 3, tremoloRate: 5, tremoloDepth: 0.25, filterType: 'lowpass', filterFreq: 2200, attack: 0.12, release: 0.3, peakGain: 0.18
+    },
+    { // 12. Flute — bright C major scale run
+      engine: 'sustain', notes: ['C5','D5','E5','F5','G5','A5','G5','E5'],
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.8 }, { type: 'sine', ratio: 2, gain: 0.08 }],
+      vibratoRate: 6, vibratoDepth: 3.5, noiseMix: 0.12, noiseFreqRatio: 2.5, attack: 0.25, release: 0.4, peakGain: 0.22
+    },
+    { // 13. Marimba — G major pentatonic mallet run
+      engine: 'pluck', notes: ['G3','A3','B3','D4','C4','B3','A3','G3'], interval: 0.65,
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.6 }, { type: 'triangle', ratio: 4, gain: 0.08 }],
+      decay: 0.85, peakGain: 0.3
+    },
+    { // 14. Pipe Organ — C major chordal walk, each note a full stacked chord
+      engine: 'sustain', notes: ['C3','E3','G3','C4','G3','E3','C3','G2'],
+      oscillators: [{ type: 'square', ratio: 0.5, gain: 0.25 }, { type: 'sine', ratio: 1, gain: 0.4 }, { type: 'sine', ratio: 1.5, gain: 0.2 }, { type: 'sine', ratio: 2, gain: 0.2 }, { type: 'sine', ratio: 3, gain: 0.12 }],
+      glide: false, filterType: 'lowpass', filterFreq: 3000, attack: 0.5, release: 0.6, peakGain: 0.2
+    },
+    { // 15. Theremin — sweeping A major melody, classic glissando
+      engine: 'theremin', notes: ['A4','C5','E5','B4','G4','D5','F#4','A4']
+    },
+    { // 16. Djembe — bass/tone/slap groove pattern
+      engine: 'pluck', notes: ['G1','G1','D2','G1','A1','D2','G1','D2'], interval: 0.5,
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.7 }],
+      decay: 0.3, noiseMix: 0.45, peakGain: 0.32
+    },
+    { // 17. Bagpipes — A mixolydian chanter melody over a droning buzz
+      engine: 'sustain', notes: ['A3','B3','C#4','D4','E4','D4','C#4','B3'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.35 }, { type: 'sawtooth', ratio: 1.006, gain: 0.35 }, { type: 'sawtooth', ratio: 1.5, gain: 0.15 }],
+      tremoloRate: 7, tremoloDepth: 0.12, filterType: 'bandpass', filterFreq: 1900, filterQ: 2, noiseMix: 0.09, attack: 0.15, release: 0.25, peakGain: 0.2
+    },
+    { // 18. Electric Bass — E minor pentatonic groove riff
+      engine: 'pluck', notes: ['E1','E1','G1','A1','E1','D1','E1','G1'], interval: 0.65,
+      oscillators: [{ type: 'sine', ratio: 1, gain: 0.7 }, { type: 'triangle', ratio: 1, gain: 0.3 }],
+      decay: 0.65, filterType: 'lowpass', filterFreq: 500, peakGain: 0.32
+    },
+    { // 19. Erhu — D minor mournful, heavily vibratoed slide
+      engine: 'sustain', notes: ['D4','E4','F4','G4','A4','G4','F4','E4'],
+      oscillators: [{ type: 'sawtooth', ratio: 1, gain: 0.5 }, { type: 'triangle', ratio: 1, gain: 0.4 }],
+      vibratoRate: 5.5, vibratoDepth: 8, filterType: 'lowpass', filterFreq: 1500, noiseMix: 0.04, attack: 0.4, release: 0.6, peakGain: 0.2
+    },
+    { // 20. Clarinet — Bb major scale, hollow low register
+      engine: 'sustain', notes: ['Bb3','C4','D4','Eb4','F4','Eb4','D4','C4'], articulate: true,
+      oscillators: [{ type: 'square', ratio: 1, gain: 0.55 }, { type: 'sine', ratio: 3, gain: 0.06 }],
+      vibratoRate: 4.5, vibratoDepth: 1.5, filterType: 'lowpass', filterFreq: 1200, noiseMix: 0.02, attack: 0.2, release: 0.35, peakGain: 0.2
+    },
+    { // 21. Gong — two strikes at different pitches for a fuller wash
+      engine: 'gong', strikes: [{ at: 0, baseFreq: 92.5, gainMul: 1 }, { at: 4.6, baseFreq: 69.3, gainMul: 0.6 }]
+    }
+  ];
+
+  /* ---------------- Helpers ---------------- */
+  const SPOTLIGHTS = ['#8af2e8','#6ae0f2','#b0e8e2','#a0f7dc'];
+  function pickSpotlight(idx){ return SPOTLIGHTS[idx % SPOTLIGHTS.length]; }
+
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Display Frame & Formatting ---------------- */
+  function wallAndFrame(bg, idx){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#0f2129"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#132c38" opacity="0.5"/>`;
+    const glow = pickSpotlight(idx);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.16"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#081318" opacity="0.6"/>`;
+    s += `<rect x="26" y="24" width="252" height="270" fill="#000" opacity="0.35"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e547a" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#41d9c9" stroke-width="6"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0a171a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, timbre){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#0c181f" opacity="0.92"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#44f2e6" opacity="0.7"/>`;
+    s += `<text x="150" y="336" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="13" font-weight="700" fill="#d6f2fb" letter-spacing="0.5">${escapeXml(name.toUpperCase())}</text>`;
+    
+    const words = timbre.split(' ');
+    let lines = [];
+    let currentLine = '';
+    words.forEach(w => {
+      if ((currentLine + ' ' + w).length > 42) {
+        lines.push(currentLine);
+        currentLine = w;
+      } else {
+        currentLine = currentLine ? currentLine + ' ' + w : w;
+      }
+    });
+    if (currentLine) lines.push(currentLine);
+
+    let startY = 352;
+    lines.forEach((line, idx) => {
+      s += `<text x="150" y="${startY + (idx * 12)}" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#8ccbe3">${escapeXml(line)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Musical Instruments Collection ---------------- */
+  const INSTRUMENTS = [
+    {
+      name: '1. Cello',
+      timbre: 'Deep, warm, and resonant, mirroring the expressiveness of a low human voice.',
+      bg: '#1f1610',
+      draw: () => {
+        let s = '';
+        s += `<path d="M120,70 Q100,110 125,140 Q95,180 115,240 Q148,260 181,240 Q201,180 171,140 Q196,110 176,70 Z" fill="#8a4b1d" stroke="#5c3010" stroke-width="3"/>`;
+        s += `<path d="M125,75 Q108,110 128,138 Q102,175 120,232" fill="none" stroke="#d48244" stroke-width="2"/>`;
+        s += `<path d="M130,140 Q122,155 132,170 M166,140 Q174,155 164,170" fill="none" stroke="#2b1405" stroke-width="4.5" stroke-linecap="round"/>`;
+        s += `<line x1="148" y1="40" x2="148" y2="265" stroke="#110a04" stroke-width="5"/>`;
+        s += `<line x1="148" y1="265" x2="148" y2="280" stroke="#a8a8a8" stroke-width="3"/>`;
+        s += `<line x1="80" y1="210" x2="216" y2="100" stroke="#f2d0a0" stroke-width="2.5" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      name: '2. Oboe',
+      timbre: 'Bright, reedy, and slightly nasal, with a piercing clear tone used to tune orchestras.',
+      bg: '#141c24',
+      draw: () => {
+        let s = '';
+        s += `<rect x="144" y="60" width="8" height="190" fill="#171615" stroke="#000" stroke-width="1"/>`;
+        s += `<polygon points="144,250 136,275 160,275 152,250" fill="#171615"/>`;
+        s += `<rect x="146" y="42" width="4" height="18" fill="#d9ad5b"/>`;
+        s += `<polygon points="147,32 145,42 151,42 149,32" fill="#e6cd98"/>`;
+        for(let i=0; i<8; i++){
+          s += `<circle cx="148" cy="${80 + i*20}" r="3.5" fill="#ccc" stroke="#666" stroke-width="1"/>`;
+          s += `<rect x="138" y="${88 + i*18}" width="20" height="2" fill="#aaa"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '3. Didgeridoo',
+      timbre: 'Low, droning, and rhythmic, producing vibrant overtone-rich buzzes and guttural pulses.',
+      bg: '#241710',
+      draw: () => {
+        let s = '';
+        s += `<path d="M80,265 L210,65 Q220,55 225,60 L230,70 Q225,80 95,275 Z" fill="#6e3c1b" stroke="#3b1d0a" stroke-width="3"/>`;
+        s += `<path d="M80,265 Q70,280 95,275" fill="#e0cbaa"/>`;
+        s += `<path d="M120,205 L130,212 M150,160 L160,167 M180,115 L190,122" stroke="#f0a830" stroke-width="4"/>`;
+        s += `<circle cx="140" cy="180" r="4" fill="#d94126"/>`;
+        s += `<circle cx="170" cy="135" r="4" fill="#ffffff"/>`;
+        return s;
+      }
+    },
+    {
+      name: '4. Harpsichord',
+      timbre: 'Crisp, plucked, and metallic, with zero volume variation per key strike.',
+      bg: '#1c1b18',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="60,250 240,250 240,110 160,110 60,180" fill="#4a2c17" stroke="#261408" stroke-width="4"/>`;
+        s += `<polygon points="68,242 232,242 232,118 162,118 68,182" fill="#a87c4f"/>`;
+        for(let i=0; i<18; i++){
+          s += `<line x1="${75 + i*8}" y1="235" x2="${165 + i*3}" y2="125" stroke="#f2d680" stroke-width="1" opacity="0.7"/>`;
+        }
+        s += `<rect x="60" y="245" width="180" height="18" fill="#111"/>`;
+        for(let i=0; i<15; i++){
+          s += `<rect x="${64 + i*11.5}" y="246" width="10" height="16" fill="${i%2===0?'#f0e6d2':'#222'}"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '5. French Horn',
+      timbre: 'Mellow, brassy, and noble, capable of sweeping seamlessly between dark warmth and heroic blasts.',
+      bg: '#241f14',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="140" cy="160" r="65" fill="none" stroke="#d99b26" stroke-width="14"/>`;
+        s += `<circle cx="140" cy="160" r="45" fill="none" stroke="#d99b26" stroke-width="8"/>`;
+        s += `<path d="M185,115 Q240,60 250,130 Q255,190 195,205" fill="#e6b033" stroke="#b37f14" stroke-width="3"/>`;
+        s += `<path d="M220,90 Q270,130 220,180 Z" fill="#f7ca4d"/>`;
+        s += `<rect x="100" y="145" width="35" height="25" fill="#b37f14" rx="4"/>`;
+        s += `<circle cx="110" cy="157" r="4" fill="#fff"/><circle cx="120" cy="157" r="4" fill="#fff"/><circle cx="130" cy="157" r="4" fill="#fff"/>`;
+        return s;
+      }
+    },
+    {
+      name: '6. Bassoon',
+      timbre: 'Dark, woody, and dry in low registers, turning plaintive and lyrical up high.',
+      bg: '#171a1c',
+      draw: () => {
+        let s = '';
+        s += `<rect x="135" y="70" width="12" height="190" fill="#52230d" stroke="#2b1105" stroke-width="2"/>`;
+        s += `<rect x="149" y="90" width="10" height="170" fill="#3d1908" stroke="#2b1105" stroke-width="2"/>`;
+        s += `<rect x="133" y="255" width="28" height="12" fill="#d9ad5b"/>`;
+        s += `<path d="M135,140 Q100,130 110,100 L115,102" fill="none" stroke="#cccccc" stroke-width="3"/>`;
+        s += `<rect x="128" y="65" width="26" height="8" fill="#f0f0f0"/>`;
+        for(let i=0; i<6; i++){
+          s += `<rect x="132" y="${110 + i*22}" width="30" height="3" fill="#ccc"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '7. Koto',
+      timbre: 'Crisp, percussive, and bell-like, with long decaying notes and subtle pitch-bends.',
+      bg: '#211917',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="50,180 250,130 255,160 55,210" fill="#8c5027" stroke="#4a2710" stroke-width="3"/>`;
+        s += `<polygon points="53,182 247,134 252,158 58,206" fill="#ba733c"/>`;
+        for(let i=0; i<10; i++){
+          let y1 = 182 + i*2.5;
+          let y2 = 134 + i*2.5;
+          s += `<line x1="53" y1="${y1}" x2="247" y2="${y2}" stroke="#fff" stroke-width="1.2" opacity="0.8"/>`;
+          s += `<polygon points="${90 + i*14},${170 - i*2} ${94 + i*14},${162 - i*2} ${98 + i*14},${170 - i*2}" fill="#f0e3ce"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '8. Steelpan',
+      timbre: 'Bright, tropical, and resonant, producing shimmering metallic tones with sustained pitch reverb.',
+      bg: '#121d24',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="148" cy="160" rx="85" ry="60" fill="#a3b8cc" stroke="#475e75" stroke-width="6"/>`;
+        s += `<ellipse cx="148" cy="160" rx="76" ry="52" fill="#7892a8"/>`;
+        s += `<ellipse cx="148" cy="160" rx="25" ry="16" fill="#a3b8cc" stroke="#475e75" stroke-width="2"/>`;
+        for(let i=0; i<8; i++){
+          let ang = (i * 45) * Math.PI / 180;
+          let cx = 148 + Math.cos(ang) * 50;
+          let cy = 160 + Math.sin(ang) * 32;
+          s += `<ellipse cx="${cx}" cy="${cy}" rx="14" ry="10" fill="#8ca4bd" stroke="#475e75" stroke-width="1.5"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '9. Sitar',
+      timbre: 'Buzzing, shimmering, and microtonal, rich in sympathetic string resonances.',
+      bg: '#241a12',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="220" r="50" fill="#a85922" stroke="#5c2c0a" stroke-width="4"/>`;
+        s += `<rect x="142" y="40" width="12" height="180" fill="#d48244" stroke="#5c2c0a" stroke-width="2"/>`;
+        s += `<circle cx="148" cy="55" r="18" fill="#a85922"/>`;
+        for(let i=0; i<12; i++){
+          s += `<rect x="138" y="${70 + i*11}" width="20" height="2.5" fill="#f2c879" rx="1"/>`;
+        }
+        for(let i=0; i<5; i++){
+          s += `<line x1="${144 + i*2}" y1="40" x2="${144 + i*2}" y2="220" stroke="#fff" stroke-width="0.8"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '10. Timpani',
+      timbre: 'Heavy, booming, and pitched, delivering deep orchestral thunder with clear tonal centers.',
+      bg: '#1c1817',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,130 Q148,80 226,130 Q220,230 148,240 Q76,230 70,130 Z" fill="#b86b32" stroke="#783e14" stroke-width="4"/>`;
+        s += `<ellipse cx="148" cy="130" rx="78" ry="25" fill="#f0e2c8" stroke="#3b2b1d" stroke-width="3"/>`;
+        s += `<line x1="100" y1="230" x2="80" y2="270" stroke="#444" stroke-width="5"/>`;
+        s += `<line x1="196" y1="230" x2="216" y2="270" stroke="#444" stroke-width="5"/>`;
+        s += `<line x1="148" y1="240" x2="148" y2="275" stroke="#444" stroke-width="5"/>`;
+        s += `<line x1="110" y1="70" x2="135" y2="120" stroke="#d9b382" stroke-width="4" stroke-linecap="round"/>`;
+        s += `<circle cx="110" cy="70" r="8" fill="#fff"/>`;
+        return s;
+      }
+    },
+    {
+      name: '11. Accordion',
+      timbre: 'Squeezed, reedy, and full-bodied, blending wind-like airflow with sharp mechanical chordal punch.',
+      bg: '#171f24',
+      draw: () => {
+        let s = '';
+        s += `<rect x="60" y="90" width="45" height="140" fill="#ba2727" rx="5"/>`;
+        s += `<rect x="195" y="90" width="45" height="140" fill="#ba2727" rx="5"/>`;
+        s += `<path d="M105,95 L120,105 L135,95 L150,105 L165,95 L180,105 L195,95 L195,225 L180,215 L165,225 L150,215 L135,225 L120,215 L105,225 Z" fill="#e8e1d1" stroke="#333" stroke-width="2"/>`;
+        for(let i=0; i<5; i++){
+          s += `<line x1="${120 + i*15}" y1="100" x2="${120 + i*15}" y2="220" stroke="#aaa" stroke-width="1.5"/>`;
+        }
+        for(let i=0; i<10; i++){
+          s += `<rect x="205" y="${100 + i*12}" width="25" height="8" fill="${i%2===0?'#fff':'#000'}"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '12. Flute',
+      timbre: 'Airy, silvery, and fluid, ranging from soft breathiness to bright, bird-like agility.',
+      bg: '#142024',
+      draw: () => {
+        let s = '';
+        s += `<line x1="50" y1="230" x2="250" y2="90" stroke="#e6f2f7" stroke-width="10" stroke-linecap="round"/>`;
+        s += `<circle cx="80" cy="209" r="3.5" fill="#142024"/>`;
+        for(let i=0; i<9; i++){
+          let x = 110 + i*13;
+          let y = 188 - i*9.1;
+          s += `<circle cx="${x}" cy="${y}" r="4" fill="#a3c4d4" stroke="#52788a" stroke-width="1"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '13. Marimba',
+      timbre: 'Soft, woody, and hollow, generating warm, liquid-smooth percussive rolls.',
+      bg: '#211a14',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<9; i++){
+          let w = 22 - i*1.2;
+          let h = 140 - i*8;
+          let x = 55 + i*22;
+          let y = 100 + i*4;
+          s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#733d1d" stroke="#3d1e0d" stroke-width="2" rx="2"/>`;
+          s += `<rect x="${x+4}" y="${y+h+5}" width="${w-8}" height="50" fill="#a8a8a8" opacity="0.6"/>`;
+        }
+        s += `<line x1="80" y1="70" x2="110" y2="130" stroke="#d9a266" stroke-width="3"/>`;
+        s += `<circle cx="80" cy="70" r="7" fill="#e86b4f"/>`;
+        return s;
+      }
+    },
+    {
+      name: '14. Pipe Organ',
+      timbre: 'Massive, majestic, and architectural, flooding space with layered wind-fed harmonics.',
+      bg: '#17151c',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<11; i++){
+          let h = 180 - Math.abs(i-5)*20;
+          let x = 50 + i*18;
+          let y = 240 - h;
+          s += `<rect x="${x}" y="${y}" width="14" height="${h}" fill="url(#organGrad)" stroke="#1a1821" stroke-width="1.5"/>`;
+          s += `<polygon points="${x},${y+h-30} ${x+7},${y+h-40} ${x+14},${y+h-30}" fill="#222"/>`;
+        }
+        s += `<defs><linearGradient id="organGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#cfb53b"/><stop offset="50%" stop-color="#fff8d6"/><stop offset="100%" stop-color="#998220"/></linearGradient></defs>`;
+        return s;
+      }
+    },
+    {
+      name: '15. Theremin',
+      timbre: 'Eerie, swooping, and vocal-like, gliding endlessly between pitches without physical touch.',
+      bg: '#101c24',
+      draw: () => {
+        let s = '';
+        s += `<rect x="90" y="150" width="120" height="70" fill="#2b3b45" rx="6" stroke="#17232b" stroke-width="3"/>`;
+        s += `<line x1="185" y1="150" x2="185" y2="60" stroke="#ccc" stroke-width="4" stroke-linecap="round"/>`;
+        s += `<circle cx="185" cy="56" r="4" fill="#44f2e6"/>`;
+        s += `<path d="M90,185 C50,185 50,150 70,150" fill="none" stroke="#ccc" stroke-width="4"/>`;
+        s += `<circle cx="115" cy="185" r="5" fill="#44f2e6"/><circle cx="140" cy="185" r="5" fill="#ff7070"/>`;
+        s += `<path d="M200,80 Q220,70 240,100 T210,140" fill="none" stroke="#44f2e6" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      name: '16. Djembe',
+      timbre: 'Earthy, dynamic, and sharp, producing thundering low bass notes and snappy edge slaps.',
+      bg: '#241a14',
+      draw: () => {
+        let s = '';
+        s += `<path d="M85,100 Q148,130 211,100 L175,180 L185,260 L111,260 L121,180 Z" fill="#693719" stroke="#3b1c0a" stroke-width="3"/>`;
+        s += `<ellipse cx="148" cy="100" rx="63" ry="20" fill="#ebd9c2" stroke="#4a2e1b" stroke-width="3"/>`;
+        for(let i=0; i<12; i++){
+          let x1 = 90 + i*10.5;
+          s += `<line x1="${x1}" y1="112" x2="175" y2="180" stroke="#f2be6b" stroke-width="1.2"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '17. Bagpipes',
+      timbre: 'Continuous, piercing, and droning, driven by constant air pressure and high reedy pipes.',
+      bg: '#1c1824',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="130" cy="180" rx="55" ry="40" fill="#24472b" stroke="#a82828" stroke-width="4"/>`;
+        s += `<line x1="110" y1="150" x2="70" y2="60" stroke="#523924" stroke-width="7" stroke-linecap="round"/>`;
+        s += `<line x1="130" y1="142" x2="110" y2="50" stroke="#523924" stroke-width="8" stroke-linecap="round"/>`;
+        s += `<line x1="150" y1="148" x2="150" y2="55" stroke="#523924" stroke-width="7" stroke-linecap="round"/>`;
+        s += `<line x1="165" y1="195" x2="230" y2="230" stroke="#523924" stroke-width="6" stroke-linecap="round"/>`;
+        return s;
+      }
+    },
+    {
+      name: '18. Electric Bass',
+      timbre: 'Low, thumping, and physical, providing the thick, driving foundation of rhythm sections.',
+      bg: '#141a24',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,220 Q60,150 110,140 Q130,180 160,150 Q200,160 190,230 Q130,270 70,220 Z" fill="#9e2323" stroke="#4a0d0d" stroke-width="3"/>`;
+        s += `<line x1="135" y1="165" x2="240" y2="50" stroke="#222" stroke-width="8"/>`;
+        s += `<rect x="110" y="180" width="25" height="12" fill="#111" rx="2"/>`;
+        s += `<rect x="120" y="198" width="25" height="12" fill="#111" rx="2"/>`;
+        for(let i=0; i<4; i++){
+          s += `<line x1="${120 + i*3}" y1="210" x2="${240 + i*2}" y2="50" stroke="#ccc" stroke-width="1.5"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '19. Erhu',
+      timbre: 'Mournful, silky, and violin-like, with a weeping, vocal quality produced by two bowed strings.',
+      bg: '#211717',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="133,220 163,220 168,260 128,260" fill="#4a1a0c" stroke="#240a03" stroke-width="2"/>`;
+        s += `<line x1="148" y1="40" x2="148" y2="265" stroke="#3b1c12" stroke-width="5"/>`;
+        s += `<circle cx="148" cy="55" r="8" fill="#d99b26"/>`;
+        s += `<circle cx="148" cy="75" r="8" fill="#d99b26"/>`;
+        s += `<line x1="146" y1="75" x2="146" y2="240" stroke="#fff" stroke-width="1"/>`;
+        s += `<line x1="150" y1="75" x2="150" y2="240" stroke="#fff" stroke-width="1"/>`;
+        s += `<line x1="80" y1="200" x2="216" y2="170" stroke="#f2d6a3" stroke-width="2"/>`;
+        return s;
+      }
+    },
+    {
+      name: '20. Clarinet',
+      timbre: 'Smooth, mellow, and liquid, capable of woody low notes and soaring, creamy high lines.',
+      bg: '#141b1f',
+      draw: () => {
+        let s = '';
+        s += `<rect x="143" y="50" width="10" height="200" fill="#121110" stroke="#000" stroke-width="1"/>`;
+        s += `<polygon points="143,250 133,275 163,275 153,250" fill="#121110"/>`;
+        s += `<rect x="141" y="80" width="14" height="6" fill="#d9ad5b"/>`;
+        s += `<rect x="141" y="210" width="14" height="6" fill="#d9ad5b"/>`;
+        for(let i=0; i<9; i++){
+          s += `<circle cx="148" cy="${95 + i*12}" r="3" fill="#fff" stroke="#999" stroke-width="1"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: '21. Gong',
+      timbre: 'Shimmering, expansive, and chaotic, building from a low strike into a massive wash of metallic overtones.',
+      bg: '#211c14',
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,260 L60,60 L236,60 L236,260" fill="none" stroke="#4a3625" stroke-width="8"/>`;
+        s += `<circle cx="148" cy="150" r="65" fill="#b88328" stroke="#5c3f0c" stroke-width="5"/>`;
+        s += `<circle cx="148" cy="150" r="50" fill="#d9a038"/>`;
+        s += `<circle cx="148" cy="150" r="20" fill="#3b2707"/>`;
+        s += `<line x1="110" y1="60" x2="122" y2="90" stroke="#aaa" stroke-width="2"/>`;
+        s += `<line x1="186" y1="60" x2="174" y2="90" stroke="#aaa" stroke-width="2"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Camera Shutter Render Engine ---------------- */
+  function renderInstrument(inst, idx) {
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += wallAndFrame(inst.bg, idx);
+    svg += inst.draw();
+    svg += caption(inst.name, inst.timbre);
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function snapPhoto() {
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 800);
+
+    frameNumber++;
+    frameCountEl.textContent = 'NO. ' + String(frameNumber).padStart(3, '0');
+
+    // Get current instrument sequentially and increment index
+    const item = INSTRUMENTS[currentIndex];
+    const itemIndex = currentIndex;
+    currentIndex = (currentIndex + 1) % INSTRUMENTS.length;
+
+    placeholderText.style.display = 'none';
+
+    const existingSvg = viewfinder.querySelector('svg');
+    if (existingSvg) existingSvg.remove();
+
+    viewfinder.insertAdjacentHTML('afterbegin', renderInstrument(item, itemIndex));
+
+    displayedInstrumentIndex = itemIndex;
+    sampleBtn.disabled = false;
+    startSample(itemIndex); // auto-play the timbre sample as soon as the instrument is revealed
+  }
+
+  shutterBtn.addEventListener('click', snapPhoto);
+
+  /* ---------------- Sample Playback Button (stoppable, click again to cancel) ---------------- */
+  let currentSession = null;
+
+  function stopCurrentSample() {
+    if (!currentSession) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    (currentSession.gainNodes || []).forEach(g => {
+      try {
+        g.gain.cancelScheduledValues(now);
+        g.gain.setValueAtTime(g.gain.value, now);
+        g.gain.linearRampToValueAtTime(0.0001, now + 0.04);
+      } catch (e) { /* node may already be finished */ }
+    });
+    clearInterval(currentSession.countdownInterval);
+    clearTimeout(currentSession.endTimeout);
+    currentSession = null;
+    isSampling = false;
+    sampleBtn.classList.remove('sampling');
+    samplePlayIcon.textContent = '\u25B6';
+    sampleBtnLabel.textContent = 'PLAY 8s TIMBRE SAMPLE';
+  }
+
+  function startSample(index) {
+    const preset = SOUND_PRESETS[index];
+    if (!preset) return;
+    if (isSampling) stopCurrentSample();
+
+    const session = { gainNodes: [] };
+    currentSession = session;
+    playInstrumentSample(preset, session);
+
+    isSampling = true;
+    sampleBtn.disabled = false;
+    sampleBtn.classList.add('sampling');
+    samplePlayIcon.textContent = '\u25A0';
+    let remaining = SAMPLE_DURATION_S;
+    sampleBtnLabel.textContent = `STOP · SAMPLING ${remaining}s`;
+
+    session.countdownInterval = setInterval(() => {
+      remaining -= 1;
+      if (remaining > 0) {
+        sampleBtnLabel.textContent = `STOP · SAMPLING ${remaining}s`;
+      } else {
+        clearInterval(session.countdownInterval);
+      }
+    }, 1000);
+
+    session.endTimeout = setTimeout(() => {
+      isSampling = false;
+      currentSession = null;
+      sampleBtn.classList.remove('sampling');
+      samplePlayIcon.textContent = '\u25B6';
+      sampleBtnLabel.textContent = 'PLAY 8s TIMBRE SAMPLE';
+    }, SAMPLE_DURATION_S * 1000 + 150);
+  }
+
+  sampleBtn.addEventListener('click', () => {
+    if (isSampling) {
+      stopCurrentSample();
+      return;
+    }
+    if (displayedInstrumentIndex === null) return;
+    startSample(displayedInstrumentIndex);
+  });
+
+  /* ---------------- Auto Shutter Controls ---------------- */
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    autoBtn.classList.toggle('active', autoActive);
+    autoBtn.setAttribute('aria-pressed', autoActive);
+
+    if (autoActive) {
+      autoLabel.textContent = 'AUTO SAMPLER · ON';
+      snapPhoto();
+      autoTimer = setInterval(snapPhoto, AUTO_INTERVAL_MS);
+    } else {
+      autoLabel.textContent = 'AUTO SAMPLER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
