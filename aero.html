@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Iconic Airliners & Aviation History</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL AV-35 · CIVIL AVIATION EDITION</p>
+    <h1>Iconic Global Airliners</h1>
+    <p>Press shutter to cycle through 35 legendary commercial aircraft &amp; supersonic transports.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to view iconic commercial aircraft
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 00/35</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">AVIONICS</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture aircraft</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48', '#8b5cf6'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* Helper to generate accurate rows/grids of aircraft windows */
+  function drawWindows(xStart, y, count, spacing, width, height, radius=1, fill="#0f172a") {
+    let s = '';
+    for (let i = 0; i < count; i++) {
+      let x = xStart + (i * spacing);
+      s += `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="${fill}" opacity="0.85"/>`;
+    }
+    return s;
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    
+    // Background sky grid & clouds/horizon detailing
+    s += `<line x1="39" y1="180" x2="257" y2="180" stroke="#ffffff" stroke-opacity="0.1" stroke-dasharray="2,2"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="308" width="300" height="92" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="308" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="324" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="337" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    // Multi-line description fitting inside viewfinder
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 50) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3); // Max 3 lines
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${351 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 35 Iconic Commercial Aircraft SVGs ---------------- */
+  const AIRPLANES = [
+    {
+      name: 'Douglas DC-3',
+      region: 'Santa Monica, California (North America)',
+      desc: 'The legendary 1930s twin-engine piston airliner that made commercial air transport profitable without government airmail subsidies.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,145 Q80,135 220,135 Q250,135 255,142 Q250,150 210,150 L80,150 Z" fill="#cbd5e1" stroke="#475569" stroke-width="1"/>`;
+        s += `<path d="M50,145 L40,120 L58,125 L75,145 Z" fill="#94a3b8"/>`; // Vertical Stabilizer
+        s += `<polygon points="120,145 160,175 190,175 170,145" fill="#cbd5e1" stroke="#475569"/>`;
+        s += `<polygon points="230,136 242,136 238,140 228,140" fill="#0284c7"/>`;
+        s += `<rect x="150" y="152" width="18" height="10" rx="2" fill="#475569"/>`;
+        s += `<line x1="168" y1="145" x2="168" y2="169" stroke="#38bdf8" stroke-width="2"/>`;
+        s += drawWindows(90, 139, 10, 11, 4, 4, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Douglas DC-8',
+      region: 'Long Beach, California (North America)',
+      desc: 'A pioneer of long-haul jet travel, designed to compete directly with early Boeing jets across transoceanic routes.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,140 L230,140 Q258,140 262,145 Q258,150 230,150 L45,150 Z" fill="#e2e8f0"/>`;
+        s += `<polygon points="45,140 32,112 52,112 70,140" fill="#2563eb"/>`; // Vertical Stabilizer
+        s += `<polygon points="110,145 155,185 185,185 165,145" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="170" width="16" height="5" rx="2" fill="#475569"/>`;
+        s += `<rect x="160" y="178" width="16" height="5" rx="2" fill="#475569"/>`;
+        s += `<path d="M242,141 L255,142 L250,145 L240,145 Z" fill="#1e293b"/>`;
+        s += drawWindows(75, 143, 24, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'McDonnell Douglas DC-9',
+      region: 'Long Beach, California (North America)',
+      desc: 'A highly successful rear-engine, T-tail short-haul jetliner that brought jet speeds to regional and municipal airports worldwide.',
+      bg: '#172554',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L220,140 Q248,140 252,145 Q248,150 220,150 L55,150 Z" fill="#f1f5f9"/>`;
+        s += `<polygon points="60,140 42,108 60,108 78,140" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<rect x="35" y="105" width="32" height="6" rx="2" fill="#dc2626"/>`; // T-tail Horizontal Fin
+        s += `<rect x="68" y="136" width="22" height="7" rx="3" fill="#475569"/>`;
+        s += `<polygon points="130,146 160,175 180,175 165,146" fill="#cbd5e1"/>`;
+        s += `<path d="M232,141 L246,142 L242,145 L230,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 20, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 727',
+      region: 'Renton, Washington (North America)',
+      desc: 'A versatile tri-jet with a distinctive T-tail, engineered to operate from shorter runways while carrying heavy passenger loads.',
+      bg: '#1e1b4b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,140 L225,140 Q255,140 258,145 Q255,150 225,150 L50,150 Z" fill="#e2e8f0"/>`;
+        s += `<polygon points="55,140 38,105 58,105 75,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<rect x="32" y="102" width="34" height="6" rx="2" fill="#0284c7"/>`;
+        s += `<rect x="62" y="135" width="22" height="6" rx="2" fill="#475569"/>`;
+        s += `<path d="M72,130 Q65,125 58,135 Z" fill="#334155"/>`;
+        s += `<polygon points="125,146 160,182 185,182 168,146" fill="#cbd5e1"/>`;
+        s += `<path d="M238,141 L252,142 L247,145 L235,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 22, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 747 ("Queen of the Skies")',
+      region: 'Everett, Washington (North America)',
+      desc: "The world's first wide-body 'Jumbo Jet,' whose iconic upper deck and double-aisle layout democratized international mass transit.",
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,140 L180,140 Q215,130 235,138 Q258,142 262,147 Q258,154 220,154 L45,154 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="50,140 30,102 55,102 78,140" fill="#1e40af"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,150 155,190 190,190 165,150" fill="#cbd5e1"/>`;
+        s += `<rect x="128" y="172" width="14" height="6" rx="2" fill="#334155"/>`;
+        s += `<rect x="145" y="180" width="14" height="6" rx="2" fill="#334155"/>`;
+        s += drawWindows(195, 134, 6, 5, 2.5, 2.5, 1, "#1e40af");
+        s += drawWindows(75, 144, 25, 5.5, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A340',
+      region: 'Toulouse (Pan-European Consortium)',
+      desc: 'A long-range, four-engine wide-body airliner designed to fly ultra-long-haul intercontinental routes without oceanic ETOPS constraints.',
+      bg: '#065f46',
+      draw: () => {
+        let s = '';
+        s += `<path d="M40,140 L235,140 Q262,140 266,145 Q262,150 235,150 L40,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="45,140 30,108 50,108 70,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="110,146 155,185 185,185 160,146" fill="#cbd5e1"/>`;
+        s += `<rect x="125" y="166" width="12" height="5" rx="2" fill="#475569"/>`;
+        s += `<rect x="145" y="176" width="12" height="5" rx="2" fill="#475569"/>`;
+        s += `<path d="M246,141 L258,142 L253,145 L242,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(70, 143, 28, 5.5, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 314 Clipper',
+      region: 'Seattle, Washington (North America)',
+      desc: 'A massive 1930s long-range flying boat built for Pan American Airways, establishing luxury transpacific and transatlantic routes.',
+      bg: '#134e4a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,145 Q80,130 220,130 Q250,130 255,140 Q240,158 180,158 L70,158 Z" fill="#cbd5e1" stroke="#334155"/>`;
+        s += `<path d="M50,135 L42,118 L55,120 L62,135 Z" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<line x1="58" y1="120" x2="58" y2="135" stroke="#0284c7" stroke-width="3"/>`;
+        s += `<rect x="100" y="124" width="80" height="8" fill="#94a3b8"/>`;
+        s += `<polygon points="120,154 140,162 160,154" fill="#64748b"/>`;
+        s += drawWindows(80, 137, 14, 8, 3, 4, 1, "#1e293b");
+        return s;
+      }
+    },
+    {
+      name: 'Lockheed L-1049 Super Constellation',
+      region: 'Burbank, California (North America)',
+      desc: 'A triple-tailed, pressurized piston airliner whose distinctive dolphin-shaped fuselage defined premier long-distance routes in the 1950s.',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,142 Q100,132 160,135 Q220,138 258,145 Q220,152 150,150 Q90,148 45,142 Z" fill="#e2e8f0" stroke="#94a3b8"/>`;
+        s += `<path d="M45,142 L38,122 L48,123 Z" fill="#dc2626"/>`; // Left Fin
+        s += `<path d="M52,142 L47,120 L55,121 Z" fill="#dc2626"/>`; // Center Vertical Stabilizer
+        s += `<polygon points="120,143 145,170 165,170 150,143" fill="#cbd5e1"/>`;
+        s += `<ellipse cx="145" cy="170" rx="10" ry="3" fill="#dc2626"/>`;
+        s += drawWindows(80, 140, 18, 7, 3, 3, 1, "#0f172a");
+        return s;
+      }
+    },
+    {
+      name: 'de Havilland DH.106 Comet',
+      region: 'Hatfield, Hertfordshire (United Kingdom / Europe)',
+      desc: 'The world\'s first commercial jetliner, introducing passenger jet transit before structural metal fatigue forced major redesigns.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,140 L220,140 Q248,140 252,145 Q248,150 220,150 L50,150 Z" fill="#cbd5e1"/>`;
+        s += `<polygon points="50,140 38,112 55,112 72,140" fill="#1e3a8a"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,145 150,178 175,178 155,145" fill="#94a3b8"/>`;
+        s += `<ellipse cx="128" cy="148" rx="4" ry="6" fill="#1e293b"/>`;
+        s += drawWindows(80, 143, 15, 8, 3.5, 3.5, 0.5, "#0f172a");
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 707',
+      region: 'Renton, Washington (North America)',
+      desc: 'The groundbreaking swept-wing quad-jet that inaugurated the mainstream Jet Age, rapidly shrinking global travel times.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,140 L230,140 Q258,140 262,145 Q258,150 230,150 L45,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="45,140 32,108 52,108 70,140" fill="#d97706"/>`; // Vertical Stabilizer
+        s += `<polygon points="110,145 155,185 185,185 165,145" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="168" width="12" height="5" rx="1" fill="#475569"/>`;
+        s += `<rect x="152" y="178" width="12" height="5" rx="1" fill="#475569"/>`;
+        s += `<path d="M244,141 L256,142 L250,145 L240,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 143, 25, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Sud Aviation SE 210 Caravelle',
+      region: 'Toulouse (France / Europe)',
+      desc: 'A pioneering short-to-medium-range European jetliner that introduced rear-fuselage engine mounting and clean-wing aerodynamics.',
+      bg: '#312e81',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L215,140 Q242,140 246,145 Q242,150 215,150 L55,150 Z" fill="#f1f5f9"/>`;
+        s += `<polygon points="55,140 40,112 58,112 72,140" fill="#1e40af"/>`; // Vertical Stabilizer
+        s += `<rect x="65" y="136" width="22" height="7" rx="3" fill="#475569"/>`;
+        s += `<polygon points="120,146 150,175 170,175 155,146" fill="#cbd5e1"/>`;
+        for(let i=0; i<14; i++) {
+          s += `<polygon points="${85 + i*8},142 ${88 + i*8},147 ${82 + i*8},147" fill="#0284c7"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Tupolev Tu-114',
+      region: 'Moscow (Soviet Union / Eastern Europe)',
+      desc: 'A colossal turboprop airliner powered by counter-rotating propellers, holding the record as the fastest turboprop commercial aircraft.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M40,138 L235,138 Q260,138 264,144 Q260,150 235,150 L40,150 Z" fill="#cbd5e1"/>`;
+        s += `<polygon points="45,138 30,105 50,105 70,138" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<polygon points="110,145 150,185 180,185 160,145" fill="#94a3b8"/>`;
+        s += `<rect x="125" y="162" width="22" height="7" fill="#334155"/>`;
+        s += `<line x1="147" y1="152" x2="147" y2="178" stroke="#38bdf8" stroke-width="2"/>`;
+        s += drawWindows(70, 141, 24, 6, 3, 3, 1.5, "#0f172a");
+        return s;
+      }
+    },
+    {
+      name: 'Concorde',
+      region: 'Filton & Toulouse (UK & France / Joint Europe)',
+      desc: 'The famous delta-wing supersonic transport (SST) capable of flying passengers across the Atlantic at Mach 2.04.',
+      bg: '#030712',
+      draw: () => {
+        let s = '';
+        s += `<path d="M35,144 L210,142 L275,145 L210,148 L35,146 Z" fill="#f8fafc"/>`;
+        s += `<path d="M110,145 Q150,147 200,168 L220,168 L190,145 Z" fill="#e2e8f0"/>`;
+        s += `<polygon points="50,144 32,110 52,110 80,144" fill="#1e3a8a"/>`; // Vertical Stabilizer
+        s += `<rect x="150" y="155" width="28" height="7" fill="#334155"/>`;
+        s += `<polygon points="250,144 265,145 255,146" fill="#0284c7"/>`;
+        s += drawWindows(75, 143, 26, 5, 1.8, 1.8, 0.5, "#0f172a");
+        return s;
+      }
+    },
+    {
+      name: 'Tupolev Tu-144 ("Concordski")',
+      region: 'Voronezh (Soviet Union / Eastern Europe)',
+      desc: 'The world\'s first commercial supersonic transport aircraft to fly, featuring Ogival delta wings and retractable forward canards.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M35,144 L210,141 L278,145 L210,149 L35,146 Z" fill="#e2e8f0"/>`;
+        s += `<polygon points="225,143 235,133 240,143" fill="#cbd5e1"/>`;
+        s += `<polygon points="100,145 180,172 215,172 185,145" fill="#cbd5e1"/>`;
+        s += `<polygon points="48,144 30,108 50,108 75,144" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<rect x="140" y="152" width="35" height="9" fill="#1e293b"/>`;
+        s += drawWindows(70, 143, 25, 5, 1.8, 1.8, 0.5, "#0f172a");
+        return s;
+      }
+    },
+    {
+      name: 'McDonnell Douglas DC-10',
+      region: 'Long Beach, California (North America)',
+      desc: 'A tri-jet wide-body airliner featuring a center engine mounted inside the vertical tail fin, built for high-capacity transcontinental routes.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,138 L225,138 Q255,138 258,145 Q255,152 225,152 L45,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="50,138 32,100 55,100 78,138" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<circle cx="58" cy="118" r="7" fill="#475569"/>`;
+        s += `<polygon points="115,147 155,188 185,188 165,147" fill="#cbd5e1"/>`;
+        s += `<rect x="135" y="172" width="16" height="7" rx="2" fill="#334155"/>`;
+        s += `<path d="M238,139 L252,141 L246,146 L235,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 142, 24, 5.5, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A300',
+      region: 'Toulouse (Pan-European Consortium)',
+      desc: 'The world\'s first twin-engine wide-body airliner, establishing Airbus as a global commercial aviation force in the 1970s.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M48,138 L220,138 Q250,138 254,145 Q250,152 220,152 L48,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="52,138 35,104 55,104 75,138" fill="#1e40af"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,147 150,185 178,185 160,147" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="170" width="18" height="8" rx="2" fill="#334155"/>`;
+        s += `<path d="M234,139 L248,141 L242,146 L230,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 142, 22, 6, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 737 Family',
+      region: 'Renton, Washington (North America)',
+      desc: 'The most-produced jet airliner family in history, serving as the core narrow-body workhorse for worldwide airlines since 1967.',
+      bg: '#172554',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L215,140 Q242,140 245,145 Q242,150 215,150 L55,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="60,140 42,110 60,110 78,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="120,146 150,178 172,178 155,146" fill="#cbd5e1"/>`;
+        s += `<path d="M130,165 L146,165 L146,172 L130,170 Z" fill="#334155"/>`;
+        s += `<path d="M228,141 L238,142 L234,145 L224,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 18, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A320 Family',
+      region: 'Toulouse, Hamburg (Europe)',
+      desc: 'The pioneer of fly-by-wire digital flight controls in commercial airliners, becoming a dominant global narrow-body jet platform.',
+      bg: '#042f2e',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L218,140 Q245,140 248,145 Q245,150 218,150 L55,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="60,140 43,110 61,110 78,140" fill="#2563eb"/>`; // Vertical Stabilizer
+        s += `<polygon points="120,146 152,178 174,178 158,146" fill="#cbd5e1"/>`;
+        s += `<rect x="134" y="166" width="16" height="7" rx="3" fill="#334155"/>`;
+        s += `<path d="M230,141 L242,142 L237,145 L226,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 20, 5.8, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 757',
+      region: 'Renton, Washington (North America)',
+      desc: 'A powerful long-narrow-body airliner known for exceptional high-and-hot runway performance and transatlantic capability.',
+      bg: '#111827',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,140 L230,140 Q258,140 261,145 Q258,150 230,150 L45,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="50,140 35,108 52,108 70,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,146 150,180 172,180 155,146" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="168" width="18" height="7" rx="2" fill="#334155"/>`;
+        s += `<path d="M244,141 L255,142 L250,145 L240,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 143, 24, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 767',
+      region: 'Everett, Washington (North America)',
+      desc: 'Boeing\'s first wide-body twin-jet, establishing reliable long-haul oceanic flights under expanded ETOPS safety regulations.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M48,138 L228,138 Q258,138 261,145 Q258,152 228,152 L48,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="52,138 35,104 55,104 75,138" fill="#1e40af"/>`; // Vertical Stabilizer
+        s += `<polygon points="118,147 152,185 180,185 162,147" fill="#cbd5e1"/>`;
+        s += `<rect x="132" y="170" width="18" height="8" rx="2" fill="#334155"/>`;
+        s += `<path d="M242,139 L255,141 L248,146 L238,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 142, 23, 6, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 777 ("Triple Seven")',
+      region: 'Everett, Washington (North America)',
+      desc: 'The world\'s largest twin-jet airliner, featuring computer-aided design, huge GE90 engines, and long-range intercontinental reach.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<path d="M42,138 L235,138 Q265,138 268,145 Q265,152 235,152 L42,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="46,138 28,102 50,102 72,138" fill="#1d4ed8"/>`; // Vertical Stabilizer
+        s += `<polygon points="112,147 150,188 182,188 160,147" fill="#cbd5e1"/>`;
+        s += `<rect x="128" y="170" width="22" height="10" rx="3" fill="#334155"/>`;
+        s += `<path d="M250,139 L262,141 L256,146 L245,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(70, 142, 26, 6, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A330',
+      region: 'Toulouse (Pan-European Consortium)',
+      desc: 'A versatile twin-engine wide-body jetliner heavily utilized for medium-to-long range passenger routes around the world.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,138 L230,138 Q258,138 261,145 Q258,152 230,152 L45,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="50,138 32,104 52,104 72,138" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,147 150,185 180,185 160,147" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="168" width="20" height="9" rx="3" fill="#334155"/>`;
+        s += `<path d="M244,139 L255,141 L248,146 L238,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(72, 142, 24, 6, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A380 ("Superjumbo")',
+      region: 'Toulouse (Pan-European Consortium)',
+      desc: 'The world\'s largest passenger airliner, featuring a full-length double-deck cabin designed for ultra-high-density hub routes.',
+      bg: '#172554',
+      draw: () => {
+        let s = '';
+        s += `<path d="M40,132 L230,132 Q262,132 265,145 Q262,158 230,158 L40,158 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="45,132 22,90 48,90 75,132" fill="#1e40af"/>`; // Vertical Stabilizer
+        s += `<polygon points="110,148 150,195 185,195 160,148" fill="#cbd5e1"/>`;
+        s += `<rect x="125" y="172" width="16" height="8" rx="2" fill="#334155"/>`;
+        s += `<rect x="145" y="182" width="16" height="8" rx="2" fill="#334155"/>`;
+        s += drawWindows(70, 137, 26, 6, 2.5, 3, 1, "#1e40af");
+        s += drawWindows(70, 147, 26, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Boeing 787 Dreamliner',
+      region: 'Everett, WA & Charleston, SC (North America)',
+      desc: 'A revolutionary composite-construction wide-body jet incorporating electrical architecture and raked wingtips for high efficiency.',
+      bg: '#042f2e',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,138 L230,138 Q260,138 265,145 Q260,152 230,152 L45,152 Z" fill="#f8fafc"/>`;
+        s += `<path d="M50,138 L32,102 L52,102 Q65,120 72,138 Z" fill="#0284c7"/>`; // Curved Vertical Stabilizer
+        s += `<path d="M115,147 Q145,175 185,185 L180,185 Q150,165 160,147 Z" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="168" width="20" height="9" rx="3" fill="#334155"/>`;
+        s += `<path d="M246,139 L258,141 L250,146 L240,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 142, 22, 6.5, 2.8, 4, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A350 XWB',
+      region: 'Toulouse (Pan-European Consortium)',
+      desc: 'A long-range wide-body airliner built with advanced carbon-fiber wings and signature curved winglets for high aerodynamic efficiency.',
+      bg: '#111827',
+      draw: () => {
+        let s = '';
+        s += `<path d="M42,138 L235,138 Q265,138 268,145 Q265,152 235,152 L42,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="46,138 28,102 50,102 72,138" fill="#2563eb"/>`; // Vertical Stabilizer
+        s += `<polygon points="112,147 150,188 182,188 160,147" fill="#cbd5e1"/>`;
+        s += `<path d="M182,188 Q188,185 186,178 Z" fill="#2563eb"/>`; // Curved Winglet
+        s += `<rect x="128" y="170" width="22" height="9" rx="3" fill="#334155"/>`;
+        s += `<path d="M250,139 Q260,140 262,145 L252,146 Z" fill="#0f172a"/>`; // Mask cockpit
+        s += drawWindows(70, 142, 25, 6.2, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Embraer E190/E195 E-Jets',
+      region: 'São José dos Campos (Brazil / South America)',
+      desc: 'A market-leading family of advanced regional jetliners designed in Brazil to serve secondary and high-frequency feeder routes.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L212,140 Q238,140 242,145 Q238,150 212,150 L55,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="60,140 43,110 61,110 78,140" fill="#15803d"/>`; // Vertical Stabilizer
+        s += `<polygon points="120,146 150,178 170,178 155,146" fill="#cbd5e1"/>`;
+        s += `<rect x="132" y="165" width="15" height="6" rx="2" fill="#334155"/>`;
+        s += `<path d="M225,141 L236,142 L231,145 L220,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 18, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Bombardier CRJ Series',
+      region: 'Mirabel, Quebec (Canada / North America)',
+      desc: 'A widely adopted family of regional jetliners adapted from executive transport airframes, revolutionizing point-to-point regional travel.',
+      bg: '#312e81',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,140 L220,140 Q248,140 252,145 Q248,150 220,150 L50,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="55,140 38,108 55,108 72,140" fill="#b91c1c"/>`; // Vertical Stabilizer
+        s += `<rect x="32" y="105" width="28" height="5" rx="1" fill="#b91c1c"/>`; // T-tail Horizontal Fin
+        s += `<rect x="65" y="136" width="20" height="6" rx="2" fill="#475569"/>`;
+        s += `<polygon points="125,146 155,175 175,175 160,146" fill="#cbd5e1"/>`;
+        s += drawWindows(85, 143, 20, 5.8, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Airbus A220 (CSeries)',
+      region: 'Mirabel, Quebec (Canada / Joint Europe)',
+      desc: 'An ultra-efficient modern narrow-body jet equipped with PW1000G geared turbofans and composite wings for regional and mainline routes.',
+      bg: '#065f46',
+      draw: () => {
+        let s = '';
+        s += `<path d="M52,140 L220,140 Q248,140 251,145 Q248,150 220,150 L52,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="57,140 40,110 58,110 75,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="118,146 150,178 172,178 156,146" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="165" width="16" height="7" rx="3" fill="#334155"/>`;
+        s += `<path d="M233,141 L245,142 L240,145 L229,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(80, 143, 20, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'ATR 42 / 72',
+      region: 'Toulouse & Naples (France & Italy / Europe)',
+      desc: 'The benchmark regional turboprop aircraft worldwide, optimized for short runways, island routes, and low operating costs.',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L210,140 Q235,140 238,145 Q235,150 210,150 L55,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="60,140 45,110 62,110 78,140" fill="#2563eb"/>`; // Vertical Stabilizer
+        s += `<rect x="40" y="108" width="28" height="5" fill="#2563eb"/>`; // High T-tail
+        s += `<rect x="100" y="132" width="75" height="6" fill="#cbd5e1"/>`; // High wing
+        s += `<rect x="130" y="138" width="14" height="6" fill="#475569"/>`; // Engine nacelle
+        s += `<line x1="144" y1="130" x2="144" y2="152" stroke="#38bdf8" stroke-width="2"/>`; // Propeller
+        s += drawWindows(80, 143, 16, 6.5, 3, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'de Havilland Canada Dash 8 (Q400)',
+      region: 'Toronto, Ontario (Canada / North America)',
+      desc: 'A high-speed regional turboprop engineered with active noise cancellation, matching jet speeds on short-haul regional sectors.',
+      bg: '#172554',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,140 L220,140 Q245,140 248,145 Q245,150 220,150 L50,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="55,140 40,108 58,108 73,140" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<rect x="34" y="106" width="30" height="5" fill="#dc2626"/>`; // T-tail
+        s += `<rect x="100" y="132" width="80" height="6" fill="#cbd5e1"/>`;
+        s += `<rect x="135" y="138" width="16" height="7" fill="#475569"/>`;
+        s += `<line x1="151" y1="130" x2="151" y2="154" stroke="#38bdf8" stroke-width="2"/>`;
+        s += drawWindows(80, 143, 20, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Ilyushin Il-62',
+      region: 'Moscow (Soviet Union / Eastern Europe)',
+      desc: 'A long-range Soviet jetliner with four aft-mounted engines and a T-tail layout, serving as the flagship intercontinental USSR transport.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,140 L230,140 Q258,140 262,145 Q258,150 230,150 L45,150 Z" fill="#cbd5e1"/>`;
+        s += `<polygon points="50,140 32,105 52,105 72,140" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<rect x="25" y="102" width="34" height="6" fill="#dc2626"/>`; // T-tail
+        s += `<rect x="62" y="134" width="26" height="10" rx="3" fill="#475569"/>`; // Quad rear engines
+        s += `<polygon points="120,146 155,182 182,182 165,146" fill="#94a3b8"/>`;
+        s += drawWindows(80, 143, 22, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Ilyushin Il-86 / Il-96',
+      region: 'Voronezh (Soviet Union & Russia)',
+      desc: 'The first Soviet wide-body quad-jet airliner, designed for high-capacity routes with lower deck luggage self-boarding systems.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,138 L230,138 Q258,138 262,145 Q258,152 230,152 L45,152 Z" fill="#cbd5e1"/>`;
+        s += `<polygon points="50,138 32,102 52,102 72,138" fill="#2563eb"/>`; // Vertical Stabilizer
+        s += `<polygon points="115,147 150,188 180,188 160,147" fill="#94a3b8"/>`;
+        s += `<rect x="128" y="170" width="14" height="6" fill="#334155"/>`;
+        s += `<rect x="148" y="180" width="14" height="6" fill="#334155"/>`;
+        s += drawWindows(75, 142, 24, 6, 2.5, 3.5, 1);
+        return s;
+      }
+    },
+    {
+      name: 'COMAC C919',
+      region: 'Shanghai (China / East Asia)',
+      desc: 'China\'s independently developed narrow-body mainline commercial jet, designed to enter the global single-aisle market.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<path d="M52,140 L220,140 Q248,140 251,145 Q248,150 220,150 L52,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="57,140 40,110 58,110 75,140" fill="#dc2626"/>`; // Vertical Stabilizer
+        s += `<polygon points="118,146 150,178 172,178 156,146" fill="#cbd5e1"/>`;
+        s += `<rect x="130" y="166" width="16" height="7" rx="3" fill="#334155"/>`;
+        s += `<path d="M233,141 L245,142 L240,145 L229,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(80, 143, 20, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Sukhoi Superjet 100',
+      region: 'Komsomolsk-on-Amur (Russia / Northern Asia)',
+      desc: 'A fly-by-wire regional jetliner developed in collaboration with international aerospace partners for short-to-medium sectors.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M55,140 L212,140 Q238,140 242,145 Q238,150 212,150 L55,150 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="60,140 43,110 61,110 78,140" fill="#0284c7"/>`; // Vertical Stabilizer
+        s += `<polygon points="120,146 150,178 170,178 155,146" fill="#cbd5e1"/>`;
+        s += `<rect x="132" y="165" width="15" height="6" rx="2" fill="#334155"/>`;
+        s += `<path d="M225,141 L236,142 L231,145 L220,145 Z" fill="#0f172a"/>`;
+        s += drawWindows(85, 143, 17, 6, 2.5, 3, 1);
+        return s;
+      }
+    },
+    {
+      name: 'Lockheed L-1011 TriStar',
+      region: 'Burbank, California (North America)',
+      desc: 'An technologically advanced wide-body tri-jet featuring an integrated S-duct center engine and autoland capabilities ahead of its era.',
+      bg: '#172554',
+      draw: () => {
+        let s = '';
+        s += `<path d="M45,138 L225,138 Q255,138 258,145 Q255,152 225,152 L45,152 Z" fill="#f8fafc"/>`;
+        s += `<polygon points="50,138 32,100 55,100 78,138" fill="#d97706"/>`; // Vertical Stabilizer
+        s += `<path d="M68,138 Q58,128 50,138 Z" fill="#334155"/>`; // S-Duct intake
+        s += `<polygon points="115,147 155,188 185,188 165,147" fill="#cbd5e1"/>`;
+        s += `<rect x="135" y="172" width="16" height="7" rx="2" fill="#334155"/>`;
+        s += `<path d="M238,139 L252,141 L246,146 L235,146 Z" fill="#0f172a"/>`;
+        s += drawWindows(75, 142, 24, 5.5, 2.5, 3.5, 1);
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Core Render Function ---------------- */
+  function renderPlane(index) {
+    const item = AIRPLANES[index];
+    let svg = `<svg viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+
+    placeholderText.style.display = 'none';
+    
+    // Remove old SVG if present
+    const oldSvg = viewfinder.querySelector('svg');
+    if (oldSvg) oldSvg.remove();
+
+    viewfinder.insertAdjacentHTML('afterbegin', svg);
+
+    // Update counter
+    const numStr = String(index + 1).padStart(2, '0');
+    frameCountEl.textContent = `NO. ${numStr}/35`;
+
+    // Trigger visual effects
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth; // trigger reflow
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => {
+      recIndicator.classList.remove('flash');
+    }, 600);
+
+    playShutterSound();
+  }
+
+  /* ---------------- Shutter Control ---------------- */
+  function triggerCapture() {
+    renderPlane(currentIndex);
+    currentIndex = (currentIndex + 1) % AIRPLANES.length;
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if (autoActive) stopAuto();
+    triggerCapture();
+  });
+
+  /* ---------------- Auto Mode ---------------- */
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON';
+    triggerCapture();
+    autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+  }
+
+  autoBtn.addEventListener('click', () => {
+    if (autoActive) {
+      stopAuto();
+    } else {
+      startAuto();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

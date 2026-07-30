@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Marine Basins & Ecosystems Edition</title>
+<style>
+  :root {
+    --body-dark: #0a1118;
+    --body-mid: #111d2a;
+    --body-light: #1c2d3f;
+    --screen-bg: #060a0f;
+    --cream: #e0f2fe;
+    --cream-dim: #7dd3fc;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #1e3a8a;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0c4a6e 0%, #032b45 55%, #02131e 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #93c5fd;
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #0c4a6e;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56, 189, 248, 0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #e0f2fe;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #38bdf8, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0284c7;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: #93c5fd;
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56, 189, 248, 0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56, 189, 248, 0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #032b45;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56, 189, 248, 0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56, 189, 248, 0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL OCEAN-21 · MARINE ECOSYSTEMS EDITION</p>
+    <h1>Underwater Systems & Basins</h1>
+    <p>Press shutter to survey 21 prominent subsea habitats and continental shelves.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SONAR</span>
+      <span>f/2.8 &nbsp;·&nbsp; ISO 400</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        SONAR READY<br>
+        press shutter to survey major marine habitats
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/500</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">BATHYMETRY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to capture ecosystems</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#04080e"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#08131f" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#020408" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#0c4a6e" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#06111e"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#040d1a" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" fill="#f0f9ff">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#7dd3fc">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Marine Ecosystems SVG Visualizations ---------------- */
+  const LANDFORMS = [
+    {
+      name: 'Great Barrier Reef Coral Systems',
+      region: 'Coral Sea (Northeast Australia)',
+      desc: "World's largest biogenic reef structure, built by billions of coral polyps creating a shallow-water haven.",
+      bg: '#022c22',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#047857" opacity="0.4"/>`;
+        s += `<path d="M50,273 Q80,180 120,240 T190,210 T240,273" fill="#10b981"/>`;
+        s += `<circle cx="80" cy="200" r="12" fill="#f43f5e"/>`;
+        s += `<circle cx="150" cy="180" r="16" fill="#fbbf24"/>`;
+        s += `<circle cx="210" cy="220" r="10" fill="#ec4899"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Monterey Submarine Canyon & Kelp Forests',
+      region: 'California Coast (Eastern Pacific Ocean)',
+      desc: 'Dense giant kelp forests anchored to rocky reefs, nourished by deep-canyon upwellings of cold water.',
+      bg: '#064e3b',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 110,120 140,273" fill="#0f172a"/>`;
+        s += `<polygon points="257,273 190,100 160,273" fill="#0f172a"/>`;
+        for(let i=0; i<5; i++){
+          s += `<path d="M${70+i*30},273 Q${60+i*30},150 ${80+i*30},50" stroke="#15803d" stroke-width="4" fill="none"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Sargasso Sea Driftwood & Pelagic Algae Mat',
+      region: 'North Atlantic Gyre (Subtropical Atlantic)',
+      desc: 'Unique open-ocean ecosystem lacking land boundaries, sustained by floating mats of Sargassum seaweed.',
+      bg: '#02131e',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0369a1" opacity="0.3"/>`;
+        for(let i=0; i<12; i++){
+          s += `<ellipse cx="${60 + (i*15)%180}" cy="${60 + (i*12)%100}" rx="15" ry="6" fill="#ca8a04" opacity="0.8"/>`;
+        }
+        s += `<path d="M100,180 C120,170 140,190 160,180" stroke="#38bdf8" stroke-width="3" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Galápagos Hydrothermal Vent Communities',
+      region: 'Galápagos Rift (Equatorial Eastern Pacific)',
+      desc: 'Deep-sea chemosynthetic habitats centered around superheated volcanic vents where giant tube worms thrive.',
+      bg: '#09090b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="220" width="218" height="53" fill="#27272a"/>`;
+        s += `<polygon points="120,220 135,140 165,140 180,220" fill="#18181b"/>`;
+        s += `<path d="M140,140 Q150,60 160,40 Q145,80 150,140" fill="#ef4444" opacity="0.7"/>`;
+        s += `<rect x="70" y="180" width="6" height="40" fill="#f8fafc"/>`;
+        s += `<rect x="70" y="170" width="6" height="10" fill="#dc2626"/>`;
+        s += `<rect x="220" y="190" width="6" height="30" fill="#f8fafc"/>`;
+        s += `<rect x="220" y="180" width="6" height="10" fill="#dc2626"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Raja Ampat Coral Triangle Beds',
+      region: 'West Papua (Indo-Pacific Archipelagos)',
+      desc: 'Global epicenter of marine biodiversity, featuring soft coral garden slopes and limestone karst ecosystems.',
+      bg: '#042f2e',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,273 C80,150 110,150 130,273" fill="#0f766e"/>`;
+        s += `<path d="M160,273 C180,100 210,100 240,273" fill="#0d9488"/>`;
+        s += `<circle cx="100" cy="180" r="14" fill="#a855f7"/>`;
+        s += `<circle cx="185" cy="150" r="18" fill="#38bdf8"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Agulhas Bank Continental Shelf',
+      region: 'Southern Coast (South Africa)',
+      desc: 'Broad, productive subsea shelf where Atlantic and Indian Ocean currents mix, fueling seasonal sardine runs.',
+      bg: '#032b45',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 120,37 200,200 257,200 257,273 39,273" fill="#1e3a8a"/>`;
+        for(let i=0; i<8; i++){
+          s += `<ellipse cx="${130 + i*12}" cy="${130 + i*8}" rx="6" ry="2" fill="#93c5fd"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Rost Reef Cold-Water Coral Complex',
+      region: 'Lofoten Archipelago (Norwegian Sea)',
+      desc: 'Deep, dark-water coral ecosystem formed by Lophelia pertusa stony corals living hundreds of meters deep.',
+      bg: '#020617',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="200" width="218" height="73" fill="#0f172a"/>`;
+        s += `<path d="M70,200 Q90,140 110,200 Q130,130 150,200" stroke="#f43f5e" stroke-width="4" fill="none"/>`;
+        s += `<path d="M150,200 Q170,150 190,200 Q210,120 230,200" stroke="#fb7185" stroke-width="4" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Sundarbans Submerged Mangrove Roots',
+      region: 'Bay of Bengal (India / Bangladesh)',
+      desc: 'Intricate underwater prop-root systems stabilizing muds and creating nursery grounds for juvenile marine life.',
+      bg: '#14281d',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="210" width="218" height="63" fill="#2d3748"/>`;
+        for(let i=0; i<6; i++){
+          s += `<path d="M${60+i*32},37 L${50+i*32},210 M${60+i*32},100 L${75+i*32},210" stroke="#854d0e" stroke-width="4"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Great Australian Bight Benthic Shelf',
+      region: 'Southern Ocean Margin (South Australia)',
+      desc: 'Vast continental shelf dominated by deep bryozoan suspension feeders, sponges, and rare temperate reef life.',
+      bg: '#082f49',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="180" width="218" height="93" fill="#0c4a6e"/>`;
+        for(let i=0; i<7; i++){
+          s += `<path d="M${60+i*28},180 C${50+i*28},150 ${70+i*28},150 ${60+i*28},180" fill="#f59e0b"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Shark Bay Seagrass Meadows',
+      region: 'Western Coast (Australia / Indian Ocean)',
+      desc: 'Massive underwater fields of Posidonia australis seagrass covering thousands of sq km, feeding dugongs.',
+      bg: '#064e3b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="170" width="218" height="103" fill="#047857"/>`;
+        for(let i=0; i<15; i++){
+          s += `<path d="M${45+i*14},273 Q${40+i*14},200 ${50+i*14},140" stroke="#a3e635" stroke-width="2" fill="none"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Messina Strait Currents & Deep-Water Upwelling',
+      region: 'Central Mediterranean (Italy / Sicily)',
+      desc: 'Narrow hydrodynamic shelf gap where powerful tidal currents force deep abyssal fauna up into surface waters.',
+      bg: '#0c4a6e',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 100,37 80,273 39,273" fill="#1e293b"/>`;
+        s += `<polygon points="257,37 200,37 220,273 257,273" fill="#1e293b"/>`;
+        s += `<path d="M120,250 Q150,150 180,50" stroke="#38bdf8" stroke-width="4" fill="none" stroke-dasharray="6,4"/>`;
+        s += `<path d="M170,250 Q140,150 130,50" stroke="#38bdf8" stroke-width="3" fill="none" stroke-dasharray="6,4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Belize Barrier Reef Lagoon & Blue Hole',
+      region: 'Caribbean Sea (Central America)',
+      desc: 'Complex coastal barrier system with shallow seagrass flats, patch reefs, and a 124m deep submerged sinkhole.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#38bdf8"/>`;
+        s += `<circle cx="148" cy="155" r="55" fill="#030712"/>`;
+        s += `<circle cx="148" cy="155" r="55" fill="none" stroke="#fde047" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Barents Sea Cold-Shelf Sponge Spicules',
+      region: 'Arctic Ocean Margin (Northern Europe)',
+      desc: 'Dense, deep-water benthic communities made of silicious glass sponges, forming structural habitats across shelf muds.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="190" width="218" height="83" fill="#1e293b"/>`;
+        for(let i=0; i<6; i++){
+          s += `<cylinder cx="${60+i*32}" cy="170" fill="#e2e8f0"/>`;
+          s += `<path d="M${55+i*32},190 L${55+i*32},150 L65,150 L65,190" fill="#cbd5e1"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Bering Sea Slope & Zhemchug Canyon',
+      region: 'North Pacific / Subarctic (Alaska / Eastern Russia)',
+      desc: 'Colossal submarine canyon ecosystem supporting deep-sea sponges, corals, and vast benthic crab populations.',
+      bg: '#030712',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 110,37 140,273 39,273" fill="#1e3a8a"/>`;
+        s += `<polygon points="257,37 190,37 160,273 257,273" fill="#1e3a8a"/>`;
+        s += `<path d="M120,100 L180,200" stroke="#ef4444" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Patagonian Shelf Breaks & Frontal Zones',
+      region: 'South Atlantic (Argentina / Falkland Islands)',
+      desc: 'Broad, nutrient-rich shelf margin where ocean currents generate massive plankton blooms sustaining marine life.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 130,37 210,273 39,273" fill="#0369a1"/>`;
+        s += `<path d="M120,50 C160,80 100,150 180,220" stroke="#a3e635" stroke-width="8" fill="none" opacity="0.7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Izaru Cold Seep Asphalts',
+      region: 'Gulf of Mexico Basin (North America)',
+      desc: 'Abyssal seafloor sites where hydrocarbons and asphalt ooze from the seabed, supporting chemosynthetic communities.',
+      bg: '#09090b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="210" width="218" height="63" fill="#27272a"/>`;
+        s += `<path d="M80,210 Q90,160 110,210 Q140,140 170,210" fill="#18181b"/>`;
+        s += `<circle cx="110" cy="190" r="4" fill="#a855f7"/>`;
+        s += `<circle cx="140" cy="170" r="5" fill="#a855f7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Red Sea Deep Brine Pools',
+      region: 'Red Sea Trough (Middle East)',
+      desc: 'Extreme hypersaline, oxygen-depleted basins sitting at the ocean floor surrounded by extremophile microbial mats.',
+      bg: '#450a0a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#7f1d1d" opacity="0.3"/>`;
+        s += `<rect x="39" y="200" width="218" height="73" fill="#991b1b"/>`;
+        s += `<rect x="70" y="220" width="156" height="30" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Tasmanian Giant Kelp Forests',
+      region: 'Southeastern Waters (Tasmania, Australia)',
+      desc: 'Cool-temperate kelp forest ecosystem providing structural habitat for endemic sea dragons and abalone.',
+      bg: '#064e3b',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<6; i++){
+          s += `<path d="M${60+i*30},273 C${40+i*30},180 ${80+i*30},120 ${60+i*30},37" stroke="#15803d" stroke-width="5" fill="none"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'George\'s Bank Shallow Continental Shoals',
+      region: 'Gulf of Maine (Northwest Atlantic)',
+      desc: 'Highly elevated submerged plateau where tidal mixing creates one of the most biologically productive environments.',
+      bg: '#0369a1',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="200" width="218" height="73" fill="#0284c7"/>`;
+        s += `<rect x="80" y="120" width="136" height="80" fill="#38bdf8"/>`;
+        s += `<path d="M80,120 L39,200 M216,120 L257,200" stroke="#38bdf8" stroke-width="2"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Palau Blue Corner Wall',
+      region: 'Philippine Sea (Micronesia)',
+      desc: 'Dramatic underwater drop-off where currents converge along sheer coral walls, attracting pelagic sharks and rays.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 130,37 130,273 39,273" fill="#0f766e"/>`;
+        s += `<path d="M150,100 L190,120 L150,125 Z" fill="#f8fafc"/>`;
+        s += `<path d="M170,180 L220,200 L170,208 Z" fill="#f8fafc"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Challenger Deep Hadal Trench Zone',
+      region: 'Mariana Trench (Western Pacific Ocean)',
+      desc: "Earth's deepest benthic habitat, where hyper-pressurized, sub-zero ecosystems are populated by amphipods.",
+      bg: '#020617',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 100,37 140,273 39,273" fill="#090d16"/>`;
+        s += `<polygon points="257,37 200,37 160,273 257,273" fill="#090d16"/>`;
+        s += `<circle cx="150" cy="255" r="4" fill="#38bdf8"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Camera Shutter Render Core ---------------- */
+  function renderFrame(index) {
+    const item = LANDFORMS[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function triggerSnap() {
+    playShutterSound();
+    
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 800);
+
+    frameNumber++;
+    frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+
+    if(placeholderText) {
+      placeholderText.style.display = 'none';
+    }
+
+    const svgContent = renderFrame(currentIndex);
+    
+    let imgContainer = viewfinder.querySelector('svg');
+    if(!imgContainer) {
+      viewfinder.insertAdjacentHTML('afterbegin', svgContent);
+    } else {
+      imgContainer.outerHTML = svgContent;
+    }
+
+    currentIndex = (currentIndex + 1) % LANDFORMS.length;
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    triggerSnap();
+  });
+
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON';
+    triggerSnap();
+    autoTimer = setInterval(triggerSnap, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+    autoTimer = null;
+  }
+
+  autoBtn.addEventListener('click', () => {
+    if(autoActive) {
+      stopAuto();
+    } else {
+      startAuto();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
