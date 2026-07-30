@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📸 EasyCamera</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+
+        :root {
+            --bg: #0a0a14;
+            --card: #1a1a2e;
+            --accent: #6a7cff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: #ddd;
+            line-height: 1.5;
+            min-height: 100dvh;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            color: #a0b0ff;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.75;
+            margin-bottom: 8px;
+        }
+
+        .search-container {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 10;
+            padding: 12px 0 16px;
+        }
+
+        #search {
+            width: 100%;
+            padding: 16px 20px;
+            background-color: #1f1f33;
+            border: 1.5px solid #33334d;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #search:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(106, 124, 255, 0.15);
+        }
+
+        .category {
+            margin-bottom: 32px;
+        }
+
+        .category h2 {
+            font-size: 1.35rem;
+            color: #a0b0ff;
+            margin-bottom: 14px;
+            padding-left: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .links {
+            display: grid;
+            gap: 12px;
+        }
+
+        .link-card {
+            display: block;
+            padding: 18px 22px;
+            background-color: var(--card);
+            color: #e0e0ff;
+            text-decoration: none;
+            font-size: 1.15rem;
+            font-weight: 500;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(106, 124, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            background-color: #23223f;
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(106, 124, 255, 0.2);
+        }
+
+        .link-card:active {
+            transform: scale(0.97);
+        }
+
+        .emoji {
+            margin-right: 12px;
+            font-size: 1.4rem;
+            display: inline-block;
+            width: 28px;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 30px 0 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            border-top: 1px solid #222;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 24px;
+            }
+            .container {
+                max-width: 680px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 EasyCamera</h1>
+            <p class="subtitle">High-quality visual references for every creative need</p>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="🔍 Search categories or topics..." autocomplete="off">
+        </div>
+
+        <!-- Nature -->
+        <div class="category" data-category="nature">
+            <h2>🌍 Nature &amp; Landscapes</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/land.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌄</span> Natural Marvels
+                </a>
+                <a href="https://easylandx.github.io/cam/bird.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🐦</span> Birds and Rivers
+                </a>
+                <a href="https://easylandx.github.io/cam/marine.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌊</span> Marine Life
+                </a>
+                <a href="https://easylandx.github.io/cam/trees.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌳</span> Ancient Trees
+                </a>
+                <a href="https://easylandx.github.io/cam/plant.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌱</span> Native Plant Species
+                </a>
+                <a href="https://easylandx.github.io/cam/rivers.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🛶</span> Rivers &amp; Hydrological
+                </a>
+                <a href="https://easylandx.github.io/cam/basins.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌏</span> Basins &amp; Ecosystems
+                </a>
+                <a href="https://easylandx.github.io/cam/coast.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🐬</span> Coastal &amp; Waterways
+                </a>
+                <a href="https://easylandx.github.io/cam/earth.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌍</span> Earth Relief &amp; Bathymetry
+                </a>
+            </div>
+        </div>
+
+        <!-- Art & Culture -->
+        <div class="category" data-category="art">
+            <h2>🎨 Art &amp; Culture</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/art.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🖼️</span> Iconic Paintings
+                </a>
+                <a href="https://easylandx.github.io/cam/mast.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🎨</span> Invented Paintings
+                </a>
+                <a href="https://easylandx.github.io/cam/imag.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🏛️</span> Invented Monuments
+                </a>
+                <a href="https://easylandx.github.io/cam/ceramic.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🏺</span> Ceramic Arts
+                </a>
+                <a href="https://easylandx.github.io/cam/abstract.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">👀</span> Art &amp; Geometry
+                </a>
+                <a href="https://easylandx.github.io/cam/geome.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🧿</span> Sacred Geometry
+                </a>
+            </div>
+        </div>
+
+        <!-- Science & Geology -->
+        <div class="category" data-category="science">
+            <h2>🔬 Science &amp; Earth</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/science.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🔬</span> Scientific Discoveries
+                </a>
+                <a href="https://easylandx.github.io/cam/geo.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌋</span> Geological &amp; Mineral
+                </a>
+                <a href="https://easylandx.github.io/cam/tecto.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">⛰️</span> Tectonic &amp; Geological
+                </a>
+                <a href="https://easylandx.github.io/cam/atmo.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌈</span> Atmospheric Optics
+                </a>
+                <a href="https://easylandx.github.io/cam/micro.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🦠</span> Microscopic &amp; Natural
+                </a>
+                <a href="https://easylandx.github.io/cam/pigme.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">💐</span> Color Compounds
+                </a>
+            </div>
+        </div>
+
+        <!-- Engineering & Technology -->
+        <div class="category" data-category="engineering">
+            <h2>⚙️ Engineering &amp; Technology</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/engine.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">👷🏻‍♀️</span> Precision Engineering
+                </a>
+                <a href="https://easylandx.github.io/cam/bridge.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🌉</span> Structural Mechanics
+                </a>
+                <a href="https://easylandx.github.io/cam/aero.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">✈️</span> Airliners &amp; Aviation
+                </a>
+                <a href="https://easylandx.github.io/cam/vessel.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">⛵</span> Seafaring Vessels
+                </a>
+                <a href="https://easylandx.github.io/cam/acous.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🔊</span> Acoustic Wave
+                </a>
+            </div>
+        </div>
+
+        <!-- History, Myth & Philosophy -->
+        <div class="category" data-category="culture">
+            <h2>📜 History, Myth &amp; Philosophy</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/hist.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🤵</span> World Icons
+                </a>
+                <a href="https://easylandx.github.io/cam/myth.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🐉</span> Mythical Creatures
+                </a>
+                <a href="https://easylandx.github.io/cam/write.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">📜</span> Systems &amp; Philosophical
+                </a>
+            </div>
+        </div>
+
+        <!-- Lifestyle & Others -->
+        <div class="category" data-category="other">
+            <h2>🍽️ Lifestyle &amp; Others</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/food.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🥘</span> Culinary Traditions
+                </a>
+                <a href="https://easylandx.github.io/cam/music.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🎵</span> Musical Instruments
+                </a>
+            </div>
+        </div>
+
+        <!-- Self & Camera -->
+        <div class="category" data-category="camera">
+            <h2>📷 Camera &amp; Self</h2>
+            <div class="links">
+                <a href="https://easylandx.github.io/cam/self.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">🤳</span> Selfie Camera
+                </a>
+                <a href="https://easylandx.github.io/cam/cam.html" target="_blank" rel="noopener noreferrer" class="link-card">
+                    <span class="emoji">📷</span> Real Camera
+                </a>
+            </div>
+        </div>
+
+        <div class="no-results" id="no-results">
+            No matches found. Try different keywords.
+        </div>
+
+        <div class="footer">
+            EasyCamera • All visual references on GitHub Pages
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search');
+        const categories = document.querySelectorAll('.category');
+        const noResults = document.getElementById('no-results');
+
+        function filterLinks() {
+            const term = searchInput.value.toLowerCase().trim();
+            
+            let visibleCount = 0;
+
+            categories.forEach(category => {
+                const links = category.querySelectorAll('.link-card');
+                let categoryVisible = false;
+
+                links.forEach(link => {
+                    const text = link.textContent.toLowerCase();
+                    if (term === '' || text.includes(term)) {
+                        link.style.display = 'block';
+                        categoryVisible = true;
+                    } else {
+                        link.style.display = 'none';
+                    }
+                });
+
+                category.style.display = categoryVisible ? 'block' : 'none';
+                if (categoryVisible) visibleCount++;
+            });
+
+            noResults.style.display = (visibleCount === 0 && term !== '') ? 'block' : 'none';
+        }
+
+        searchInput.addEventListener('input', filterLinks);
+
+        // Make search work on mobile (clear button etc.)
+        searchInput.addEventListener('focus', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>
