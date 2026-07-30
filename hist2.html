@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Historical Figures Edition</title>
+<style>
+  :root {
+    --body-dark: #5c2a10;
+    --body-mid: #8a3c14;
+    --body-light: #c2591c;
+    --screen-bg: #140c07;
+    --cream: #fbead6;
+    --cream-dim: #e3b78c;
+    --shutter-orange: #e8622c;
+    --shutter-orange-dark: #b8431a;
+    --amber: #f2a544;
+    --line: #6b3a1a;
+    --focus: #ffb347;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #b8521e 0%, #6b2f10 55%, #180d07 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -6px 12px rgba(0,0,0,0.35);
+    border: 1px solid #2c1408;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--shutter-orange);
+    box-shadow: 0 0 8px 1px rgba(232,98,44,0.6);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: #6b5140;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #ff7a45;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ff7a45;
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #f28a5f, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.25);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #200f06;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(232,98,44,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--shutter-orange);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(232,98,44,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(232,98,44,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--body-dark);
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(242,165,68,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(242,165,68,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL GB-01 · GALLERY SIM</p>
+    <h1>Gallery Booth</h1>
+    <p>Point, click, capture history — icons who shaped world civilization.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE</span>
+      <span>f/2.8 &nbsp;·&nbsp; ISO 200</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER EMPTY<br>
+        press shutter to capture a historical icon
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/60</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span class="val">ENDLESS</span>
+      </div>
+    </div>
+    <p class="hint">tap the orange button to take a photo</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;           // ← Add this
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1400;
+
+  /* ---------------- Web Audio API Shutter Sound Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Museum Gallery & Art Collection ---------------- */
+  const SPOTLIGHTS = ['#f2c98a','#f2b06a','#e8d9b0','#f7dca0'];
+
+  function wallAndFrame(bg){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#3a2a1c"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#4a3826" opacity="0.5"/>`;
+    const glow = pick(SPOTLIGHTS);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.16"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#241609" opacity="0.6"/>`;
+    s += `<rect x="26" y="24" width="252" height="270" fill="#000" opacity="0.35"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#7a4a1e" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#d9a441" stroke-width="6"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1a120a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, dates, category){
+    let s = '';
+    s += `<rect x="0" y="344" width="300" height="56" fill="#15110c" opacity="0.85"/>`;
+    s += `<rect x="0" y="344" width="300" height="2" fill="#f2a544" opacity="0.7"/>`;
+    s += `<text x="150" y="365" text-anchor="middle" font-family="Georgia, serif" font-size="13.5" font-weight="700" fill="#fbead6" letter-spacing="0.3">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="380" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10" fill="#e3b78c">${escapeXml(dates)}</text>`;
+    s += `<text x="150" y="394" text-anchor="middle" font-family="'Courier New', monospace" font-size="7.5" fill="#b08e6a" letter-spacing="1.1">${escapeXml(category.toUpperCase())}</text>`;
+    return s;
+  }
+
+  /* ---------------- Historical Figures SVG Portraits ---------------- */
+  const HISTORICAL_FIGURES = [
+    {
+      name: 'Jesus Christ',
+      dates: 'c. 4 BCE – 30/33 CE',
+      category: 'Religious Leader · Founder of Christianity',
+      bg: '#2b1e1a',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="118" r="54" fill="#f2a544" opacity="0.8"/>`;
+        s += `<circle cx="148" cy="118" r="48" fill="none" stroke="#fbead6" stroke-width="2" opacity="0.9"/>`;
+        s += `<rect x="144" y="68" width="8" height="100" fill="#fff" opacity="0.35"/>`;
+        s += `<rect x="98" y="114" width="100" height="8" fill="#fff" opacity="0.35"/>`;
+        s += `<path d="M75,273 Q100,165 148,165 Q196,165 221,273 Z" fill="#b8431a"/>`;
+        s += `<path d="M75,273 Q125,185 148,185 Q170,185 200,273 Z" fill="#e8cfad"/>`;
+        s += `<rect x="135" y="145" width="26" height="30" fill="#d49b6a"/>`;
+        s += `<ellipse cx="148" cy="120" rx="26" ry="34" fill="#e5ad7e"/>`;
+        s += `<path d="M120,95 Q115,150 128,185 M176,95 Q181,150 168,185" fill="none" stroke="#4a2c11" stroke-width="12" stroke-linecap="round"/>`;
+        s += `<path d="M128,135 Q148,168 168,135 Q160,172 148,172 Q136,172 128,135 Z" fill="#3b2109"/>`;
+        s += `<path d="M136,134 Q148,142 160,134" fill="none" stroke="#3b2109" stroke-width="3.5" stroke-linecap="round"/>`;
+        s += `<path d="M133,115 Q140,111 145,115 M151,115 Q156,111 163,115" fill="none" stroke="#3b2109" stroke-width="2.5"/>`;
+        s += `<circle cx="139" cy="120" r="2.5" fill="#2b1504"/><circle cx="157" cy="120" r="2.5" fill="#2b1504"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Confucius',
+      dates: 'China · 551–479 BCE',
+      category: 'Philosopher · Cultural Foundation of East Asia',
+      bg: '#241a18',
+      draw: () => {
+        let s = '';
+        s += `<text x="148" y="140" text-anchor="middle" font-family="sans-serif" font-size="110" fill="#d94141" opacity="0.12">仁</text>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#2e382b"/>`;
+        s += `<path d="M100,273 L148,180 L196,273 Z" fill="#8c2e2b"/>`;
+        s += `<path d="M130,180 L148,273 L166,180 Z" fill="#e0b86c"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca77f"/>`;
+        s += `<ellipse cx="148" cy="120" rx="25" ry="30" fill="#eaba95"/>`;
+        s += `<rect x="128" y="80" width="40" height="22" rx="3" fill="#1a1816"/>`;
+        s += `<line x1="120" y1="102" x2="176" y2="102" stroke="#d9a441" stroke-width="4"/>`;
+        s += `<path d="M125,135 Q148,225 171,135 Z" fill="#dedede" stroke="#b0b0b0" stroke-width="1"/>`;
+        s += `<path d="M132,132 Q148,142 164,132" fill="none" stroke="#d0d0d0" stroke-width="3" stroke-linecap="round"/>`;
+        s += `<path d="M132,115 Q139,111 144,115 M152,115 Q157,111 164,115" fill="none" stroke="#261b14" stroke-width="2.5"/>`;
+        s += `<circle cx="138" cy="118" r="2.2" fill="#261b14"/><circle cx="158" cy="118" r="2.2" fill="#261b14"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Gautama Buddha',
+      dates: 'c. 5th–4th century BCE',
+      category: 'Spiritual Teacher · Founder of Buddhism',
+      bg: '#1c2419',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="148" cy="125" rx="60" ry="60" fill="#e59828" opacity="0.3"/>`;
+        s += `<circle cx="148" cy="125" r="48" fill="#d47e1b" opacity="0.4"/>`;
+        s += `<path d="M70,273 Q90,165 148,165 Q206,165 226,273 Z" fill="#d45b12"/>`;
+        s += `<path d="M100,273 Q125,180 185,273 Z" fill="#f29f05"/>`;
+        s += `<rect x="136" y="148" width="24" height="25" fill="#dca06d"/>`;
+        s += `<line x1="138" y1="160" x2="158" y2="160" stroke="#b07543" stroke-width="1.5"/>`;
+        s += `<ellipse cx="148" cy="122" rx="27" ry="32" fill="#e8b182"/>`;
+        s += `<circle cx="148" cy="85" r="10" fill="#36251b"/>`;
+        s += `<path d="M121,118 Q148,90 175,118 Z" fill="#36251b"/>`;
+        s += `<path d="M120,118 Q114,132 120,144 M176,118 Q182,132 176,144" fill="none" stroke="#dca06d" stroke-width="4.5" stroke-linecap="round"/>`;
+        s += `<path d="M132,120 Q139,125 144,120 M152,120 Q157,125 164,120" fill="none" stroke="#36251b" stroke-width="2.5" stroke-linecap="round"/>`;
+        s += `<circle cx="148" cy="111" r="2.5" fill="#c41c1c"/>`;
+        s += `<path d="M140,138 Q148,143 156,138" fill="none" stroke="#36251b" stroke-width="2" stroke-linecap="round"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Julius Caesar',
+      dates: 'Rome · 100–44 BCE',
+      category: 'General & Dictator · Roman Empire Era',
+      bg: '#24171a',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="120" r="64" fill="none" stroke="#e8a838" stroke-width="2" stroke-dasharray="4,8" opacity="0.3"/>`;
+        s += `<path d="M68,273 Q100,165 148,165 Q196,165 228,273 Z" fill="#dedede"/>`;
+        s += `<path d="M68,273 Q110,170 148,273 Z" fill="#7a1a2b"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07f"/>`;
+        s += `<ellipse cx="148" cy="120" rx="25" ry="30" fill="#eaba95"/>`;
+        s += `<path d="M122,104 Q148,85 174,104" fill="none" stroke="#e8a838" stroke-width="5" stroke-linecap="round"/>`;
+        for(let i=0; i<6; i++){
+          s += `<circle cx="${125+i*9}" cy="${98-Math.sin(i*0.6)*6}" r="3" fill="#f2c94c"/>`;
+        }
+        s += `<path d="M132,115 Q139,111 144,115 M152,115 Q157,111 164,115" fill="none" stroke="#382216" stroke-width="2.5"/>`;
+        s += `<circle cx="138" cy="118" r="2.2" fill="#382216"/><circle cx="158" cy="118" r="2.2" fill="#382216"/>`;
+        s += `<path d="M148,115 L145,130 L153,130" fill="none" stroke="#ab7759" stroke-width="2"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Cleopatra VII',
+      dates: 'Egypt · 69–30 BCE',
+      category: 'Last Queen of Egypt · Ptolemaic Kingdom',
+      bg: '#18242b',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="148,42 60,180 236,180" fill="#d9a441" opacity="0.15"/>`;
+        s += `<circle cx="148" cy="62" r="18" fill="#e25329" opacity="0.8"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#1b4958"/>`;
+        s += `<path d="M100,165 Q148,210 196,165 Z" fill="#f2a544" stroke="#d94141" stroke-width="2"/>`;
+        s += `<rect x="138" y="142" width="20" height="28" fill="#c98a5d"/>`;
+        s += `<ellipse cx="148" cy="120" rx="24" ry="29" fill="#dba174"/>`;
+        s += `<path d="M118,105 Q110,160 120,200 M178,105 Q186,160 176,200" fill="none" stroke="#141212" stroke-width="14" stroke-linecap="round"/>`;
+        s += `<path d="M122,90 Q148,78 174,90 Z" fill="#f2a544"/>`;
+        s += `<circle cx="148" cy="85" r="4" fill="#d94141"/>`;
+        s += `<path d="M130,118 Q138,114 144,118 L124,120 M152,118 Q158,114 166,118 L172,120" fill="none" stroke="#0f1924" stroke-width="3"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#0f1924"/><circle cx="158" cy="118" r="2.3" fill="#0f1924"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Michelangelo',
+      dates: 'Italy · 1475–1564',
+      category: 'Renaissance Sculptor & Painter · David & Sistine Chapel',
+      bg: '#2b241c',
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,80 Q148,80 144,100 M236,80 Q148,80 152,100" fill="none" stroke="#e8caa4" stroke-width="2" opacity="0.25"/>`;
+        s += `<path d="M70,273 Q100,170 148,170 Q196,170 226,273 Z" fill="#3b2b1d"/>`;
+        s += `<line x1="110" y1="170" x2="186" y2="273" stroke="#6e4f35" stroke-width="10"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M121,110 C110,85 148,78 175,110 Z" fill="#2b1f17"/>`;
+        s += `<path d="M122,128 Q148,170 174,128 Z" fill="#2b1f17"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Leonardo da Vinci',
+      dates: 'Italy · 1452–1519',
+      category: 'Renaissance Polymath · Painter & Engineer',
+      bg: '#2b2118',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="120" r="68" fill="none" stroke="#d9a441" stroke-width="1" opacity="0.25"/>`;
+        s += `<rect x="90" y="62" width="116" height="116" fill="none" stroke="#d9a441" stroke-width="1" opacity="0.2"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#5e2814"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#cca07c"/>`;
+        s += `<ellipse cx="148" cy="122" rx="24" ry="30" fill="#dfb18c"/>`;
+        s += `<ellipse cx="148" cy="90" rx="34" ry="12" fill="#1c1713"/>`;
+        s += `<path d="M120,105 Q105,140 115,220 Q148,265 181,220 Q191,140 176,105 Z" fill="#d6cbd3" opacity="0.9"/>`;
+        s += `<path d="M125,140 Q148,250 171,140" fill="none" stroke="#b0a5ad" stroke-width="3"/>`;
+        s += `<path d="M132,116 Q138,112 143,116 M153,116 Q158,112 164,116" fill="none" stroke="#332419" stroke-width="2"/>`;
+        s += `<circle cx="138" cy="119" r="2.2" fill="#24180e"/><circle cx="158" cy="119" r="2.2" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'William Shakespeare',
+      dates: 'United Kingdom · 1564–1616',
+      category: 'Playwright & Poet · Western Literature',
+      bg: '#261a24',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,175 148,175 Q196,175 226,273 Z" fill="#1f1a14"/>`;
+        s += `<ellipse cx="148" cy="166" rx="38" ry="14" fill="#f0ebe1" stroke="#c7bfb1" stroke-width="2"/>`;
+        s += `<rect x="138" y="140" width="20" height="20" fill="#dbab88"/>`;
+        s += `<ellipse cx="148" cy="118" rx="25" ry="32" fill="#ebd0a7"/>`;
+        s += `<path d="M123,110 Q120,80 148,80 Q176,80 173,110 Z" fill="#ebd0a7"/>`;
+        s += `<path d="M122,105 Q110,120 118,145 M174,105 Q186,120 178,145" fill="none" stroke="#4a3525" stroke-width="9" stroke-linecap="round"/>`;
+        s += `<path d="M134,136 Q148,142 162,136" fill="none" stroke="#4a3525" stroke-width="3" stroke-linecap="round"/>`;
+        s += `<polygon points="148,144 142,160 154,160" fill="#4a3525"/>`;
+        s += `<circle cx="120" cy="132" r="3.5" fill="none" stroke="#f2a544" stroke-width="1.8"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#2b1a0e"/><circle cx="158" cy="118" r="2.3" fill="#2b1a0e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Aristotle',
+      dates: '384–322 BCE',
+      category: 'Ancient Greek Philosopher · Classical Logic',
+      bg: '#1f2b26',
+      draw: () => {
+        let s = '';
+        s += `<rect x="55" y="45" width="14" height="200" fill="#ffffff" opacity="0.08"/>`;
+        s += `<rect x="227" y="45" width="14" height="200" fill="#ffffff" opacity="0.08"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#e3ded8"/>`;
+        s += `<path d="M70,273 Q130,170 180,273 Z" fill="#c7c1b8"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d9a882"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#eab993"/>`;
+        s += `<path d="M122,108 Q148,85 174,108" fill="none" stroke="#8c857b" stroke-width="10" stroke-linecap="round"/>`;
+        s += `<path d="M120,122 Q110,170 148,185 Q186,170 176,122 Z" fill="#8c857b"/>`;
+        s += `<path d="M133,115 Q139,111 144,115 M152,115 Q157,111 163,115" fill="none" stroke="#2b2016" stroke-width="2.2"/>`;
+        s += `<circle cx="139" cy="118" r="2.2" fill="#2b2016"/><circle cx="157" cy="118" r="2.2" fill="#2b2016"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Alexander the Great',
+      dates: '356–323 BCE',
+      category: 'King of Macedon · Ancient Conqueror',
+      bg: '#2b1a1a',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="120" r="55" fill="none" stroke="#f2a544" stroke-width="1.5" stroke-dasharray="4,6" opacity="0.4"/>`;
+        s += `<path d="M65,273 Q100,165 148,165 Q196,165 231,273 Z" fill="#b8321d"/>`;
+        s += `<path d="M90,273 L105,175 L191,175 L206,273 Z" fill="#c98a2c"/>`;
+        s += `<rect x="136" y="142" width="24" height="28" fill="#e5b085"/>`;
+        s += `<ellipse cx="148" cy="120" rx="26" ry="31" fill="#f2c49b"/>`;
+        s += `<path d="M118,125 Q110,80 148,70 Q186,80 178,125 Z" fill="#d49b35"/>`;
+        s += `<path d="M135,70 Q148,55 161,70" fill="none" stroke="#f2be5c" stroke-width="8" stroke-linecap="round"/>`;
+        s += `<path d="M122,102 Q148,96 174,102" fill="none" stroke="#ffffff" stroke-width="4.5"/>`;
+        s += `<circle cx="138" cy="116" r="2.5" fill="#1b2a3a"/><circle cx="158" cy="116" r="2.5" fill="#1b2a3a"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Galileo Galilei',
+      dates: 'Italy · 1564–1642',
+      category: 'Astronomer & Physicist · Heliocentrism Champion',
+      bg: '#151b29',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="210" cy="75" r="7" fill="#e3b27d"/>`;
+        s += `<circle cx="195" cy="75" r="1.5" fill="#fff"/><circle cx="223" cy="75" r="1.5" fill="#fff"/>`;
+        s += `<line x1="45" y1="230" x2="110" y2="170" stroke="#8a735c" stroke-width="7" stroke-linecap="round" opacity="0.5"/>`;
+        s += `<path d="M70,273 Q100,170 148,170 Q196,170 226,273 Z" fill="#24211d"/>`;
+        s += `<path d="M125,170 Q148,185 171,170 Z" fill="#e8e2ce"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d9a27e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M123,115 Q115,85 148,85 Q181,85 173,115 Z" fill="#ebb694"/>`;
+        s += `<path d="M122,110 Q112,130 118,145 M174,110 Q184,130 178,145" fill="none" stroke="#a39a93" stroke-width="8" stroke-linecap="round"/>`;
+        s += `<path d="M122,130 Q118,180 148,185 Q178,180 174,130 Z" fill="#a39a93"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#2b1c10"/><circle cx="158" cy="118" r="2.3" fill="#2b1c10"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Isaac Newton',
+      dates: 'United Kingdom · 1643–1727',
+      category: 'Physicist & Mathematician · Universal Gravitation',
+      bg: '#182433',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="148,40 40,273 256,273" fill="#ffffff" opacity="0.06"/>`;
+        s += `<circle cx="215" cy="85" r="9" fill="#d93829"/>`;
+        s += `<path d="M215,76 Q218,72 221,74" fill="none" stroke="#4a2e16" stroke-width="1.5"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#1b1c2b"/>`;
+        s += `<path d="M135,165 L161,165 L158,215 L138,215 Z" fill="#e8e5de"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#e0b296"/>`;
+        s += `<ellipse cx="148" cy="120" rx="25" ry="31" fill="#ecc4ac"/>`;
+        s += `<path d="M118,105 Q100,140 115,200 M178,105 Q196,140 181,200" fill="none" stroke="#dedede" stroke-width="12" stroke-linecap="round"/>`;
+        s += `<path d="M122,100 Q148,85 174,100" fill="none" stroke="#dedede" stroke-width="10"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#1b242e"/><circle cx="158" cy="118" r="2.3" fill="#1b242e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Socrates',
+      dates: 'Greece · c. 470–399 BCE',
+      category: 'Classical Philosopher · Socratic Method & Ethics',
+      bg: '#212628',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="120" r="60" fill="none" stroke="#f2a544" stroke-width="1" stroke-dasharray="2,6" opacity="0.3"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#d9d2c9"/>`;
+        s += `<rect x="136" y="145" width="24" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="27" ry="28" fill="#ebb694"/>`;
+        s += `<path d="M122,102 Q148,82 174,102" fill="none" stroke="#b3ab9d" stroke-width="8" stroke-linecap="round"/>`;
+        s += `<path d="M118,128 Q148,200 178,128 Z" fill="#b3ab9d"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.4" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Plato',
+      dates: 'Greece · c. 428–348 BCE',
+      category: 'Philosopher · Academy Founder & Author of The Republic',
+      bg: '#1e2429',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="148,50 60,180 236,180" fill="#ffffff" opacity="0.08"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#9e3b2b"/>`;
+        s += `<path d="M100,273 Q125,180 185,273 Z" fill="#d9d2c9"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M122,104 Q148,80 174,104" fill="none" stroke="#cfc7bc" stroke-width="10" stroke-linecap="round"/>`;
+        s += `<path d="M120,130 Q148,190 176,130 Z" fill="#cfc7bc"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Genghis Khan',
+      dates: 'Mongolia · 1162–1227',
+      category: 'Mongol Emperor · Largest Contiguous Land Empire',
+      bg: '#2b2318',
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,273 Q100,155 148,155 Q196,155 236,273 Z" fill="#7a2b1e"/>`;
+        s += `<path d="M80,273 L148,165 L216,273 Z" fill="#b88330"/>`;
+        s += `<rect x="136" y="138" width="24" height="25" fill="#c99163"/>`;
+        s += `<ellipse cx="148" cy="118" rx="28" ry="28" fill="#dca476"/>`;
+        s += `<path d="M110,95 L186,95 L176,68 L120,68 Z" fill="#38291c"/>`;
+        s += `<rect x="108" y="92" width="80" height="12" rx="4" fill="#e8d8c3"/>`;
+        s += `<path d="M125,128 Q148,175 171,128 Z" fill="#211912"/>`;
+        s += `<circle cx="138" cy="114" r="2.2" fill="#211912"/><circle cx="158" cy="114" r="2.2" fill="#211912"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Joan of Arc',
+      dates: 'France · c. 1412–1431',
+      category: 'Military Heroine · Patron Saint of France',
+      bg: '#1b222a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#788796"/>`;
+        s += `<path d="M120,165 L148,273 L176,165 Z" fill="#adb8c4"/>`;
+        s += `<rect x="138" y="142" width="20" height="26" fill="#e5b08b"/>`;
+        s += `<ellipse cx="148" cy="120" rx="23" ry="28" fill="#f2c4a2"/>`;
+        s += `<path d="M122,100 Q148,82 174,100 Q180,140 172,145 M124,145 Q116,140 122,100 Z" fill="#3b2b1e"/>`;
+        s += `<circle cx="138" cy="118" r="2.2" fill="#261b14"/><circle cx="158" cy="118" r="2.2" fill="#261b14"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Johannes Gutenberg',
+      dates: 'Germany · c. 1400–1468',
+      category: 'Inventor · Movable Type Printing Press',
+      bg: '#241e1a',
+      draw: () => {
+        let s = '';
+        s += `<text x="148" y="120" text-anchor="middle" font-family="serif" font-size="90" fill="#ffffff" opacity="0.08">Aa</text>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#2e251f"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d9a27e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M120,90 Q148,78 176,90 Z" fill="#702020"/>`;
+        s += `<path d="M122,125 Q148,185 174,125 Z" fill="#dedede"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Nicolaus Copernicus',
+      dates: 'Poland · 1473–1543',
+      category: 'Mathematician & Astronomer · Heliocentric Model',
+      bg: '#141a29',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="115" r="50" fill="none" stroke="#f2a544" stroke-width="1.5" opacity="0.4"/>`;
+        s += `<circle cx="148" cy="115" r="8" fill="#f2a544"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#421d1d"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d9a27e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="24" ry="29" fill="#ebb694"/>`;
+        s += `<path d="M122,102 Q148,88 174,102 Q180,135 174,140 M122,140 Q116,135 122,102 Z" fill="#2b1a10"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Christopher Columbus',
+      dates: 'Italy/Spain · 1451–1506',
+      category: 'Explorer · Transatlantic Voyages to the Americas',
+      bg: '#19262b',
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,140 Q148,80 246,140" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.15"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#8c2b2b"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<rect x="118" y="86" width="60" height="22" fill="#211c19"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Martin Luther',
+      dates: 'Germany · 1483–1546',
+      category: 'Monk & Theologian · Protestant Reformation',
+      bg: '#211d1a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="144" y="50" width="8" height="80" fill="#ffffff" opacity="0.15"/>`;
+        s += `<rect x="108" y="80" width="80" height="8" fill="#ffffff" opacity="0.15"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#171514"/>`;
+        s += `<rect x="136" y="145" width="24" height="25" fill="#d9a27e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="27" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M120,98 Q148,86 176,98 Z" fill="#171514"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Abraham Lincoln',
+      dates: 'United States · 1809–1865',
+      category: '16th U.S. President · Union & Emancipation',
+      bg: '#181b21',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#121417"/>`;
+        s += `<polygon points="148,165 138,273 158,273" fill="#ffffff"/>`;
+        s += `<rect x="138" y="140" width="20" height="28" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="118" rx="22" ry="30" fill="#ebb694"/>`;
+        s += `<rect x="126" y="45" width="44" height="52" fill="#121417"/>`;
+        s += `<rect x="114" y="93" width="68" height="6" rx="2" fill="#121417"/>`;
+        s += `<path d="M126,120 Q148,160 170,120 Z" fill="#2b1a10"/>`;
+        s += `<circle cx="138" cy="114" r="2.2" fill="#24180e"/><circle cx="158" cy="114" r="2.2" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Thomas Edison',
+      dates: 'United States · 1847–1931',
+      category: 'Prolific Inventor · Incandescent Light & Phonograph',
+      bg: '#292318',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="80" r="25" fill="#f2a544" opacity="0.3"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#242220"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="30" fill="#ebb694"/>`;
+        s += `<path d="M120,102 Q148,90 176,102 Q180,125 174,130 M122,130 Q116,125 122,102 Z" fill="#8c857b"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#24180e"/><circle cx="158" cy="118" r="2.3" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Vincent van Gogh',
+      dates: 'Netherlands · 1853–1890',
+      category: 'Post-Impressionist Painter · Expressive Modern Art',
+      bg: '#182b3a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M40,50 Q148,120 256,50" fill="none" stroke="#f2be5c" stroke-width="4" stroke-dasharray="6,6" opacity="0.4"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#2b5233"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d99a6e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="24" ry="29" fill="#e8ad82"/>`;
+        s += `<ellipse cx="148" cy="95" rx="36" ry="10" fill="#d48a37"/>`;
+        s += `<path d="M124,125 Q148,165 172,125 Z" fill="#c95828"/>`;
+        s += `<circle cx="138" cy="118" r="2.3" fill="#1b2a3a"/><circle cx="158" cy="118" r="2.3" fill="#1b2a3a"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Sigmund Freud',
+      dates: 'Austria · 1856–1939',
+      category: 'Neurologist · Founder of Psychoanalysis',
+      bg: '#1f1d24',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#26242b"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="24" ry="29" fill="#ebb694"/>`;
+        s += `<path d="M122,102 Q148,90 174,102 Z" fill="#d9d9d9"/>`;
+        s += `<path d="M124,125 Q148,165 172,125 Z" fill="#d9d9d9"/>`;
+        s += `<circle cx="132" cy="118" r="7" fill="none" stroke="#f2a544" stroke-width="1.5"/>`;
+        s += `<circle cx="164" cy="118" r="7" fill="none" stroke="#f2a544" stroke-width="1.5"/>`;
+        s += `<line x1="139" y1="118" x2="157" y2="118" stroke="#f2a544" stroke-width="1.5"/>`;
+        s += `<circle cx="132" cy="118" r="2" fill="#24180e"/><circle cx="164" cy="118" r="2" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Winston Churchill',
+      dates: 'United Kingdom · 1874–1965',
+      category: 'Prime Minister · WWII Leadership',
+      bg: '#1c2126',
+      draw: () => {
+        let s = '';
+        s += `<path d="M65,273 Q100,165 148,165 Q196,165 231,273 Z" fill="#1b1d21"/>`;
+        s += `<polygon points="148,165 138,273 158,273" fill="#8c1d1d"/>`;
+        s += `<rect x="134" y="140" width="28" height="28" fill="#dca07e"/>`;
+        s += `<ellipse cx="148" cy="120" rx="30" ry="32" fill="#ebb694"/>`;
+        s += `<rect x="122" y="78" width="52" height="16" fill="#111214"/>`;
+        s += `<circle cx="138" cy="116" r="2.2" fill="#24180e"/><circle cx="158" cy="116" r="2.2" fill="#24180e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Pablo Picasso',
+      dates: 'Spain · 1881–1973',
+      category: 'Modern Artist · Co-Founder of Cubism',
+      bg: '#2b211a',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="60,60 140,40 180,100 80,110" fill="#d94141" opacity="0.2"/>`;
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#1c2436"/>`;
+        s += `<line x1="70" y1="200" x2="226" y2="200" stroke="#ffffff" stroke-width="6"/>`;
+        s += `<rect x="137" y="145" width="22" height="25" fill="#d99a6e"/>`;
+        s += `<ellipse cx="148" cy="122" rx="25" ry="29" fill="#e8ad82"/>`;
+        s += `<path d="M120,98 Q148,90 176,98 Z" fill="#2b231d"/>`;
+        s += `<circle cx="136" cy="118" r="3" fill="#111"/><circle cx="160" cy="118" r="2" fill="#111"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Martin Luther King Jr.',
+      dates: 'United States · 1929–1968',
+      category: 'Civil Rights Leader · Nonviolent Resistance',
+      bg: '#1f2421',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,165 148,165 Q196,165 226,273 Z" fill="#1d2026"/>`;
+        s += `<polygon points="148,165 140,273 156,273" fill="#2b4263"/>`;
+        s += `<rect x="137" y="142" width="22" height="26" fill="#8c583b"/>`;
+        s += `<ellipse cx="148" cy="120" rx="25" ry="29" fill="#a36948"/>`;
+        s += `<path d="M122,98 Q148,88 174,98 Z" fill="#1a120c"/>`;
+        s += `<path d="M136,132 Q148,138 160,132" fill="none" stroke="#1a120c" stroke-width="3"/>`;
+        s += `<circle cx="138" cy="116" r="2.3" fill="#1a120c"/><circle cx="158" cy="116" r="2.3" fill="#1a120c"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Camera Core Logic ---------------- */
+  function renderFigure(fig) {
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += wallAndFrame(fig.bg);
+    svg += fig.draw();
+    svg += caption(fig.name, fig.dates, fig.category);
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function triggerCapture() {
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 600);
+
+    frameNumber++;
+    frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+
+    if (placeholderText) placeholderText.style.display = 'none';
+
+       const chosen = HISTORICAL_FIGURES[currentIndex];
+    currentIndex = (currentIndex + 1) % HISTORICAL_FIGURES.length;
+    const existingSvg = viewfinder.querySelector('svg');
+    if (existingSvg) existingSvg.remove();
+
+    viewfinder.insertAdjacentHTML('afterbegin', renderFigure(chosen));
+  }
+
+  function toggleAuto() {
+    autoActive = !autoActive;
+    autoBtn.classList.toggle('active', autoActive);
+    autoBtn.setAttribute('aria-pressed', autoActive ? 'true' : 'false');
+    autoLabel.textContent = autoActive ? 'AUTO SHUTTER · ON' : 'AUTO SHUTTER · OFF';
+
+    if (autoActive) {
+      triggerCapture();
+      autoTimer = setInterval(() => {
+        triggerCapture();
+      }, AUTO_INTERVAL_MS);
+    } else {
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if (autoActive) toggleAuto();
+    triggerCapture();
+  });
+
+  autoBtn.addEventListener('click', toggleAuto);
+
+})();
+</script>
+</body>
+</html>
