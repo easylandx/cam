@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Extreme Tectonic & Geological Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL GEO-21 · EXTREME LANDSCAPES EDITION</p>
+    <h1>Extreme Geological Landscapes</h1>
+    <p>Press shutter to cycle through 21 dramatic tectonic, volcanic, and eroded landforms.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to survey 21 extreme geological landforms
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">GEOLOGY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture landforms</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Extreme Geological Landscapes ---------------- */
+  const LANDFORMS = [
+    {
+      name: 'Danakil Depression & Dallol',
+      region: 'Afar Region (Ethiopia / East Africa)',
+      desc: 'A hyper-saline rift basin lying over 100 meters below sea level, where tectonic divergence creates boiling acid ponds, sulfur crusts, and active lava lakes.',
+      bg: '#292524',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,120 70,220 230,220 257,120" fill="#44403c"/>`;
+        s += `<ellipse cx="100" cy="200" rx="35" ry="12" fill="#a3e635"/>`;
+        s += `<ellipse cx="180" cy="205" rx="30" ry="10" fill="#ef4444"/>`;
+        s += `<ellipse cx="140" cy="190" rx="20" ry="8" fill="#eab308"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Zhangjiajie Quartz Pillars',
+      region: 'Hunan Province (China / East Asia)',
+      desc: 'Over 3,000 towering quartz-sandstone karst columns sculpted by millions of years of physical weathering, water erosion, and tectonic uplift.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="55" y="60" width="22" height="213" fill="#334155"/>`;
+        s += `<rect x="105" y="40" width="30" height="233" fill="#475569"/>`;
+        s += `<rect x="165" y="80" width="26" height="193" fill="#334155"/>`;
+        s += `<rect x="210" y="50" width="24" height="223" fill="#1e293b"/>`;
+        s += `<path d="M100,40 L120,20 L140,40 Z" fill="#22c55e"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Lençóis Maranhenses Lagoons',
+      region: 'Maranhão (Brazil / South America)',
+      desc: 'Vast coastal white sand dunes where trapped seasonal rains create thousands of crystal-clear turquoise freshwater lagoons amidst shifting barchan sands.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,273 Q90,140 150,230 T257,200 L257,273 Z" fill="#fef08a"/>`;
+        s += `<path d="M39,180 Q100,80 170,180 Z" fill="#38bdf8"/>`;
+        s += `<path d="M120,240 Q180,150 240,240 Z" fill="#0ea5e9"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Salar de Uyuni Salt Flat',
+      region: 'Potosí Department (Bolivia / South America)',
+      desc: "The world's largest salt pan, formed by the prehistoric drying of inland lakes leaving behind a flat, crusty expanse of lithium-rich brine.",
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="170" width="218" height="103" fill="#f8fafc"/>`;
+        s += `<line x1="39" y1="170" x2="257" y2="170" stroke="#cbd5e1" stroke-width="2"/>`;
+        s += `<polygon points="60,170 90,110 120,170" fill="#64748b"/>`;
+        s += `<polygon points="170,170 200,100 230,170" fill="#475569"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Jiuzhaigou Travertine Pools',
+      region: 'Sichuan Province (China / East Asia)',
+      desc: 'A high-altitude glacial valley featuring multi-tiered turquoise lakes and cascades created by calcium carbonate mineral deposits.',
+      bg: '#064e3b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="80" width="218" height="30" fill="#2dd4bf"/>`;
+        s += `<rect x="39" y="140" width="218" height="35" fill="#0fb5d4"/>`;
+        s += `<rect x="39" y="200" width="218" height="40" fill="#0284c7"/>`;
+        s += `<rect x="39" y="110" width="218" height="30" fill="#f1f5f9"/>`;
+        s += `<rect x="39" y="175" width="218" height="25" fill="#e2e8f0"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Perito Moreno Glacier',
+      region: 'Santa Cruz Province (Patagonia, Argentina)',
+      desc: 'A massive advancing ice sheet in the Southern Patagonian Ice Field that periodically dams and bursts Lake Argentino in spectacular ruptures.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="180" width="218" height="93" fill="#0284c7"/>`;
+        s += `<polygon points="39,37 160,37 200,180 39,180" fill="#e0f2fe"/>`;
+        s += `<polygon points="120,37 160,37 200,180 160,180" fill="#bae6fd"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Cappadocia Fairy Chimneys',
+      region: 'Anatolian Plateau (Turkey / Western Asia)',
+      desc: 'A surreal landscape created by thick volcanic ash deposits (tufa) eroded over millenniums into tall, cone-shaped rock spires.',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 L80,100 L110,100 L120,273 Z" fill="#d97706"/>`;
+        s += `<ellipse cx="95" cy="95" rx="20" ry="10" fill="#78350f"/>`;
+        s += `<path d="M160,273 L170,80 L200,80 L210,273 Z" fill="#b45309"/>`;
+        s += `<ellipse cx="185" cy="75" rx="22" ry="12" fill="#78350f"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Þingvellir Continental Rift',
+      region: 'Suðurland (Iceland / North Atlantic)',
+      desc: 'A dramatic visible boundary of the Mid-Atlantic Ridge where the North American and Eurasian tectonic plates actively pull apart.',
+      bg: '#111827',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 120,37 100,273 39,273" fill="#374151"/>`;
+        s += `<polygon points="257,37 180,37 200,273 257,273" fill="#374151"/>`;
+        s += `<rect x="100" y="160" width="100" height="113" fill="#0284c7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Richat Structure ("Eye of Sahara")',
+      region: 'Adrar Plateau (Mauritania / West Africa)',
+      desc: 'A deeply eroded 40-kilometer-wide geological dome exposing concentric rings of resistant igneous and sedimentary rock strata.',
+      bg: '#7c2d12',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="148" cy="155" rx="90" ry="90" fill="none" stroke="#ea580c" stroke-width="8"/>`;
+        s += `<ellipse cx="148" cy="155" rx="60" ry="60" fill="none" stroke="#f97316" stroke-width="6"/>`;
+        s += `<ellipse cx="148" cy="155" rx="35" ry="35" fill="none" stroke="#fdba74" stroke-width="5"/>`;
+        s += `<circle cx="148" cy="155" r="12" fill="#ea580c"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Antelope Slot Canyons',
+      region: 'Navajo Nation, Arizona (United States)',
+      desc: 'Deep, narrow sandstone corridors carved into flowing, wave-like rock formations by flash flooding and wind erosion.',
+      bg: '#7c2d12',
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,37 Q120,100 80,180 T110,273 L39,273 Z" fill="#ea580c"/>`;
+        s += `<path d="M257,37 Q180,100 210,180 T180,273 L257,273 Z" fill="#c2410c"/>`;
+        s += `<path d="M80,180 Q150,130 210,180 Z" fill="#f97316" opacity="0.4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Fly Geyser Mineral Terraces',
+      region: 'Black Rock Desert, Nevada (United States)',
+      desc: 'A geothermal geyser system formed by mineral-rich thermal water depositing calcium carbonate into vivid, algae-colored travertine towers.',
+      bg: '#1e1b18',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="100,273 120,140 180,140 200,273" fill="#15803d"/>`;
+        s += `<polygon points="120,140 135,90 165,90 180,140" fill="#d97706"/>`;
+        s += `<ellipse cx="150" cy="90" rx="15" ry="5" fill="#ef4444"/>`;
+        s += `<path d="M150,90 Q140,50 150,37 Q160,50 150,90" fill="#38bdf8" opacity="0.7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Tsingy de Bemaraha Karst',
+      region: 'Melaky Region (Madagascar)',
+      desc: 'A massive "stone forest" composed of needle-sharp limestone pinnacles formed by underground groundwater erosion and tropical weathering.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<7; i++){
+          s += `<polygon points="${45 + i*30},273 ${58 + i*30},60 ${70 + i*30},273" fill="#64748b"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Vatnajökull Subglacial Volcanoes',
+      region: 'Highlands (Iceland / North Atlantic)',
+      desc: "Europe's largest ice cap, sitting directly over active subglacial volcanoes that periodically trigger catastrophic meltwater floods.",
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 148,90 257,273" fill="#dc2626"/>`;
+        s += `<polygon points="39,273 148,80 257,273" fill="#f8fafc" opacity="0.85"/>`;
+        s += `<path d="M130,120 L160,120 L148,150 Z" fill="#ef4444"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Torres del Paine Granite Horns',
+      region: 'Magallanes Region (Chilean Patagonia)',
+      desc: 'Striking alpine spires created when laccolithic granite intrusions were exposed and carved by massive alpine glaciers.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="50,273 90,70 130,273" fill="#1e293b"/>`;
+        s += `<polygon points="120,273 160,50 200,273" fill="#334155"/>`;
+        s += `<polygon points="190,273 220,90 250,273" fill="#1e293b"/>`;
+        s += `<polygon points="80,90 90,70 100,90" fill="#f8fafc"/>`;
+        s += `<polygon points="150,75 160,50 170,75" fill="#f8fafc"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Great Blue Hole Sinkhole',
+      region: 'Lighthouse Reef (Belize / Caribbean Sea)',
+      desc: 'A massive 300-meter-wide submerged marine sinkhole formed during past glacial periods when rising sea levels flooded a deep limestone cave system.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="148" cy="155" r="85" fill="#0f172a"/>`;
+        s += `<circle cx="148" cy="155" r="85" fill="#1e3a8a" opacity="0.8"/>`;
+        s += `<circle cx="148" cy="155" r="70" fill="#172554"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Giant's Causeway Columns",
+      region: 'County Antrim (Northern Ireland / W. Europe)',
+      desc: 'An expansive coastal plateau composed of roughly 40,000 interlocking hexagonal basalt columns formed by rapid cooling of ancient lava flows.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<6; i++){
+          s += `<rect x="${45 + i*35}" y="${100 + (i%2)*30}" width="30" height="${173 - (i%2)*30}" fill="#44403c" stroke="#292524" stroke-width="2"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Wadi Rum Sandstone Monoliths',
+      region: 'Aqaba Governorate (Jordan / Middle East)',
+      desc: 'Dramatic red sandstone and granite mountain valleys sculpted by wind erosion, thermal fracture, and flash-flood runoff.',
+      bg: '#451a03',
+      draw: () => {
+        let s = '';
+        s += `<rect x="50" y="80" width="80" height="193" fill="#9a3412"/>`;
+        s += `<rect x="160" y="110" width="90" height="163" fill="#c2410c"/>`;
+        s += `<path d="M50,80 Q90,50 130,80 Z" fill="#78350f"/>`;
+        s += `<path d="M160,110 Q205,80 250,110 Z" fill="#78350f"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Chiricahua Hoodoo Rock',
+      region: 'Arizona (United States / North America)',
+      desc: 'A vast field of balanced rock pillars carved from thick layers of rhyolite ash deposited by an ancient volcanic super-eruption.',
+      bg: '#292524',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="100" cy="90" rx="25" ry="15" fill="#78350f"/>`;
+        s += `<polygon points="90,105 110,105 105,273 95,273" fill="#a16207"/>`;
+        s += `<ellipse cx="180" cy="110" rx="30" ry="18" fill="#78350f"/>`;
+        s += `<polygon points="170,128 190,128 185,273 175,273" fill="#ca8a04"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'White Desert Chalk Towers',
+      region: 'Western Desert (Egypt / North Africa)',
+      desc: 'Mushroom-shaped chalk formations sculpted out of ancient seabed deposits by relentless wind-blown desert sandstorms.',
+      bg: '#78350f',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="120" cy="120" rx="45" ry="20" fill="#f8fafc"/>`;
+        s += `<path d="M105,135 L135,135 L128,273 L112,273 Z" fill="#f1f5f9"/>`;
+        s += `<ellipse cx="200" cy="150" rx="30" ry="14" fill="#f8fafc"/>`;
+        s += `<path d="M190,162 L210,162 L205,273 L195,273 Z" fill="#e2e8f0"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Atacama Death Valley Badlands',
+      region: 'Antofagasta Region (Chile / South America)',
+      desc: 'One of the driest non-polar environments on Earth, shaped by extreme hyper-aridity, tectonic folding, and ancient mineral crusting.',
+      bg: '#3b1202',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 80,140 120,273" fill="#9a3412"/>`;
+        s += `<polygon points="100,273 150,100 200,273" fill="#ea580c"/>`;
+        s += `<polygon points="180,273 220,160 257,273" fill="#c2410c"/>`;
+        s += `<line x1="39" y1="250" x2="257" y2="250" stroke="#fef08a" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Kailasa & Deccan Traps Basins',
+      region: 'Maharashtra (India / South Asia)',
+      desc: 'A massive flood basalt volcanic province covering over 500,000 square kilometers, created by one of the largest volcanic eruptions in Earth history.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<5; i++){
+          s += `<rect x="${45 + i*8}" y="${100 + i*32}" width="${200 - i*16}" height="22" fill="#44403c"/>`;
+        }
+        s += `<rect x="39" y="240" width="218" height="33" fill="#292524"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Render Function ---------------- */
+  function renderLandform(index) {
+    const lf = LANDFORMS[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(lf.bg, index);
+    svg += lf.draw();
+    svg += caption(lf.name, lf.region, lf.desc);
+    svg += `</svg>`;
+
+    viewfinder.innerHTML = svg +
+      `<div class="reticle tl"></div><div class="reticle tr"></div><div class="reticle bl"></div><div class="reticle br"></div>` +
+      `<div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>` +
+      `<div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>` +
+      `<div class="grain"></div>` +
+      `<div class="flash-overlay" id="flashOverlay"></div>`;
+  }
+
+  function triggerShutter() {
+    playShutterSound();
+
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % LANDFORMS.length;
+
+    renderLandform(currentIndex);
+
+    const fo = document.getElementById('flashOverlay');
+    if(fo) {
+      fo.classList.remove('go');
+      void fo.offsetWidth;
+      fo.classList.add('go');
+    }
+  }
+
+  /* ---------------- Event Listeners ---------------- */
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) toggleAuto();
+    triggerShutter();
+  });
+
+  function toggleAuto() {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoBtn.setAttribute('aria-pressed', 'true');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      triggerShutter();
+      autoTimer = setInterval(triggerShutter, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoBtn.setAttribute('aria-pressed', 'false');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  autoBtn.addEventListener('click', toggleAuto);
+
+})();
+</script>
+</body>
+</html>

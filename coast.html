@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Coastal & Waterways Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL HYDRO-21 · COASTAL GEOGRAPHY EDITION</p>
+    <h1>World Waterways & Dynamics</h1>
+    <p>Press shutter to survey 21 global estuaries, currents &amp; tidal phenomena.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to survey coastal &amp; estuarine dynamics
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">HYDROLOGY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture waterways</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    // Multi-line description fitting inside viewfinder
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3); // Max 3 lines
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Waterways & Coastal Dynamics SVG Visualizations ---------------- */
+  const HYDRO_DATA = [
+    {
+      name: "Amazon River Plume & Tidal Bore (Pororoca)",
+      region: "Amapá Coast (Brazil / South America)",
+      desc: "A massive river discharge system creating a fresh-water ocean plume thousands of miles long and generating powerful inland-surging tidal bores (pororocas).",
+      bg: "#06283d",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,120 Q120,150 180,100 T257,180" stroke="#0284c7" stroke-width="24" fill="none"/>`;
+        s += `<path d="M39,120 Q120,150 180,100 T257,180" stroke="#38bdf8" stroke-width="12" fill="none"/>`;
+        s += `<path d="M160,50 C200,80 230,140 257,150 L257,37 L160,37 Z" fill="#0ea5e9" opacity="0.4"/>`;
+        s += `<path d="M120,125 Q110,145 100,165" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>`;
+        s += `<path d="M130,130 Q120,150 110,170" stroke="#f8fafc" stroke-width="2" stroke-linecap="round"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Bay of Fundy Resonant Tidal Basin",
+      region: "Nova Scotia / New Brunswick (Canada / North America)",
+      desc: "A funnel-shaped ocean bay exhibiting the highest tidal ranges on Earth due to physical hydrodynamic resonance matching the Atlantic ocean tide period.",
+      bg: "#0b192c",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 180,110 39,273" fill="#1e293b"/>`;
+        s += `<polygon points="257,37 200,140 257,273" fill="#1e293b"/>`;
+        s += `<path d="M39,150 Q180,130 257,190" stroke="#0284c7" stroke-width="18" fill="none"/>`;
+        s += `<path d="M160,80 Q180,130 190,170" stroke="#38bdf8" stroke-width="3" stroke-dasharray="4,4" fill="none"/>`;
+        s += `<text x="180" y="220" font-size="9" fill="#38bdf8" font-family="monospace">16m Tide</text>`;
+        return s;
+      }
+    },
+    {
+      name: "Maelstrom (Mosstraumen) Tidal Whirlpools",
+      region: "Lofoten Archipelago (Norway / Arctic Ocean)",
+      desc: "A violent system of open-ocean eddies and tidal currents generated by strong oceanic tides forcing through narrow, shallow inter-island channels.",
+      bg: "#021526",
+      draw: () => {
+        let s = '';
+        s += `<circle cx="100" cy="120" r="30" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="12,6"/>`;
+        s += `<circle cx="100" cy="120" r="15" fill="none" stroke="#0284c7" stroke-width="2"/>`;
+        s += `<circle cx="180" cy="180" r="25" fill="none" stroke="#38bdf8" stroke-width="3" stroke-dasharray="10,5"/>`;
+        s += `<polygon points="39,37 120,80 39,200" fill="#334155"/>`;
+        s += `<polygon points="257,100 160,150 257,273" fill="#334155"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Strait of Gibraltar Internal Waves",
+      region: "Iberian Peninsula / North Africa (Mediterranean / Atlantic)",
+      desc: "Deep underwater solitary waves formed by dense, high-salinity Mediterranean water spilling west into the lighter, fresher Atlantic Ocean.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="80" fill="#334155"/>`;
+        s += `<rect x="39" y="190" width="218" height="83" fill="#334155"/>`;
+        s += `<path d="M39,140 Q80,120 120,150 T200,140 T257,150" stroke="#38bdf8" stroke-width="4" fill="none"/>`;
+        s += `<path d="M39,160 Q80,140 120,170 T200,160 T257,170" stroke="#1d4ed8" stroke-width="6" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Congo Submarine Canyon Sediment Flow",
+      region: "Atlantic Coast (Angola / DRC)",
+      desc: "A massive underwater canyon system extending hundreds of miles out to sea, carrying massive turbidity currents of river-borne sediment into the abyssal plain.",
+      bg: "#030712",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 130,140 39,273" fill="#1e293b"/>`;
+        s += `<polygon points="257,37 170,140 257,273" fill="#1e293b"/>`;
+        s += `<path d="M150,37 L150,140 L200,273" stroke="#d97706" stroke-width="8" opacity="0.7" fill="none"/>`;
+        s += `<path d="M150,140 L110,273" stroke="#b45309" stroke-width="5" opacity="0.7" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Saltstraumen Tidal Current System",
+      region: "Bodø (Norway / Northern Europe)",
+      desc: "The strongest tidal current in the world, where over 400 million cubic meters of seawater rush through a narrow 150-meter-wide strait every six hours.",
+      bg: "#0c4a6e",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="80" height="236" fill="#1e293b"/>`;
+        s += `<rect x="177" y="37" width="80" height="236" fill="#1e293b"/>`;
+        s += `<line x1="140" y1="37" x2="140" y2="273" stroke="#38bdf8" stroke-width="12"/>`;
+        s += `<path d="M125,100 L140,130 L155,100" fill="none" stroke="#f8fafc" stroke-width="3"/>`;
+        s += `<path d="M125,160 L140,190 L155,160" fill="none" stroke="#f8fafc" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Chesapeake Bay Estuarine Circulation",
+      region: "Mid-Atlantic Coast (United States / North America)",
+      desc: "A classic partially mixed estuary where light freshwater runoff flows seaward along the surface while dense ocean saltwater creeps up-bay along the sea floor.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="80" width="218" height="50" fill="#38bdf8" opacity="0.8"/>`;
+        s += `<rect x="39" y="130" width="218" height="70" fill="#1e3a8a"/>`;
+        s += `<line x1="60" y1="105" x2="200" y2="105" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8,4"/>`;
+        s += `<line x1="200" y1="165" x2="60" y2="165" stroke="#60a5fa" stroke-width="3" stroke-dasharray="8,4"/>`;
+        s += `<text x="220" y="102" font-size="10" fill="#f8fafc">Fresh</text>`;
+        s += `<text x="220" y="170" font-size="10" fill="#60a5fa">Salt</text>`;
+        return s;
+      }
+    },
+    {
+      name: "Qiantang River Tidal Bore (The Black Dragon)",
+      region: "Hangzhou Bay (China / East Asia)",
+      desc: "The world's largest river tidal bore, where incoming oceanic tides encounter a sharp bay funnel, creating a vertical wall of water surging upriver.",
+      bg: "#111827",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,200 L130,160 L130,37 L39,37 Z" fill="#1f2937"/>`;
+        s += `<path d="M257,200 L170,160 L170,37 L257,37 Z" fill="#1f2937"/>`;
+        s += `<line x1="120" y1="165" x2="180" y2="165" stroke="#f8fafc" stroke-width="6"/>`;
+        s += `<path d="M150,165 L150,273" stroke="#0284c7" stroke-width="30"/>`;
+        s += `<path d="M135,180 L150,165 L165,180" fill="none" stroke="#f59e0b" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Sunda Shelf Monsoon Current Swings",
+      region: "South China Sea / Java Sea (Southeast Asia)",
+      desc: "Shallow shelf waters whose flow dynamics and current directions completely reverse direction twice a year driven by seasonal monsoon winds.",
+      bg: "#064e3b",
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,60 Q150,100 240,60" fill="none" stroke="#34d399" stroke-width="6" stroke-dasharray="12,6"/>`;
+        s += `<path d="M240,200 Q150,160 60,200" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="12,6"/>`;
+        s += `<text x="150" y="45" text-anchor="middle" font-size="8" fill="#34d399" font-family="monospace">NE Monsoon Flow</text>`;
+        s += `<text x="150" y="220" text-anchor="middle" font-size="8" fill="#f59e0b" font-family="monospace">SW Monsoon Flow</text>`;
+        return s;
+      }
+    },
+    {
+      name: "Gulf Stream Boundary Current",
+      region: "Straits of Florida (North America / Atlantic)",
+      desc: "A swift, warm western boundary ocean current driven by wind stress and thermohaline circulation, transporting massive thermal energy north.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,273 C80,180 120,120 220,37" stroke="#ef4444" stroke-width="22" fill="none" opacity="0.8"/>`;
+        s += `<path d="M60,273 C80,180 120,120 220,37" stroke="#f59e0b" stroke-width="10" fill="none"/>`;
+        s += `<polygon points="39,37 120,37 39,200" fill="#1e293b"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Lena River Delta Thermo-Erosion Channels",
+      region: "Siberian Arctic Coast (Russia / Northern Asia)",
+      desc: "A massive 30,000-square-kilometer frozen delta network shaped by intense seasonal ice breakup and thermo-erosional breakdown of permafrost banks.",
+      bg: "#1e293b",
+      draw: () => {
+        let s = '';
+        s += `<path d="M150,273 L150,180 L70,50 M150,180 L110,60 M150,180 L190,50 M150,180 L230,70" stroke="#38bdf8" stroke-width="5" fill="none"/>`;
+        s += `<circle cx="70" cy="50" r="4" fill="#e2e8f0"/>`;
+        s += `<circle cx="110" cy="60" r="4" fill="#e2e8f0"/>`;
+        s += `<circle cx="190" cy="50" r="4" fill="#e2e8f0"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Bermuda Triangle Gulf Stream Meanders",
+      region: "Western Atlantic Basin (North America)",
+      desc: "Complex hydro-dynamic ocean rings and cold/warm core eddies detaching from the main current edge to trap distinct marine micro-environments.",
+      bg: "#0b132b",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,220 Q100,120 180,200 T257,80" stroke="#f59e0b" stroke-width="8" fill="none"/>`;
+        s += `<circle cx="110" cy="80" r="22" fill="none" stroke="#ef4444" stroke-width="4"/>`;
+        s += `<circle cx="200" cy="220" r="18" fill="none" stroke="#38bdf8" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Agulhas Current Retroflection",
+      region: "Cape Agulhas (South Africa / Southern Ocean)",
+      desc: "A major ocean boundary current that loops sharply back into the Indian Ocean, periodically pinching off massive spinning warm-core 'Agulhas rings' into the Atlantic.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<path d="M257,80 L150,180 C100,230 50,180 120,120 C180,70 257,140 257,140" stroke="#f59e0b" stroke-width="8" fill="none"/>`;
+        s += `<circle cx="70" cy="140" r="16" fill="none" stroke="#ef4444" stroke-width="4"/>`;
+        s += `<polygon points="120,37 180,37 150,110" fill="#334155"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Catatumbo River Estuary Hydrology",
+      region: "Lake Maracaibo (Venezuela / South America)",
+      desc: "A unique freshwater-estuarine hydro-climate where localized wind convergence over marshlands fuels the world's highest frequency of atmospheric lightning strikes.",
+      bg: "#18181b",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="140" width="218" height="133" fill="#0284c7" opacity="0.6"/>`;
+        s += `<polygon points="130,50 110,110 135,110 120,170 160,95 135,95" fill="#facc15"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Humboldt Upwelling System",
+      region: "Pacific Coast (Peru / Chile)",
+      desc: "A cold ocean current system where offshore trade winds push surface waters away from the coast, drawing up cold, nutrient-rich deep water to fuel vast marine food webs.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<rect x="180" y="37" width="77" height="236" fill="#1e293b"/>`;
+        s += `<line x1="160" y1="200" x2="80" y2="200" stroke="#f8fafc" stroke-width="4" marker-end="url(#arrow)"/>`;
+        s += `<path d="M170,250 C170,180 120,160 120,120" stroke="#a3e635" stroke-width="6" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Mississippi River Plume & Hypoxic Dead Zone",
+      region: "Gulf of Mexico (United States / North America)",
+      desc: "A jet-like river delta discharge carrying heavy nutrient loads, creating a sharp salt wedge interface and seasonal bottom-water hypoxia.",
+      bg: "#064e3b",
+      draw: () => {
+        let s = '';
+        s += `<path d="M150,37 L150,150 L80,240 M150,150 L220,240 M150,150 L150,260" stroke="#84cc16" stroke-width="8"/>`;
+        s += `<path d="M60,180 C100,160 200,160 240,180 L240,273 L60,273 Z" fill="#ef4444" opacity="0.4"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Cook Inlet Extremal Tides & Sediment Loads",
+      region: "Gulf of Alaska (United States / North America)",
+      desc: "A macrotidal fjord inlet featuring extreme semi-diurnal tidal ranges, heavy glacial flour suspended sediments, and severe mudflat current rushes.",
+      bg: "#1e293b",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 120,273 39,273" fill="#475569"/>`;
+        s += `<polygon points="257,37 180,273 257,273" fill="#475569"/>`;
+        s += `<path d="M120,37 L150,273 L180,37" fill="#78350f" opacity="0.7"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Strait of Malacca Surface Transport Flow",
+      region: "Malay Peninsula / Sumatra (Southeast Asia)",
+      desc: "A narrow, shallow choke-point waterway featuring complex seasonal surface salinity gradients and heavy tidally driven mixing.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 200,160 39,273" fill="#1e293b"/>`;
+        s += `<polygon points="257,37 257,273 100,180" fill="#1e293b"/>`;
+        s += `<line x1="60" y1="60" x2="220" y2="220" stroke="#38bdf8" stroke-width="8"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Bosphorus Strait Counter-Current System",
+      region: "Istanbul (Turkey / Black Sea-Marmara)",
+      desc: "A dramatic two-layer exchange flow where low-salinity surface water rushes out from the Black Sea while a deep, dense saltwater counter-current flows in from the Mediterranean.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="80" width="218" height="40" fill="#38bdf8"/>`;
+        s += `<rect x="39" y="120" width="218" height="40" fill="#1e3a8a"/>`;
+        s += `<line x1="60" y1="100" x2="200" y2="100" stroke="#f8fafc" stroke-width="3"/>`;
+        s += `<line x1="200" y1="140" x2="60" y2="140" stroke="#f59e0b" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Ob River Gulf Ice Jam Dynamics",
+      region: "Kara Sea Margin (Siberia, Russia)",
+      desc: "The world's longest river estuary, dominated by winter ice-sheet capping and massive spring meltwater flooding against northern sea ice.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="80" fill="#f8fafc"/>`;
+        s += `<path d="M150,273 L150,110" stroke="#0284c7" stroke-width="24"/>`;
+        s += `<path d="M110,110 L190,110" stroke="#ef4444" stroke-width="6"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Kuroshio Extension Meander & Frontal Zone",
+      region: "Western Pacific Ocean (Japan / East Asia)",
+      desc: "A high-velocity warm oceanic jet whose sharp temperature fronts and dynamic meanders influence weather patterns and eddy generation across the North Pacific.",
+      bg: "#0c1527",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,200 C90,100 140,250 257,100" stroke="#ef4444" stroke-width="10" fill="none"/>`;
+        s += `<path d="M39,220 C90,120 140,270 257,120" stroke="#38bdf8" stroke-width="6" fill="none"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Render Logic ---------------- */
+  function renderFrame(index) {
+    const item = HYDRO_DATA[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+
+    placeholderText.style.display = 'none';
+    
+    // Remove old rendered SVG
+    const oldSvg = viewfinder.querySelector('svg');
+    if(oldSvg) oldSvg.remove();
+
+    viewfinder.insertAdjacentHTML('beforeend', svg);
+
+    // Trigger visual flash
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 800);
+
+    frameNumber++;
+    frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+  }
+
+  function handleSnap() {
+    playShutterSound();
+    renderFrame(currentIndex);
+    currentIndex = (currentIndex + 1) % HYDRO_DATA.length;
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    handleSnap();
+  });
+
+  /* ---------------- Auto Mode ---------------- */
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON';
+    handleSnap();
+    autoTimer = setInterval(handleSnap, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+  }
+
+  autoBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    else startAuto();
+  });
+
+})();
+</script>
+</body>
+</html>

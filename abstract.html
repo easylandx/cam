@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Abstract Art & Geometry Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL ART-21 · GEOMETRIC EDITION</p>
+    <h1>Abstract Art &amp; Geometry</h1>
+    <p>Press shutter to cycle through non-figurative patterns, color theory &amp; geometric forms.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to survey abstract movements
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">ABSTRACT</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture movements</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Abstract Movements Visualizations ---------------- */
+  const MOVEMENTS = [
+    {
+      name: 'De Stijl (Neoplasticism)',
+      region: 'Leiden (Netherlands / Western Europe)',
+      desc: 'A strict geometric movement championed by Piet Mondrian using grid-based horizontal and vertical lines with primary colors, black, and white.',
+      bg: '#f8fafc',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="100" height="120" fill="#dc2626"/>`;
+        s += `<rect x="189" y="197" width="68" height="76" fill="#2563eb"/>`;
+        s += `<rect x="39" y="217" width="50" height="56" fill="#facc15"/>`;
+        s += `<line x1="139" y1="37" x2="139" y2="273" stroke="#000" stroke-width="8"/>`;
+        s += `<line x1="189" y1="37" x2="189" y2="273" stroke="#000" stroke-width="6"/>`;
+        s += `<line x1="39" y1="157" x2="257" y2="157" stroke="#000" stroke-width="8"/>`;
+        s += `<line x1="39" y1="217" x2="189" y2="217" stroke="#000" stroke-width="6"/>`;
+        s += `<line x1="89" y1="157" x2="89" y2="273" stroke="#000" stroke-width="6"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Suprematism',
+      region: 'St. Petersburg (Russian Empire / Eastern Europe)',
+      desc: 'Founded by Kazimir Malevich, focusing on fundamental geometric forms (squares, circles, lines) painted in a limited range of colors.',
+      bg: '#e2e8f0',
+      draw: () => {
+        let s = '';
+        s += `<rect x="70" y="70" width="80" height="80" fill="#0f172a" transform="rotate(-12 110 110)"/>`;
+        s += `<circle cx="180" cy="180" r="35" fill="#dc2626"/>`;
+        s += `<line x1="50" y1="220" x2="230" y2="100" stroke="#000" stroke-width="6"/>`;
+        s += `<rect x="140" y="90" width="70" height="15" fill="#2563eb" transform="rotate(25 175 97)"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Constructivism',
+      region: 'Moscow (Soviet Russia / Eastern Europe)',
+      desc: 'An avant-garde movement rejecting art for art\'s sake in favor of dynamic, industrial geometric abstraction aligned with modern technology.',
+      bg: '#18181b',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="50,250 150,50 180,250" fill="#dc2626" opacity="0.9"/>`;
+        s += `<circle cx="150" cy="150" r="60" fill="none" stroke="#f8fafc" stroke-width="4"/>`;
+        s += `<line x1="39" y1="273" x2="257" y2="37" stroke="#ea580c" stroke-width="5"/>`;
+        s += `<rect x="80" y="180" width="120" height="12" fill="#f8fafc" transform="rotate(-30 140 186)"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Op Art (Optical Art)',
+      region: 'Paris (France / Western Europe)',
+      desc: 'A mid-20th-century movement using stark geometric patterns and line arrangements to generate optical illusions of movement.',
+      bg: '#000000',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<10; i++){
+          let r = 100 - i*10;
+          let fill = i % 2 === 0 ? '#ffffff' : '#000000';
+          let cx = 148 + (i%2 === 0 ? i*2 : -i*2);
+          s += `<circle cx="${cx}" cy="155" r="${r}" fill="${fill}"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Concrete Art',
+      region: 'Paris (France / Western Europe)',
+      desc: 'Coined by Theo van Doesburg, a style of pure geometric abstraction featuring non-figurative planes and mathematical logic.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="60,60 220,60 140,240" fill="#38bdf8"/>`;
+        s += `<polygon points="60,60 140,240 60,240" fill="#0284c7"/>`;
+        s += `<circle cx="140" cy="120" r="30" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Hard-Edge Painting',
+      region: 'California (United States / North America)',
+      desc: 'Characterized by large, flat areas of uniform color separated by clean, sharply defined geometric boundaries.',
+      bg: '#4f46e5',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 257,37 257,273" fill="#ec4899"/>`;
+        s += `<polygon points="39,37 39,273 257,273" fill="#10b981"/>`;
+        s += `<polygon points="39,273 148,155 257,273" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Orphism (Simultanism)',
+      region: 'Paris (France / Western Europe)',
+      desc: 'An offshoot of Cubism pioneering vibrant, overlapping circular geometric shapes and vivid color harmony.',
+      bg: '#1e1b4b',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="110" cy="130" r="65" fill="#ef4444" opacity="0.8"/>`;
+        s += `<circle cx="180" cy="130" r="55" fill="#3b82f6" opacity="0.8"/>`;
+        s += `<circle cx="148" cy="180" r="60" fill="#eab308" opacity="0.8"/>`;
+        s += `<circle cx="148" cy="155" r="30" fill="#10b981" opacity="0.9"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Color Field Painting',
+      region: 'New York City (United States / North America)',
+      desc: 'Defined by massive expanses of flat, solid color designed to create immersive emotional and contemplative experiences.',
+      bg: '#7c2d12',
+      draw: () => {
+        let s = '';
+        s += `<rect x="55" y="55" width="186" height="90" fill="#ea580c"/>`;
+        s += `<rect x="55" y="160" width="186" height="95" fill="#ca8a04"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Minimalism (Geometric)',
+      region: 'New York City (United States / North America)',
+      desc: 'A 1960s aesthetic reducing art to basic geometric forms, industrial fabrications, and monochromatic palettes.',
+      bg: '#27272a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="74" y="72" width="148" height="166" fill="none" stroke="#71717a" stroke-width="12"/>`;
+        s += `<rect x="104" y="102" width="88" height="106" fill="#18181b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Bauhaus Abstraction',
+      region: 'Weimar & Dessau (Germany / Central Europe)',
+      desc: 'A design philosophy merging fine art and functional craft, exploring primary shapes, spatial relationships, and color.',
+      bg: '#f1f5f9',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="80,220 148,80 216,220" fill="#2563eb"/>`;
+        s += `<circle cx="95" cy="120" r="35" fill="#dc2626"/>`;
+        s += `<rect x="155" y="140" width="60" height="60" fill="#facc15"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Rayonism',
+      region: 'Moscow (Russian Empire / Eastern Europe)',
+      desc: 'Depicting rays of light reflecting off non-existent objects through dynamic intersecting vector lines.',
+      bg: '#090d16',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<15; i++){
+          let x1 = 39 + i*15;
+          let y1 = 37;
+          let x2 = 257 - i*10;
+          let y2 = 273;
+          let col = i%3 === 0 ? '#38bdf8' : (i%3 === 1 ? '#f59e0b' : '#ef4444');
+          s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="3"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Neo-Geo',
+      region: 'New York City (United States / North America)',
+      desc: 'Using geometric patterns, neon synthetic colors, and cellular grids to critique industrial technology and consumer culture.',
+      bg: '#180828',
+      draw: () => {
+        let s = '';
+        s += `<rect x="59" y="57" width="178" height="196" fill="none" stroke="#f43f5e" stroke-width="6"/>`;
+        s += `<rect x="89" y="87" width="50" height="50" fill="#06b6d4"/>`;
+        s += `<rect x="159" y="87" width="50" height="50" fill="#a855f7"/>`;
+        s += `<rect x="89" y="157" width="50" height="50" fill="#a855f7"/>`;
+        s += `<rect x="159" y="157" width="50" height="50" fill="#06b6d4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Syncromism',
+      region: 'Paris (France / Western Europe)',
+      desc: 'Organizing abstract compositions through scale-like color harmonies akin to musical arrangements.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        let colors = ['#9333ea', '#c084fc', '#3b82f6', '#60a5fa', '#34d399', '#fbbf24', '#f87171'];
+        colors.forEach((c, i) => {
+          s += `<path d="M${39 + i*14},37 C${100 + i*10},100 ${50 + i*20},200 ${257 - i*14},273 L${257 - i*20},273 Z" fill="${c}" opacity="0.85"/>`;
+        });
+        return s;
+      }
+    },
+    {
+      name: 'Elementarism',
+      region: 'Strasbourg (France / Western Europe)',
+      desc: 'Theo van Doesburg\'s modification of De Stijl introducing diagonal lines to create tension and dynamism.',
+      bg: '#f8fafc',
+      draw: () => {
+        let s = '';
+        s += `<g transform="rotate(45 148 155)">`;
+        s += `<rect x="48" y="55" width="100" height="100" fill="#dc2626"/>`;
+        s += `<rect x="158" y="165" width="60" height="60" fill="#2563eb"/>`;
+        s += `<line x1="148" y1="55" x2="148" y2="255" stroke="#000" stroke-width="8"/>`;
+        s += `<line x1="48" y1="155" x2="248" y2="155" stroke="#000" stroke-width="8"/>`;
+        s += `</g>`;
+        return s;
+      }
+    },
+    {
+      name: 'Geometric Abstraction (Grupo Frente)',
+      region: 'Rio de Janeiro (Brazil / South America)',
+      desc: 'Exploring rigorous geometric arrangements, vibrant color theory, and spatial rhythm within Latin American art.',
+      bg: '#042f2e',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<5; i++){
+          let opacity = 0.2 + i*0.18;
+          s += `<rect x="${59 + i*18}" y="${57 + i*18}" width="${178 - i*36}" height="${196 - i*36}" fill="#14b8a6" opacity="${opacity}"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Cubo-Futurism',
+      region: 'St. Petersburg (Russian Empire / Eastern Europe)',
+      desc: 'Combining fragmented geometric planes of French Cubism with kinetic motion and energetic lines of Italian Futurism.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="50,50 120,80 80,160 40,120" fill="#78350f"/>`;
+        s += `<polygon points="120,80 200,40 220,130 140,150" fill="#b45309"/>`;
+        s += `<polygon points="80,160 160,140 210,240 110,250" fill="#d97706"/>`;
+        s += `<line x1="39" y1="200" x2="257" y2="80" stroke="#fef08a" stroke-width="3"/>`;
+        s += `<line x1="60" y1="240" x2="257" y2="110" stroke="#fef08a" stroke-width="2"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Post-Painterly Abstraction',
+      region: 'New York City (United States / North America)',
+      desc: 'Favoring flat fields of color, open compositions, and crisp geometric precision over gestural brushwork.',
+      bg: '#fafaf9',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 148,273 80,273" fill="#06b6d4"/>`;
+        s += `<polygon points="257,37 148,273 200,273" fill="#8b5cf6"/>`;
+        s += `<polygon points="148,37 257,200 257,273" fill="#ec4899"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Lyrical Abstraction (European)',
+      region: 'Paris (France / Western Europe)',
+      desc: 'Balancing soft non-figurative shapes, subtle color gradations, and freeform geometric flow.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<path d="M60,100 C120,40 180,160 220,100 C240,180 140,260 80,200 Z" fill="#38bdf8" opacity="0.6"/>`;
+        s += `<path d="M100,80 C160,140 200,60 240,140 C180,220 100,180 60,120 Z" fill="#f43f5e" opacity="0.5"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Spatialism (Spazialismo)',
+      region: 'Milan (Italy / Southern Europe)',
+      desc: 'Founded by Lucio Fontana, incorporating physical space into abstract canvases using monochrome surfaces pierced by cuts.',
+      bg: '#b91c1c',
+      draw: () => {
+        let s = '';
+        s += `<path d="M110,70 Q115,150 100,230" stroke="#000" stroke-width="5" fill="none"/>`;
+        s += `<path d="M150,60 Q145,150 155,240" stroke="#000" stroke-width="6" fill="none"/>`;
+        s += `<path d="M190,80 Q180,160 195,220" stroke="#000" stroke-width="4" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Purism',
+      region: 'Paris (France / Western Europe)',
+      desc: 'Developed by Amédée Ozenfant and Le Corbusier, emphasizing clean geometric precision, simple forms, and harmonious proportion.',
+      bg: '#e2e8f0',
+      draw: () => {
+        let s = '';
+        s += `<rect x="70" y="80" width="70" height="150" fill="#94a3b8"/>`;
+        s += `<circle cx="170" cy="155" r="50" fill="#cbd5e1"/>`;
+        s += `<rect x="120" y="110" width="60" height="100" fill="#64748b" opacity="0.7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Analytical Abstraction (Vorticism)',
+      region: 'London (United Kingdom / Western Europe)',
+      desc: 'Using sharp, dynamic, machine-inspired geometric lines and angular forms to convey the energy of the modern industrial age.',
+      bg: '#111827',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<8; i++){
+          let p1 = `${148 - i*12},${37 + i*15}`;
+          let p2 = `${257 - i*15},${155 + i*10}`;
+          let p3 = `${148 + i*10},${273 - i*12}`;
+          let fill = i%2 === 0 ? '#f59e0b' : '#374151';
+          s += `<polygon points="${p1} ${p2} ${p3}" fill="${fill}" opacity="0.8"/>`;
+        }
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Core Render Function ---------------- */
+  function renderFrame(index) {
+    const item = MOVEMENTS[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+
+    viewfinder.innerHTML = svg + `
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerShutter() {
+    playShutterSound();
+
+    const flash = document.getElementById('flashOverlay') || flashOverlay;
+    const rec = document.getElementById('recIndicator') || recIndicator;
+
+    if(flash) {
+      flash.classList.remove('go');
+      void flash.offsetWidth;
+      flash.classList.add('go');
+    }
+
+    if(rec) {
+      rec.classList.add('flash');
+      setTimeout(() => rec.classList.remove('flash'), 600);
+    }
+
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % MOVEMENTS.length;
+    renderFrame(currentIndex);
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    getCtx();
+    triggerShutter();
+  });
+
+  autoBtn.addEventListener('click', () => {
+    getCtx();
+    autoActive = !autoActive;
+    autoBtn.classList.toggle('active', autoActive);
+    autoBtn.setAttribute('aria-pressed', autoActive);
+    autoLabel.textContent = autoActive ? 'AUTO SHUTTER · ON' : 'AUTO SHUTTER · OFF';
+
+    if(autoActive) {
+      triggerShutter();
+      autoTimer = setInterval(triggerShutter, AUTO_INTERVAL_MS);
+    } else {
+      clearInterval(autoTimer);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
