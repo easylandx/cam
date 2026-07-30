@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Culinary Traditions Edition</title>
+<style>
+  :root {
+    --body-dark: #1f1108;
+    --body-mid: #4a2411;
+    --body-light: #7c3f1d;
+    --screen-bg: #140b05;
+    --cream: #fef3c7;
+    --cream-dim: #fde68a;
+    --shutter-orange: #f59e0b;
+    --shutter-orange-dark: #d97706;
+    --amber: #fbbf24;
+    --line: #78350f;
+    --focus: #fbbf24;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #7c3f1d 0%, #4a2411 55%, #140b05 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 -6px 12px rgba(0,0,0,0.6);
+    border: 1px solid #140b05;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--shutter-orange);
+    box-shadow: 0 0 8px 1px rgba(251,191,36,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: #fbbf24;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.7;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #fbbf24;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #fbbf24;
+    box-shadow: 0 0 6px #fbbf24;
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fef3c7, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.4);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.4);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #140b05;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(251,191,36,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--shutter-orange);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #140b05;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(251,191,36,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(251,191,36,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL MB-21 · CULINARY HERITAGE</p>
+    <h1>21 Culinary Traditions</h1>
+    <p>Point, click, capture iconic agricultural systems & heritage ingredients.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>LIVE</span>
+      <span>f/2.8 &nbsp;·&nbsp; ISO 200</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER EMPTY<br>
+        press shutter to explore culinary traditions
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span class="val">1/125</span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span class="val">SEQUENCE</span>
+      </div>
+    </div>
+    <p class="hint">tap the orange button to take a photo</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1400;
+
+  /* ---------------- Web Audio API Shutter Sound Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const WARM_GLOWS = ['#f59e0b','#d97706','#b45309','#fbbf24'];
+  function pickGlow(idx){ return WARM_GLOWS[idx % WARM_GLOWS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function waterAndFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#140b05"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#3b1a08" opacity="0.5"/>`;
+    const glow = pickGlow(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.2"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#0a0502" opacity="0.8"/>`;
+    s += `<rect x="26" y="24" width="252" height="270" fill="#000" opacity="0.4"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#522308" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1f0c03"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(title, location, desc){
+    let s = '';
+    s += `<rect x="0" y="334" width="300" height="66" fill="#1a0c04" opacity="0.95"/>`;
+    s += `<rect x="0" y="334" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="352" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#fef3c7" letter-spacing="0.2">${escapeXml(title)}</text>`;
+    s += `<text x="150" y="366" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#fde68a">${escapeXml(location)}</text>`;
+    
+    // Simple text wrapping / shortening for 2 lines if needed
+    let shortDesc = desc.length > 68 ? desc.substring(0, 65) + '...' : desc;
+    s += `<text x="150" y="380" text-anchor="middle" font-family="'Courier New', monospace" font-size="7" fill="#fbbf24" letter-spacing="0.5">${escapeXml(shortDesc)}</text>`;
+    return s;
+  }
+
+  /* ---------------- 21 Culinary Traditions SVG Illustrations ---------------- */
+  const CULINARY_TRADITIONS = [
+    {
+      title: 'Parmigiano-Reggiano',
+      location: 'Emilia-Romagna (Italy)',
+      desc: 'Hard, long-aged granular cheese produced in specific northern provinces.',
+      bg: '#2b1e16',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="180" rx="75" ry="40" fill="#d4a373"/>`;
+        s += `<rect x="75" y="120" width="150" height="60" fill="#e9c46a"/>`;
+        s += `<ellipse cx="150" cy="120" rx="75" ry="40" fill="#f4a261"/>`;
+        s += `<path d="M90,140 Q110,130 130,145" fill="none" stroke="#2b1e16" stroke-width="2" opacity="0.5"/>`;
+        s += `<polygon points="160,110 200,90 210,120 170,130" fill="#ccd5ae"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Kimchi (Kimjang Culture)',
+      location: 'Korean Peninsula (East Asia)',
+      desc: 'Ancestral fermented cabbage with chili and garlic in clay jars.',
+      bg: '#3a0ca3',
+      draw: () => {
+        let s = '';
+        s += `<path d="M100,220 C90,140 100,120 150,120 C200,120 210,140 200,220 Z" fill="#6b705c"/>`;
+        s += `<ellipse cx="150" cy="120" rx="50" ry="15" fill="#4a4e69"/>`;
+        s += `<ellipse cx="150" cy="115" rx="42" ry="10" fill="#22223b"/>`;
+        s += `<path d="M120,160 Q150,150 180,160 Q170,190 130,185 Z" fill="#d90429"/>`;
+        s += `<circle cx="140" cy="170" r="3" fill="#ffb703"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Maguey Mezcal & Agave',
+      location: 'Oaxaca (Mexico)',
+      desc: 'Artisanal spirit distilled from slow-roasted agave piñas in pit ovens.',
+      bg: '#1b4332',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="150,80 135,140 165,140" fill="#40916c"/>`;
+        s += `<polygon points="110,110 135,150 150,130" fill="#52b788"/>`;
+        s += `<polygon points="190,110 165,150 150,130" fill="#52b788"/>`;
+        s += `<polygon points="80,150 130,170 140,150" fill="#74c69d"/>`;
+        s += `<polygon points="220,150 170,170 160,150" fill="#74c69d"/>`;
+        s += `<ellipse cx="150" cy="180" rx="45" ry="35" fill="#d8f3dc"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Nixtamalization & Heirloom Maize',
+      location: 'Mesoamerica (Mexico / Guatemala)',
+      desc: 'Ancient process of cooking corn in limewater to unlock niacin.',
+      bg: '#3d0c02',
+      draw: () => {
+        let s = '';
+        s += `<path d="M130,230 Q140,100 170,80 Q180,150 150,230 Z" fill="#ffb703"/>`;
+        for(let y=100; y<210; y+=16){
+          s += `<circle cx="148" cy="${y}" r="6" fill="#fb8500"/>`;
+          s += `<circle cx="158" cy="${y+6}" r="5.5" fill="#e07a5f"/>`;
+        }
+        s += `<path d="M120,230 Q110,180 135,140" fill="none" stroke="#606c38" stroke-width="8"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Champagne Terroir',
+      location: 'Champagne Province (France)',
+      desc: 'Chalk-soiled sparkling wine using secondary bottle fermentation.',
+      bg: '#0f2027',
+      draw: () => {
+        let s = '';
+        s += `<path d="M135,240 L135,160 L120,120 L120,80 L180,80 L180,120 L165,160 L165,240 Z" fill="#1b4332"/>`;
+        s += `<rect x="120" y="80" width="60" height="15" fill="#d4af37"/>`;
+        s += `<circle cx="140" cy="180" r="3" fill="#ffffff" opacity="0.6"/>`;
+        s += `<circle cx="155" cy="160" r="2" fill="#ffffff" opacity="0.8"/>`;
+        s += `<circle cx="148" cy="130" r="4" fill="#ffffff" opacity="0.5"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Basmati Rice (GI Region)',
+      location: 'Gangetic Plains & Punjab (India/Pak)',
+      desc: 'Long-grain aromatic rice aged up to two years in Himalayan foothills.',
+      bg: '#1d2d44',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="200" rx="80" ry="30" fill="#748cab"/>`;
+        s += `<path d="M70,200 Q150,150 230,200 Z" fill="#f0ebd8"/>`;
+        s += `<ellipse cx="120" cy="170" rx="20" ry="4" fill="#ffffff" transform="rotate(-20 120 170)"/>`;
+        s += `<ellipse cx="150" cy="165" rx="22" ry="4.5" fill="#ffffff" transform="rotate(10 150 165)"/>`;
+        s += `<ellipse cx="180" cy="175" rx="18" ry="4" fill="#ffffff" transform="rotate(-30 180 175)"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Jemáa el-Fnaa Tajine',
+      location: 'Marrakech (Morocco)',
+      desc: 'Slow-cooked conical clay-pot stewing with spices & preserved lemons.',
+      bg: '#4a0e17',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="210" rx="80" ry="25" fill="#9a031e"/>`;
+        s += `<polygon points="150,70 85,195 215,195" fill="#e36414"/>`;
+        s += `<circle cx="150" cy="65" r="12" fill="#fb8b24"/>`;
+        s += `<ellipse cx="150" cy="195" rx="65" ry="15" fill="#0f4c5c"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Ibérico Ham (Jamón de Bellota)',
+      location: 'Dehesa Oak Forests (Spain/Portugal)',
+      desc: 'Cured ham from free-roaming black pigs foraging on acorns.',
+      bg: '#2b0938',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,180 Q120,100 230,130 Q210,210 70,180 Z" fill="#9e2a2b"/>`;
+        s += `<path d="M70,180 Q100,160 120,180 Z" fill="#fff3b0"/>`;
+        s += `<path d="M130,130 Q160,150 210,140" fill="none" stroke="#fff3b0" stroke-width="4" opacity="0.7"/>`;
+        s += `<ellipse cx="230" cy="130" rx="10" ry="18" fill="#335c67"/>`;
+        s += `<circle cx="238" cy="130" rx="3" ry="8" fill="#000"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Kombu Kelp & Dashi',
+      location: 'Hokkaido Coast (Japan)',
+      desc: 'Sun-dried giant kelp forming the elemental umami base for stocks.',
+      bg: '#001d3d',
+      draw: () => {
+        let s = '';
+        s += `<path d="M100,240 Q130,170 110,100 Q140,160 120,240" fill="#2d6a4f"/>`;
+        s += `<path d="M150,240 Q180,150 160,80 Q190,140 170,240" fill="#1b4332"/>`;
+        s += `<path d="M190,240 Q210,180 200,120 Q220,170 210,240" fill="#40916c"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Andean Potato Biodiversity',
+      location: 'Lake Titicaca Basin (Peru/Bolivia)',
+      desc: 'High-altitude terraced agriculture featuring thousands of potato varieties.',
+      bg: '#31572c',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="110" cy="150" rx="30" ry="22" fill="#4cc9f0" transform="rotate(15 110 150)"/>`;
+        s += `<ellipse cx="170" cy="130" rx="35" ry="25" fill="#f72585" transform="rotate(-20 170 130)"/>`;
+        s += `<ellipse cx="145" cy="185" rx="40" ry="28" fill="#ffb703" transform="rotate(5 145 185)"/>`;
+        s += `<circle cx="130" cy="180" r="2" fill="#7209b7"/>`;
+        s += `<circle cx="155" cy="190" r="2" fill="#7209b7"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Traditional Balsamic Vinegar',
+      location: 'Modena & Reggio Emilia (Italy)',
+      desc: 'Cooked grape-must reduction aged in wooden barrel series.',
+      bg: '#10002b',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="190" rx="60" ry="35" fill="#3c096c"/>`;
+        s += `<rect x="90" y="130" width="120" height="60" fill="#5a189a"/>`;
+        s += `<ellipse cx="150" cy="130" rx="60" ry="35" fill="#7b2cbf"/>`;
+        s += `<line x1="90" y1="130" x2="90" y2="190" stroke="#e0aaff" stroke-width="3"/>`;
+        s += `<line x1="210" y1="130" x2="210" y2="190" stroke="#e0aaff" stroke-width="3"/>`;
+        s += `<rect x="135" y="110" width="30" height="20" fill="#240046"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Milpa Polyculture System',
+      location: 'Mesoamerica (Mexico/Central Amer)',
+      desc: 'Intercropping corn, beans, and squash together—the "Three Sisters".',
+      bg: '#132a13',
+      draw: () => {
+        let s = '';
+        s += `<line x1="150" y1="240" x2="150" y2="80" stroke="#ecf39e" stroke-width="8"/>`;
+        s += `<path d="M150,120 Q110,140 90,120" fill="none" stroke="#4f772d" stroke-width="5"/>`;
+        s += `<path d="M150,150 Q190,170 210,150" fill="none" stroke="#4f772d" stroke-width="5"/>`;
+        s += `<ellipse cx="150" cy="210" rx="45" ry="20" fill="#90a955"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Peking Duck (Shuntian Craft)',
+      location: 'Beijing (China)',
+      desc: 'Imperial wood-roasted duck with micro-thin, crispy mahogany skin.',
+      bg: '#540b0e',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="150" rx="65" ry="40" fill="#9e2a2b" transform="rotate(-15 150 150)"/>`;
+        s += `<circle cx="95" cy="120" r="20" fill="#fff3b0"/>`;
+        s += `<path d="M80,125 Q70,130 60,125" fill="none" stroke="#e36414" stroke-width="5"/>`;
+        s += `<path d="M190,170 Q220,180 230,160" fill="none" stroke="#9e2a2b" stroke-width="8"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Saffron Harvesting',
+      location: 'Khorasan Region (Iran)',
+      desc: 'Hand-picked crimson stigmas from millions of autumn crocus blossoms.',
+      bg: '#240046',
+      draw: () => {
+        let s = '';
+        s += `<path d="M150,180 Q120,100 130,80 Q150,130 150,180 Z" fill="#7b2cbf"/>`;
+        s += `<path d="M150,180 Q180,100 170,80 Q150,130 150,180 Z" fill="#9d4edd"/>`;
+        s += `<path d="M150,180 L145,90 M150,180 L150,85 M150,180 L155,90" fill="none" stroke="#d90429" stroke-width="3"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Roquefort Blue Cheese',
+      location: 'Combalou Caves (France)',
+      desc: 'Raw sheep milk cheese aged in natural fault caves with Penicillium.',
+      bg: '#1c2541',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="80,200 220,200 190,120 110,120" fill="#f8edeb"/>`;
+        s += `<polygon points="110,120 190,120 170,90 130,90" fill="#fcd5ce"/>`;
+        s += `<circle cx="130" cy="160" r="6" fill="#0077b6"/>`;
+        s += `<circle cx="160" cy="175" r="8" fill="#0077b6"/>`;
+        s += `<circle cx="170" cy="140" r="5" fill="#0077b6"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Chinampas Floating Gardens',
+      location: 'Xochimilco Basin (Mexico)',
+      desc: 'Hydro-agricultural system of artificial fertile islands built in lakebeds.',
+      bg: '#00281d',
+      draw: () => {
+        let s = '';
+        s += `<rect x="50" y="170" width="200" height="30" fill="#6b705c"/>`;
+        s += `<rect x="50" y="160" width="200" height="10" fill="#aacc00"/>`;
+        s += `<line x1="80" y1="160" x2="80" y2="100" stroke="#38b000" stroke-width="4"/>`;
+        s += `<line x1="150" y1="160" x2="150" y2="90" stroke="#38b000" stroke-width="4"/>`;
+        s += `<line x1="220" y1="160" x2="220" y2="105" stroke="#38b000" stroke-width="4"/>`;
+        s += `<rect x="0" y="200" width="300" height="50" fill="#0077b6" opacity="0.7"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Ceylon Tea Estates',
+      location: 'Central Highlands (Sri Lanka)',
+      desc: 'High-altitude mountain tea gardens producing brisk, golden teas.',
+      bg: '#1b4332',
+      draw: () => {
+        let s = '';
+        s += `<path d="M150,180 Q110,130 90,140 Q120,180 150,180 Z" fill="#52b788"/>`;
+        s += `<path d="M150,180 Q190,130 210,140 Q180,180 150,180 Z" fill="#74c69d"/>`;
+        s += `<line x1="150" y1="180" x2="150" y2="210" stroke="#2d6a4f" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Bourbon Vanilla Cultivation',
+      location: 'Sava Region (Madagascar)',
+      desc: 'Hand-pollinated orchids producing aromatic cured vanilla pods.',
+      bg: '#2b1e16',
+      draw: () => {
+        let s = '';
+        s += `<path d="M120,220 Q140,120 130,70" fill="none" stroke="#2a6f97" stroke-width="6"/>`;
+        s += `<path d="M160,220 Q140,130 150,80" fill="none" stroke="#012a4a" stroke-width="8"/>`;
+        s += `<path d="M180,220 Q160,140 170,90" fill="none" stroke="#012a4a" stroke-width="7"/>`;
+        s += `<circle cx="130" cy="70" r="12" fill="#fdf0d5"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Kveik Farmhouse Brewing',
+      location: 'Western Fjords (Norway)',
+      desc: 'Ancient non-commercial brewing with heirloom yeast dried on wooden rings.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        s += `<circle cx="150" cy="150" r="55" fill="none" stroke="#78350f" stroke-width="16"/>`;
+        s += `<circle cx="150" cy="150" r="55" fill="none" stroke="#d97706" stroke-width="6" stroke-dasharray="10 15"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Salineras de Maras',
+      location: 'Sacred Valley of Incas (Peru)',
+      desc: 'Evaporative terraced salt pans fed by subterranean hypersaline spring.',
+      bg: '#3d312a',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="60,120 140,120 120,150 40,150" fill="#f8edeb"/>`;
+        s += `<polygon points="150,120 240,120 230,150 130,150" fill="#f1faee"/>`;
+        s += `<polygon points="40,160 130,160 110,200 20,200" fill="#e8e8e4"/>`;
+        s += `<polygon points="140,160 250,160 230,200 120,200" fill="#f8edeb"/>`;
+        return s;
+      }
+    },
+    {
+      title: 'Traditional Coffee Ceremony',
+      location: 'Kaffa Region & Highlands (Ethiopia)',
+      desc: 'Birthplace of wild Arabica, sequentially brewed in a clay jebena.',
+      bg: '#280d00',
+      draw: () => {
+        let s = '';
+        s += `<ellipse cx="150" cy="200" rx="45" ry="30" fill="#582f0e"/>`;
+        s += `<rect x="142" y="110" width="16" height="60" fill="#7f5539"/>`;
+        s += `<path d="M150,110 L165,90 L135,90 Z" fill="#9c6644"/>`;
+        s += `<path d="M160,140 Q190,130 180,170" fill="none" stroke="#7f5539" stroke-width="6"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Core Capture Logic ---------------- */
+  function takePhoto() {
+    playShutterSound();
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 700);
+
+    frameNumber++;
+    frameCountEl.textContent = 'NO. ' + String(frameNumber).padStart(3, '0');
+
+    const item = CULINARY_TRADITIONS[currentIndex];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += waterAndFrame(item.bg, currentIndex);
+    svg += item.draw();
+    svg += caption(item.title, item.location, item.desc);
+    svg += `</svg>`;
+
+    viewfinder.innerHTML = `
+      ${svg}
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+
+    currentIndex = (currentIndex + 1) % CULINARY_TRADITIONS.length;
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    takePhoto();
+  });
+
+  /* ---------------- Auto Shutter Logic ---------------- */
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    document.getElementById('autoLabel').textContent = 'AUTO SHUTTER · ON';
+    takePhoto();
+    autoTimer = setInterval(takePhoto, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    document.getElementById('autoLabel').textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+    autoTimer = null;
+  }
+
+  autoBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    else startAuto();
+  });
+
+})();
+</script>
+</body>
+</html>

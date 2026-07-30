@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Earth Relief & Bathymetry Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL GEO-21 · PHYSICAL GEOGRAPHY EDITION</p>
+    <h1>Earth Relief & Bathymetry</h1>
+    <p>Press shutter to cycle through major global landforms &amp; deep marine basins.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to survey major physical landforms
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">GEOLOGY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture landforms</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    // Multi-line description fitting inside viewfinder
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3); // Max 3 lines
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Physical Landforms SVG Visualizations ---------------- */
+  const LANDFORMS = [
+    {
+      name: 'Grand Canyon',
+      region: 'North America (Southwestern United States)',
+      desc: 'A massive, steep-sided canyon carved by the Colorado River, exposing over two billion years of geological layers.',
+      bg: '#2b1008',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 80,180 110,210 130,160 150,273" fill="#8c2f00"/>`;
+        s += `<polygon points="257,273 210,170 180,200 160,150 140,273" fill="#b33f00"/>`;
+        s += `<path d="M125,273 L145,210 L155,273 Z" fill="#2a9d8f"/>`;
+        s += `<line x1="39" y1="120" x2="257" y2="120" stroke="#d97706" stroke-width="2" stroke-dasharray="4,4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Mariana Trench (Challenger Deep)',
+      region: 'Asia / Oceania (Western Pacific Ocean)',
+      desc: "Earth's deepest bathymetric depression, plunging nearly 11,000 meters into the subduction zone of the Pacific Plate.",
+      bg: '#020617',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 120,37 145,250 39,250" fill="#0f172a"/>`;
+        s += `<polygon points="257,37 180,37 155,250 257,250" fill="#0f172a"/>`;
+        s += `<path d="M140,240 L150,265 L160,240 Z" fill="#38bdf8"/>`;
+        s += `<text x="150" y="220" text-anchor="middle" font-size="8" fill="#38bdf8" font-family="monospace">-10,994m</text>`;
+        return s;
+      }
+    },
+    {
+      name: 'Tibetan Plateau',
+      region: 'Asia (Central / East Asia)',
+      desc: 'Known as the "Roof of the World," this vast elevated region averages over 4,500 meters in altitude and feeds Asia\'s rivers.',
+      bg: '#1e1b18',
+      draw: () => {
+        let s = '';
+        s += `<rect x="60" y="100" width="180" height="173" fill="#78350f"/>`;
+        s += `<polygon points="40,273 60,100 240,100 260,273" fill="#92400e"/>`;
+        s += `<polygon points="70,100 90,60 110,100 130,50 160,100 200,40 230,100" fill="#f8fafc"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Great Rift Valley',
+      region: 'Africa (East Africa / Afar Region)',
+      desc: 'A colossal intra-continental tectonic rift system bound by steep fault escarpments, volcanoes, and deep lakes.',
+      bg: '#27120a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="90" height="236" fill="#7f1d1d"/>`;
+        s += `<rect x="171" y="37" width="86" height="236" fill="#7f1d1d"/>`;
+        s += `<polygon points="129,37 171,37 160,273 140,273" fill="#450a0a"/>`;
+        s += `<ellipse cx="150" cy="180" rx="6" ry="40" fill="#0284c7"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Atacama Desert Plateau',
+      region: 'South America (Northern Chile)',
+      desc: 'A hyper-arid high-altitude plateau trapped between the Andes and Coastal ranges, making it the driest non-polar desert.',
+      bg: '#3b1202',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 70,120 110,273" fill="#78350f"/>`;
+        s += `<polygon points="190,273 220,80 257,273" fill="#9a3412"/>`;
+        s += `<rect x="100" y="160" width="100" height="113" fill="#d97706"/>`;
+        s += `<circle cx="150" cy="80" r="15" fill="#fef08a" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Alpine Fold Belt',
+      region: 'Europe (Central Europe)',
+      desc: 'A high-relief mountain system formed by the ongoing collision of the African and Eurasian tectonic plates.',
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 80,110 120,273" fill="#334155"/>`;
+        s += `<polygon points="90,273 150,70 200,273" fill="#475569"/>`;
+        s += `<polygon points="170,273 220,130 257,273" fill="#1e293b"/>`;
+        s += `<polygon points="135,100 150,70 165,100 150,90" fill="#ffffff"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Great Dividing Range',
+      region: 'Oceania (Eastern Australia)',
+      desc: "Australia's primary mountain and watershed range running parallel to the east coast for over 3,500 kilometers.",
+      bg: '#141e12',
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,273 Q100,120 130,273 T190,273 T240,273" fill="#2d6a4f"/>`;
+        s += `<path d="M210,37 L210,273" stroke="#0284c7" stroke-width="12" opacity="0.4"/>`;
+        s += `<path d="M90,273 Q130,140 160,273" fill="#40916c"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Vinson Massif & Sentinel Range',
+      region: 'Antarctica (Ellsworth Mountains)',
+      desc: 'The highest mountain group on the Antarctic continent, towering over the surrounding polar ice sheet.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="190" width="218" height="83" fill="#f1f5f9"/>`;
+        s += `<polygon points="80,190 140,60 200,190" fill="#e2e8f0"/>`;
+        s += `<polygon points="140,60 200,190 140,190" fill="#cbd5e1"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Danakil Depression',
+      region: 'Africa (Horn of Africa / Ethiopia)',
+      desc: 'A sunken tectonic basin sitting over 100m below sea level with hyper-saline flats, active lava lakes, and hydrothermal springs.',
+      bg: '#292524',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,120 70,220 230,220 257,120" fill="#44403c"/>`;
+        s += `<ellipse cx="110" cy="210" rx="30" ry="10" fill="#a3e635"/>`;
+        s += `<ellipse cx="180" cy="210" rx="25" ry="8" fill="#dc2626"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Mid-Atlantic Ridge',
+      region: 'Atlantic Ocean (Global Bathymetry)',
+      desc: 'A 16,000-kilometer underwater mountain range along a divergent plate boundary creating new oceanic crust.',
+      bg: '#030712',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#1e3a8a" opacity="0.5"/>`;
+        s += `<polygon points="130,37 145,273 120,273 110,37" fill="#1d4ed8"/>`;
+        s += `<polygon points="170,37 180,273 155,273 150,37" fill="#1d4ed8"/>`;
+        s += `<line x1="147" y1="37" x2="152" y2="273" stroke="#ef4444" stroke-width="2" stroke-dasharray="6,4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Ross Ice Shelf',
+      region: 'Antarctica (Ross Sea Sector)',
+      desc: "The world's largest floating ice shelf, forming a massive vertical ice cliff wall over the Southern Ocean.",
+      bg: '#0f172a',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="160" width="218" height="113" fill="#0284c7"/>`;
+        s += `<rect x="39" y="80" width="218" height="80" fill="#f8fafc"/>`;
+        s += `<line x1="39" y1="160" x2="257" y2="160" stroke="#cbd5e1" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Deccan Traps',
+      region: 'Asia (Peninsular India)',
+      desc: 'A massive flood basalt volcanic plateau covering over 500,000 square kilometers, formed by ancient volcanic eruptions.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<5; i++){
+          s += `<rect x="${50 + i*10}" y="${100 + i*30}" width="${190 - i*20}" height="20" fill="#44403c"/>`;
+        }
+        s += `<rect x="39" y="240" width="218" height="33" fill="#292524"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Western Norwegian Fjords',
+      region: 'Europe (Scandinavia)',
+      desc: 'Deep, steep-sided glacial marine valleys drowned by the ocean after ice age glaciers carved the coastal bedrock.',
+      bg: '#0284c7',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 110,37 100,273 39,273" fill="#334155"/>`;
+        s += `<polygon points="257,37 190,37 200,273 257,273" fill="#334155"/>`;
+        s += `<rect x="100" y="140" width="100" height="133" fill="#0369a1"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Salar de Uyuni',
+      region: 'South America (Altiplano, Bolivia)',
+      desc: "The world's largest salt flat, creating an extraordinarily level topographic surface at an elevation of 3,650 meters.",
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="180" width="218" height="93" fill="#f8fafc"/>`;
+        s += `<line x1="39" y1="180" x2="257" y2="180" stroke="#e2e8f0" stroke-width="2"/>`;
+        s += `<polygon points="60,180 90,130 120,180" fill="#64748b"/>`;
+        s += `<polygon points="170,180 200,120 230,180" fill="#64748b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Guilin & Yangshuo Karst Towers',
+      region: 'Asia (Guangxi, China)',
+      desc: 'A dramatic landscape of steep limestone towers and peak forests shaped by millions of years of water dissolution.',
+      bg: '#064e3b',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="220" width="218" height="53" fill="#047857"/>`;
+        s += `<path d="M60,220 C60,100 90,100 90,220" fill="#065f46"/>`;
+        s += `<path d="M120,220 C120,70 160,70 160,220" fill="#047857"/>`;
+        s += `<path d="M190,220 C190,110 220,110 220,220" fill="#065f46"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Cataracts of the Nile',
+      region: 'Africa (Northern Sudan / Southern Egypt)',
+      desc: 'A series of shallow, rocky whitewater rapids where the river cuts through exposed granite basement rock.',
+      bg: '#78350f',
+      draw: () => {
+        let s = '';
+        s += `<path d="M100,37 L100,273 L200,273 L200,37 Z" fill="#0284c7"/>`;
+        for(let i=0; i<8; i++){
+          s += `<circle cx="${120 + (i%3)*30}" cy="${60 + i*25}" r="${6 + (i%2)*4}" fill="#44403c"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: 'Appalachian Dissected Plateau',
+      region: 'North America (Eastern United States)',
+      desc: 'An ancient, heavily eroded uplifted region featuring deeply carved valleys and ridge-and-valley topography.',
+      bg: '#14532d',
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,200 Q70,140 100,200 T160,200 T220,200 T257,200" fill="#15803d"/>`;
+        s += `<path d="M39,240 Q70,180 100,240 T160,240 T220,240 T257,240" fill="#166534"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Cerrado Tablelands (Chapada)',
+      region: 'South America (Central Brazilian Plateau)',
+      desc: 'High ancient quartzite plateaus defined by flat-topped table mountains (chapadas), waterfalls, and deep river gorges.',
+      bg: '#7c2d12',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="50,273 50,130 140,130 160,273" fill="#9a3412"/>`;
+        s += `<polygon points="170,273 180,150 240,150 250,273" fill="#c2410c"/>`;
+        s += `<line x1="145" y1="130" x2="145" y2="273" stroke="#38bdf8" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Beringia Submerged Land Bridge',
+      region: 'North America / Asia (Bering Strait)',
+      desc: 'A shallow continental shelf that formed a vast land bridge connecting Siberia and Alaska during glacial low sea levels.',
+      bg: '#0c4a6e',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="160" width="218" height="113" fill="#0284c7"/>`;
+        s += `<polygon points="39,37 100,37 130,160 39,160" fill="#854d0e"/>`;
+        s += `<polygon points="257,37 200,37 170,160 257,160" fill="#854d0e"/>`;
+        s += `<rect x="130" y="130" width="40" height="30" fill="#ca8a04" opacity="0.6"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Okavango Inland Delta',
+      region: 'Africa (Kalahari Basin, Botswana)',
+      desc: 'An unusual endorheic alluvial fan where a major river empties directly into a landlocked desert basin rather than the sea.',
+      bg: '#713f12',
+      draw: () => {
+        let s = '';
+        s += `<path d="M150,37 L150,110 L50,250 L250,250 Z" fill="#15803d"/>`;
+        s += `<line x1="150" y1="37" x2="150" y2="110" stroke="#0284c7" stroke-width="8"/>`;
+        s += `<line x1="150" y1="110" x2="90" y2="230" stroke="#0284c7" stroke-width="4"/>`;
+        s += `<line x1="150" y1="110" x2="150" y2="240" stroke="#0284c7" stroke-width="4"/>`;
+        s += `<line x1="150" y1="110" x2="210" y2="230" stroke="#0284c7" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Canterbury Plains',
+      region: 'Oceania (South Island, New Zealand)',
+      desc: 'A broad braided river plain composed of thick alluvial gravels washed down from the Southern Alps.',
+      bg: '#14532d',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 100,37 39,273" fill="#475569"/>`;
+        s += `<polygon points="39,273 257,273 257,100" fill="#16a34a"/>`;
+        for(let i=0; i<5; i++){
+          s += `<path d="M${60+i*10},100 Q${100+i*15},180 ${120+i*25},273" fill="none" stroke="#38bdf8" stroke-width="2"/>`;
+        }
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Core Capture Logic ---------------- */
+  function renderFrame(index) {
+    const item = LANDFORMS[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += `<g class="landform-draw">` + item.draw() + `</g>`;
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+    return svg;
+  }
+
+  function triggerShutter() {
+    playShutterSound();
+
+    // Flash visual overlay
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    // Indicator animation
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 600);
+
+    // Update Counter and Viewfinder Content
+    frameNumber++;
+    frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+
+    if(placeholderText) placeholderText.style.display = 'none';
+
+    viewfinder.innerHTML = renderFrame(currentIndex) + `
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font">NO. ${String(frameNumber).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+
+    // Advance to next landform
+    currentIndex = (currentIndex + 1) % LANDFORMS.length;
+  }
+
+  /* ---------------- Event Listeners ---------------- */
+  shutterBtn.addEventListener('click', () => {
+    getCtx();
+    triggerShutter();
+  });
+
+  autoBtn.addEventListener('click', () => {
+    getCtx();
+    autoActive = !autoActive;
+    autoBtn.classList.toggle('active', autoActive);
+    autoBtn.setAttribute('aria-pressed', autoActive);
+    
+    if(autoActive) {
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      triggerShutter();
+      autoTimer = setInterval(triggerShutter, AUTO_INTERVAL_MS);
+    } else {
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
