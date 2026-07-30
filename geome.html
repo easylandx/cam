@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Sacred Geometry &amp; Universal Patterns Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #7c3aed;
+    --shutter-orange-dark: #581c87;
+    --amber: #a855f7;
+    --line: #334155;
+    --focus: #c084fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #3b0764 0%, #1e1b4b 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(168,85,247,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #c084fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(168,85,247,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(168,85,247,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(168,85,247,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(168,85,247,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL GEO-21 · SACRED GEOMETRY EDITION</p>
+    <h1>Sacred Geometric Symbols &amp; Patterns</h1>
+    <p>Press shutter to cycle through 21 universal physical laws &amp; mathematical symmetries.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SPECIMEN</span>
+      <span>f/1.6 &nbsp;·&nbsp; SYMMETRY</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine geometric patterns
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">RATIO</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the purple shutter button to capture sacred geometry</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#c084fc', '#38bdf8', '#f59e0b', '#ec4899', '#4ade80'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#110c1d"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#2e1065" opacity="0.4"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#030712" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#2e1065" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#181124"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#110c1d" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#c084fc" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#c084fc">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Sacred Geometric Symbols & Patterns Visualizations ---------------- */
+  const SYMBOLS = [
+    {
+      name: 'Golden Ratio (Fibonacci Proportion)',
+      region: 'Ancient Greece & Natural Biota (Mediterranean & Global)',
+      desc: 'A mathematical proportion (1.618) frequently found in nautilus shells, sunflower seed heads, and classical Greek architecture.',
+      bg: '#1e1b4b',
+      draw: () => `<path d="M150,150 Q180,100 210,150 T150,210 T90,150 T150,90" fill="none" stroke="#f59e0b" stroke-width="4"/><circle cx="150" cy="150" r="50" fill="none" stroke="#cbd5e1" stroke-width="2"/>`
+    },
+    {
+      name: 'Flower of Life Pattern',
+      region: 'Temple of Osiris, Abydos (Egypt / North Africa)',
+      desc: 'An ancient geometric figure composed of multiple evenly-spaced, overlapping circles arranged in a hexagonal flower-like lattice.',
+      bg: '#172554',
+      draw: () => `<circle cx="150" cy="150" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="150" cy="120" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="150" cy="180" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="124" cy="135" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="176" cy="135" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="124" cy="165" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/><circle cx="176" cy="165" r="30" fill="none" stroke="#38bdf8" stroke-width="2"/>`
+    },
+    {
+      name: 'Sri Yantra Mandala',
+      region: 'Indian Subcontinent (South Asia)',
+      desc: 'A complex geometric yantra composed of nine interlocking triangles radiating from a central bindu point, symbolizing cosmic creation.',
+      bg: '#3b0764',
+      draw: () => `<polygon points="150,90 200,200 100,200" fill="none" stroke="#ec4899" stroke-width="2"/><polygon points="150,210 100,110 200,110" fill="none" stroke="#ec4899" stroke-width="2"/><polygon points="150,130 180,180 120,180" fill="none" stroke="#f43f5e" stroke-width="2"/><circle cx="150" cy="150" r="4" fill="#fef08a"/>`
+    },
+    {
+      name: 'Islamic Zellige Tessellations',
+      region: 'Alhambra, Granada (Spain / Andalusia)',
+      desc: 'Intricate geometric tilework embodying complex mathematical symmetries, including periodic tessellations and complex star polygons.',
+      bg: '#064e3b',
+      draw: () => `<polygon points="150,90 170,130 210,130 180,160 190,200 150,180 110,200 120,160 90,130 130,130" fill="none" stroke="#34d399" stroke-width="2"/><circle cx="150" cy="150" r="60" fill="none" stroke="#059669" stroke-width="2"/>`
+    },
+    {
+      name: 'Platonic Solids',
+      region: 'Classical Greece (Mediterranean)',
+      desc: 'The five regular convex polyhedra studied by ancient mathematicians as foundational building blocks of physical space.',
+      bg: '#1e293b',
+      draw: () => `<polygon points="150,100 200,180 100,180" fill="none" stroke="#94a3b8" stroke-width="2"/><polygon points="150,200 200,120 100,120" fill="none" stroke="#94a3b8" stroke-width="2"/><circle cx="150" cy="150" r="55" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,4"/>`
+    },
+    {
+      name: 'Mandelbrot Fractal Set',
+      region: 'Cambridge, Massachusetts (United States / North America)',
+      desc: 'A famous mathematical set of complex numbers exhibiting infinite self-similarity, recursive geometric scaling, and non-linear dynamics.',
+      bg: '#020617',
+      draw: () => `<path d="M120,150 Q130,120 150,120 Q180,120 190,150 Q180,180 150,180 Q130,180 120,150 Z" fill="none" stroke="#38bdf8" stroke-width="3"/><circle cx="150" cy="150" r="25" fill="none" stroke="#818cf8" stroke-width="2"/><circle cx="150" cy="150" r="10" fill="none" stroke="#c084fc" stroke-width="2"/>`
+    },
+    {
+      name: 'Fibonacci Sequence Spirals',
+      region: 'Pisa (Italy / Western Europe)',
+      desc: 'A numerical sequence generating logarithmic growth spirals visible in pinecones and hurricane formations.',
+      bg: '#271c12',
+      draw: () => `<path d="M150,150 A30,30 0 0,1 180,180 A60,60 0 0,1 120,240 A120,120 0 0,1 30,120" fill="none" stroke="#fbbf24" stroke-width="3"/>`
+    },
+    {
+      name: 'Penrose Tilings',
+      region: 'Oxford (England / Western Europe)',
+      desc: 'A non-periodic tiling pattern discovered using two distinct rhombus shapes that fill a flat plane with five-fold rotational symmetry.',
+      bg: '#1c1917',
+      draw: () => `<polygon points="150,100 180,140 150,200 120,140" fill="none" stroke="#fb7185" stroke-width="2"/><line x1="150" y1="100" x2="150" y2="200" stroke="#fb7185" stroke-width="2"/><line x1="120" y1="140" x2="180" y2="140" stroke="#fb7185" stroke-width="2"/>`
+    },
+    {
+      name: 'Voronoi Diagrams',
+      region: 'Mathematical Modeling (Global / Universal Mathematics)',
+      desc: 'A geometric partitioning of a plane into regions based on distance to specific points, naturally occurring in giraffe skin and cracked mud.',
+      bg: '#292524',
+      draw: () => `<polygon points="150,100 200,130 190,190 130,210 100,160" fill="none" stroke="#a3e635" stroke-width="2"/><line x1="150" y1="150" x2="150" y2="100" stroke="#a3e635" stroke-width="1"/><line x1="150" y1="150" x2="200" y2="130" stroke="#a3e635" stroke-width="1"/><line x1="150" y1="150" x2="190" y2="190" stroke="#a3e635" stroke-width="1"/><line x1="150" y1="150" x2="130" y2="210" stroke="#a3e635" stroke-width="1"/><line x1="150" y1="150" x2="100" y2="160" stroke="#a3e635" stroke-width="1"/>`
+    },
+    {
+      name: 'Vesica Piscis',
+      region: 'Ancient Mesopotamia & Early Christian Art (Middle East / Europe)',
+      desc: 'A sacred geometric shape formed by the intersection of two disks with the same radius, symbolizing the birth of form and duality.',
+      bg: '#111827',
+      draw: () => `<circle cx="130" cy="150" r="40" fill="none" stroke="#60a5fa" stroke-width="2"/><circle cx="170" cy="150" r="40" fill="none" stroke="#60a5fa" stroke-width="2"/>`
+    },
+    {
+      name: "Metatron's Cube",
+      region: 'Hermetic Tradition (Alexandria, Egypt / Mediterranean)',
+      desc: 'A sacred geometric structure derived from Fruit of Life patterns containing all five Platonic solids within its linear web of 13 circles.',
+      bg: '#2e1065',
+      draw: () => `<circle cx="150" cy="150" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="150" cy="100" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="150" cy="200" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="100" cy="125" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="200" cy="125" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="100" cy="175" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="200" cy="175" r="10" fill="none" stroke="#e879f9" stroke-width="2"/><line x1="100" y1="125" x2="200" y2="175" stroke="#c084fc" stroke-width="1"/><line x1="200" y1="125" x2="100" y2="175" stroke="#c084fc" stroke-width="1"/><line x1="150" y1="100" x2="150" y2="200" stroke="#c084fc" stroke-width="1"/>`
+    },
+    {
+      name: 'Islamic Girih Tiles',
+      region: 'Isfahan (Iran / Middle East)',
+      desc: 'A set of five decorated polygonal tiles used by medieval Islamic architects to create complex, non-repeating geometric wall patterns.',
+      bg: '#14281d',
+      draw: () => `<polygon points="150,95 185,120 172,162 128,162 115,120" fill="none" stroke="#4ade80" stroke-width="2"/><polygon points="150,115 168,128 160,150 140,150 132,128" fill="none" stroke="#22c55e" stroke-width="2"/>`
+    },
+    {
+      name: 'Hexagonal Crystal Lattices',
+      region: 'Natural Mineralogy (Global / Universal Earth Sciences)',
+      desc: 'Molecular geometric arrangements seen in quartz crystals, ice snowflakes, and basalt columns optimizing structural stability.',
+      bg: '#042f2e',
+      draw: () => `<polygon points="150,110 185,130 185,170 150,190 115,170 115,130" fill="none" stroke="#2dd4bf" stroke-width="2"/><polygon points="150,130 168,140 168,160 150,170 132,160 132,140" fill="none" stroke="#2dd4bf" stroke-width="1"/>`
+    },
+    {
+      name: 'Torus Energy Field',
+      region: 'Universal Fluid Dynamics (Global Geophysics)',
+      desc: 'A continuous donut-shaped geometric vortex pattern observed in planetary magnetic fields, smoke rings, and toroidal fluid flows.',
+      bg: '#31100b',
+      draw: () => `<ellipse cx="150" cy="150" rx="55" ry="30" fill="none" stroke="#fb923c" stroke-width="3"/><circle cx="150" cy="150" r="20" fill="none" stroke="#fed7aa" stroke-width="2"/>`
+    },
+    {
+      name: 'Borromean Rings',
+      region: 'Northern Italy (Renaissance Europe)',
+      desc: 'Three topological interlocking rings where removing any single ring leaves the remaining two unlinked, historically used in heraldry.',
+      bg: '#26161c',
+      draw: () => `<circle cx="135" cy="135" r="30" fill="none" stroke="#f472b6" stroke-width="2"/><circle cx="165" cy="135" r="30" fill="none" stroke="#f472b6" stroke-width="2"/><circle cx="150" cy="170" r="30" fill="none" stroke="#f472b6" stroke-width="2"/>`
+    },
+    {
+      name: 'Archimedean Solids',
+      region: 'Ancient Alexandria (Hellenistic Egypt)',
+      desc: 'The 13 semi-regular convex polyhedra composed of two or more types of regular polygons meeting in identical vertex configurations.',
+      bg: '#1a1724',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="none" stroke="#a78bfa" stroke-width="2"/><polygon points="150,100 185,115 200,150 185,185 150,200 115,185 100,150 115,115" fill="none" stroke="#c084fc" stroke-width="1"/>`
+    },
+    {
+      name: 'Pentagram & Golden Triangle',
+      region: 'Pythagorean School (Croton, Magna Graecia)',
+      desc: 'A geometric star polygon whose internal angle ratios naturally correspond to the golden section, revered for mathematical harmony.',
+      bg: '#201010',
+      draw: () => `<polygon points="150,95 186,200 97,136 203,136 114,200" fill="none" stroke="#f87171" stroke-width="2"/><circle cx="150" cy="150" r="55" fill="none" stroke="#fca5a5" stroke-width="1" stroke-dasharray="3,3"/>`
+    },
+    {
+      name: 'Celtic Knotwork Lattices',
+      region: 'Insular Art (Ireland & Great Britain / Northern Europe)',
+      desc: 'Complex interlaced ribbon geometries representing unbroken continuity, eternity, and rigorous mathematical weaving rules.',
+      bg: '#132219',
+      draw: () => `<rect x="110" y="110" width="80" height="80" fill="none" stroke="#6ee7b7" stroke-width="4"/><path d="M110,150 Q150,110 190,150 Q150,190 110,150 Z" fill="none" stroke="#34d399" stroke-width="3"/>`
+    },
+    {
+      name: 'Navajo Sandpainting Geometries',
+      region: 'American Southwest (North America)',
+      desc: 'Intricate, mathematically balanced radial and linear geometric compositions used in healing ceremonies reflecting cosmic harmony.',
+      bg: '#2b1d0c',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="none" stroke="#fbbf24" stroke-width="2"/><line x1="150" y1="90" x2="150" y2="210" stroke="#f59e0b" stroke-width="2"/><line x1="90" y1="150" x2="210" y2="150" stroke="#f59e0b" stroke-width="2"/><polygon points="150,120 180,150 150,180 120,150" fill="none" stroke="#fde047" stroke-width="1.5"/>`
+    },
+    {
+      name: 'Mandala Radial Symmetry',
+      region: 'Buddhist & Hindu Traditions (Tibet & South Asia)',
+      desc: 'Circular geometric diagrams representing spiritual dissolution and reintegration through concentric rings and four-fold or eight-fold axes.',
+      bg: '#2e0824',
+      draw: () => `<circle cx="150" cy="150" r="55" fill="none" stroke="#e879f9" stroke-width="2"/><circle cx="150" cy="150" r="35" fill="none" stroke="#f472b6" stroke-width="1.5"/><circle cx="150" cy="150" r="15" fill="none" stroke="#fb7185" stroke-width="1.5"/><line x1="150" y1="95" x2="150" y2="205" stroke="#e879f9" stroke-width="1"/><line x1="95" y1="150" x2="205" y2="150" stroke="#e879f9" stroke-width="1"/>`
+    },
+    {
+      name: 'Pythagorean Tuning Ratios',
+      region: 'Ancient Samos (Greek Aegean)',
+      desc: 'Mathematical ratios of string lengths (such as 2:3 and 3:4) that govern musical intervals, acoustic harmonics, and geometric wave proportions.',
+      bg: '#0f172a',
+      draw: () => `<path d="M90,150 Q120,100 150,150 T210,150" fill="none" stroke="#38bdf8" stroke-width="3"/><path d="M90,150 Q120,200 150,150 T210,150" fill="none" stroke="#818cf8" stroke-width="2"/>`
+    }
+  ];
+
+  function renderCurrent(){
+    const p = SYMBOLS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(p.bg, currentIndex)}
+        ${p.draw()}
+        ${caption(p.name, p.region, p.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % SYMBOLS.length;
+    renderCurrent();
+
+    const fo = document.getElementById('flashOverlay');
+    const ri = document.getElementById('recIndicator');
+    if(fo) {
+      fo.classList.remove('go');
+      void fo.offsetWidth;
+      fo.classList.add('go');
+    }
+    if(ri) {
+      ri.classList.add('flash');
+      setTimeout(() => ri.classList.remove('flash'), 500);
+    }
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderCurrent();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Atmospheric Optics Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL OPTICS-21 · ATMOSPHERIC &amp; METEOROLOGICAL EDITION</p>
+    <h1>Atmospheric Optics &amp; Phenomena</h1>
+    <p>Press shutter to survey 21 rare optical phenomena, cloud formations, and light effects.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SURVEY</span>
+      <span>f/2.8 &nbsp;·&nbsp; ISO 200</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to survey atmospheric optics &amp; rare clouds
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/500</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">OPTICS</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture phenomena</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1600;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Atmospheric Optics & Phenomena SVG Visualizations ---------------- */
+  const OPTICS_DATA = [
+    {
+      name: "Brown Mountain Lights",
+      region: "Catawba River Valley, North Carolina (United States / North America)",
+      desc: "Mysterious, flickering nocturnal light orbs observed hovering above mountainous ridges, often attributed to atmospheric refraction or piezoelectric rock stress.",
+      bg: "#111827",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 90,180 150,273" fill="#1f2937"/>`;
+        s += `<polygon points="120,273 180,140 257,273" fill="#374151"/>`;
+        s += `<circle cx="160" cy="130" r="14" fill="#facc15" opacity="0.9"/>`;
+        s += `<circle cx="160" cy="130" r="26" fill="#f59e0b" opacity="0.3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Aurora Borealis & Australis",
+      region: "High-Latitude Polar Ovals (Arctic & Antarctic / Global Polar Regions)",
+      desc: "Luminous, dancing curtains of color produced when high-energy solar wind electrons collide with gas molecules in the upper thermosphere.",
+      bg: "#022c22",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,120 Q90,70 150,110 T257,90 L257,273 L39,273 Z" fill="#065f46" opacity="0.4"/>`;
+        s += `<path d="M39,90 Q110,140 180,80 T257,110" stroke="#34d399" stroke-width="8" fill="none" opacity="0.8"/>`;
+        s += `<path d="M39,130 Q120,70 200,120 T257,80" stroke="#38bdf8" stroke-width="5" fill="none" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Maracaibo Lightning (Catatumbo)",
+      region: "Lake Maracaibo Basin (Venezuela / South America)",
+      desc: "A persistent nighttime thunderstorm phenomenon generating hundreds of lightning flashes per hour, fueled by unique local nocturnal wind convergence.",
+      bg: "#090d16",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="180" width="218" height="93" fill="#0284c7" opacity="0.4"/>`;
+        s += `<polygon points="150,50 120,130 145,130 130,200 175,120 145,120" fill="#facc15"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Hessdalen Lights",
+      region: "Gauldalen Valley (Norway / Northern Europe)",
+      desc: "Anomalous luminous plasma spheres and drifting light flashes occurring in a remote valley, believed generated by underground conductive metallic ores.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,273 120,150 200,273" fill="#334155"/>`;
+        s += `<polygon points="140,273 200,180 257,273" fill="#1e293b"/>`;
+        s += `<circle cx="150" cy="120" r="12" fill="#f43f5e" opacity="0.9"/>`;
+        s += `<circle cx="150" cy="120" r="24" fill="#fb7185" opacity="0.3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Green Flash",
+      region: "Marine Horizon (Global Ocean / Coastal Horizons)",
+      desc: "A brief emerald flash of light visible for a second or two directly above the sun at sunrise or sunset, caused by atmospheric refraction and dispersion.",
+      bg: "#0c4a6e",
+      draw: () => {
+        let s = '';
+        s += `<line x1="39" y1="200" x2="257" y2="200" stroke="#38bdf8" stroke-width="3"/>`;
+        s += `<circle cx="150" cy="200" r="45" fill="#f59e0b"/>`;
+        s += `<ellipse cx="150" cy="153" rx="18" ry="6" fill="#34d399"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Brocken Spectre (Mountain Glory)",
+      region: "Harz Mountains (Germany / Central Europe)",
+      desc: "An oversized shadow of an observer cast onto upper cloud banks or fog, surrounded by glowing colored rings known as a glory, caused by diffraction.",
+      bg: "#1e293b",
+      draw: () => {
+        let s = '';
+        s += `<circle cx="150" cy="130" r="35" fill="none" stroke="#ef4444" stroke-width="3"/>`;
+        s += `<circle cx="150" cy="130" r="27" fill="none" stroke="#f59e0b" stroke-width="3"/>`;
+        s += `<circle cx="150" cy="130" r="19" fill="none" stroke="#38bdf8" stroke-width="3"/>`;
+        s += `<polygon points="140,160 160,160 165,220 135,220" fill="#0f172a"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Kelvin-Helmholtz Wave Clouds",
+      region: "Global Troposphere (Global Atmosphere)",
+      desc: "Striking cloud formations resembling breaking ocean surf, created by shear instability when a faster layer of air moves over a slower, denser cloud layer.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<path d="M50,160 C90,160 90,100 130,100 C150,100 150,130 170,130 C200,130 210,160 240,160" fill="none" stroke="#e2e8f0" stroke-width="12" stroke-linecap="round"/>`;
+        s += `<path d="M50,190 C90,190 90,130 130,130 C150,130 150,160 170,160 C200,160 210,190 240,190" fill="none" stroke="#94a3b8" stroke-width="10" stroke-linecap="round"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Asperitas Cloud Formations",
+      region: "Great Plains (United States / North America)",
+      desc: "A dramatic, chaotic undulating cloudscape that looks like a turbulent, churning ocean surface viewed from underneath, shaped by complex wave interactions.",
+      bg: "#18181b",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,100 Q80,150 120,100 T200,100 T257,120 L257,273 L39,273 Z" fill="#3f3f46"/>`;
+        s += `<path d="M39,140 Q90,90 150,150 T257,130" stroke="#71717a" stroke-width="10" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Mammatus Cloud Pouches",
+      region: "Post-Storm Troposphere (Global Storm Systems / Mid-Latitudes)",
+      desc: "Distinctive, pouch-like bulbous cloud lobes hanging beneath the base of a cumulonimbus anvil, formed by sinking cold air pockets saturated with ice and water.",
+      bg: "#27272a",
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="60" fill="#52525b"/>`;
+        const circles = [60, 90, 120, 150, 180, 210, 230];
+        circles.forEach((cx, i) => {
+          s += `<circle cx="${cx}" cy="110" r="15" fill="#a1a1aa"/>`;
+        });
+        return s;
+      }
+    },
+    {
+      name: "Sun Pillars",
+      region: "Cold-Climate Winters (Global High Latitudes)",
+      desc: "Vertical columns of light stretching upward from the sun during sunrise or sunset, created by reflection of light off flat, horizontally oriented hexagonal ice crystals.",
+      bg: "#1e1b4b",
+      draw: () => {
+        let s = '';
+        s += `<circle cx="150" cy="200" r="30" fill="#f59e0b"/>`;
+        s += `<rect x="142" y="60" width="16" height="180" fill="#fde047" opacity="0.8"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Fata Morgana Superior Mirage",
+      region: "Strait of Messina & Arctic Sea Ice (Italy / Global Polar Waters)",
+      desc: "A complex, rapidly changing superior mirage where temperature inversions bend light rays to project towering, distorted images of distant coastlines.",
+      bg: "#0c4a6e",
+      draw: () => {
+        let s = '';
+        s += `<line x1="39" y1="200" x2="257" y2="200" stroke="#38bdf8" stroke-width="2"/>`;
+        s += `<path d="M60,200 L70,120 L80,180 L90,100 L110,200 Z" fill="#0284c7" opacity="0.8"/>`;
+        s += `<path d="M150,200 L160,110 L170,190 L180,90 L200,200 Z" transform="scale(1, -1) translate(0, -400)" fill="#0284c7" opacity="0.4"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Nacreous Clouds (Polar Stratospheric)",
+      region: "Polar Stratosphere (Antarctica & Scandinavia / Polar Regions)",
+      desc: "Iridescent, mother-of-pearl clouds forming high in the stratosphere at extreme sub-zero temperatures, visible only in deep twilight.",
+      bg: "#3b0764",
+      draw: () => {
+        let s = '';
+        s += `<path d="M70,140 Q110,90 180,120 T240,110 Q260,160 200,180 T80,170 Z" fill="#f472b6" opacity="0.7"/>`;
+        s += `<path d="M90,130 Q130,100 170,130 T220,120" stroke="#38bdf8" stroke-width="6" fill="none" opacity="0.9"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Noctilucent Clouds (Mesospheric)",
+      region: "High-Latitude Mesosphere (Polar Mesosphere / Global High Latitudes)",
+      desc: "Electric-blue, glowing ice-crystal clouds sitting at the edge of space in the mesosphere, illuminated by the sun long after ground-level sunset.",
+      bg: "#030712",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,120 Q90,90 150,110 T257,100 L257,273 L39,273 Z" fill="#111827"/>`;
+        s += `<path d="M45,130 C80,110 120,140 160,105 C200,130 230,115 250,120" stroke="#38bdf8" stroke-width="3" fill="none"/>`;
+        s += `<path d="M50,140 C90,120 130,150 170,115 C210,140 240,125 250,130" stroke="#93c5fd" stroke-width="2" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Glory (Pilot's Bow / Anthelion)",
+      region: "High-Altitude Cloud Decks (Global Skies)",
+      desc: "Concentric colored rings of light centered on the shadow of an aircraft or observer against a cloud deck below, created by backward diffraction of sunlight.",
+      bg: "#1e293b",
+      draw: () => {
+        let s = '';
+        s += `<circle cx="150" cy="150" r="45" fill="none" stroke="#ef4444" stroke-width="4"/>`;
+        s += `<circle cx="150" cy="150" r="35" fill="none" stroke="#f59e0b" stroke-width="4"/>`;
+        s += `<circle cx="150" cy="150" r="25" fill="none" stroke="#38bdf8" stroke-width="4"/>`;
+        s += `<circle cx="150" cy="150" r="10" fill="#f8fafc"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Circumhorizontal Arc ('Fire Rainbows')",
+      region: "Mid-Latitude Summer Skies (Global Mid-Latitudes)",
+      desc: "A brilliant, sprawling halo of spectral colors parallel to the horizon, formed when high-altitude sunbeams pass through horizontally oriented plate-shaped ice crystals.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<path d="M39,120 Q150,160 257,120" stroke="#ef4444" stroke-width="6" fill="none"/>`;
+        s += `<path d="M39,127 Q150,167 257,127" stroke="#f59e0b" stroke-width="6" fill="none"/>`;
+        s += `<path d="M39,134 Q150,174 257,134" stroke="#34d399" stroke-width="6" fill="none"/>`;
+        s += `<path d="M39,141 Q150,181 257,141" stroke="#38bdf8" stroke-width="6" fill="none"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Crepuscular Rays",
+      region: "Global Troposphere (Global Skies)",
+      desc: "Dramatic beams of sunlight streaming through gaps in clouds or mountain peaks, made visible by the forward scattering of light off atmospheric dust and moisture.",
+      bg: "#1e1b4b",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="150,37 50,273 80,273" fill="#fde047" opacity="0.3"/>`;
+        s += `<polygon points="150,37 110,273 140,273" fill="#fde047" opacity="0.5"/>`;
+        s += `<polygon points="150,37 170,273 200,273" fill="#fde047" opacity="0.4"/>`;
+        s += `<polygon points="150,37 230,273 250,273" fill="#fde047" opacity="0.3"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Green Ray of the Aurora (Coronal Breakout)",
+      region: "Arctic Circle Skies (Norway / Northern Europe)",
+      desc: "Intense, high-altitude oxygen emission spikes that flash bright emerald across the night sky during intense geomagnetic substorms.",
+      bg: "#022c22",
+      draw: () => {
+        let s = '';
+        for(let i=0; i<8; i++){
+          let x = 60 + i*20;
+          s += `<line x1="${x}" y1="273" x2="${x + (i%2===0?5:-5)}" y2="60" stroke="#34d399" stroke-width="6" opacity="0.8"/>`;
+        }
+        return s;
+      }
+    },
+    {
+      name: "Light Pillars over Urban Freezing Zones",
+      region: "Interior Alaska & Northern Canada (North America / High Latitudes)",
+      desc: "Vertical columns of brilliant colored light shooting up from ground-level streetlights, caused by ice crystal fog refracting artificial illumination.",
+      bg: "#090d16",
+      draw: () => {
+        let s = '';
+        s += `<rect x="80" y="100" width="12" height="173" fill="#38bdf8" opacity="0.6"/>`;
+        s += `<rect x="144" y="70" width="12" height="203" fill="#f59e0b" opacity="0.6"/>`;
+        s += `<rect x="208" y="120" width="12" height="153" fill="#ef4444" opacity="0.6"/>`;
+        s += `<circle cx="86" cy="270" r="5" fill="#fff"/>`;
+        s += `<circle cx="150" cy="270" r="5" fill="#fff"/>`;
+        s += `<circle cx="214" cy="270" r="5" fill="#fff"/>`;
+        return s;
+      }
+    },
+    {
+      name: "St. Elmo's Fire",
+      region: "Mountain Peaks & Ship Masts (Global High-Altitude / Maritime)",
+      desc: "A bright blue-violet luminous plasma glow caused by corona discharge from sharp objects during high atmospheric electric fields ahead of thunderstorms.",
+      bg: "#0f172a",
+      draw: () => {
+        let s = '';
+        s += `<polygon points="140,273 160,273 150,100" fill="#334155"/>`;
+        s += `<circle cx="150" cy="95" r="16" fill="#38bdf8" opacity="0.9"/>`;
+        s += `<circle cx="150" cy="95" r="28" fill="#818cf8" opacity="0.4"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Halo Phenomena (22-Degree Solar Halo)",
+      region: "Global Troposphere (Global Skies)",
+      desc: "A luminous ring forming 22 degrees away from the sun or moon, caused by the refraction of light through hexagonal ice crystals in high cirrostratus clouds.",
+      bg: "#0284c7",
+      draw: () => {
+        let s = '';
+        s += `<circle cx="150" cy="150" r="60" fill="none" stroke="#fef08a" stroke-width="5" opacity="0.8"/>`;
+        s += `<circle cx="150" cy="150" r="20" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: "Green Flash Moon",
+      region: "Oceanic Horizons (Global Marine Horizons)",
+      desc: "A rare lunar counterpart to the solar green flash, visible during moonset over a clear ocean horizon as atmospheric refraction isolates the green spectrum.",
+      bg: "#021526",
+      draw: () => {
+        let s = '';
+        s += `<line x1="39" y1="200" x2="257" y2="200" stroke="#38bdf8" stroke-width="2"/>`;
+        s += `<circle cx="150" cy="200" r="40" fill="#e2e8f0"/>`;
+        s += `<ellipse cx="150" cy="157" rx="16" ry="5" fill="#34d399"/>`;
+        return s;
+      }
+    }
+  ];
+
+  /* ---------------- Render Logic ---------------- */
+  function renderFrame(index) {
+    const item = OPTICS_DATA[index];
+    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(item.bg, index);
+    svg += item.draw();
+    svg += caption(item.name, item.region, item.desc);
+    svg += `</svg>`;
+
+    placeholderText.style.display = 'none';
+    
+    const oldSvg = viewfinder.querySelector('svg');
+    if(oldSvg) oldSvg.remove();
+
+    viewfinder.insertAdjacentHTML('beforeend', svg);
+
+    flashOverlay.classList.remove('go');
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add('go');
+
+    recIndicator.classList.add('flash');
+    setTimeout(() => recIndicator.classList.remove('flash'), 800);
+
+    frameNumber++;
+    frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
+  }
+
+  function handleSnap() {
+    playShutterSound();
+    renderFrame(currentIndex);
+    currentIndex = (currentIndex + 1) % OPTICS_DATA.length;
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    handleSnap();
+  });
+
+  /* ---------------- Auto Mode ---------------- */
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON';
+    handleSnap();
+    autoTimer = setInterval(handleSnap, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+  }
+
+  autoBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    else startAuto();
+  });
+
+})();
+</script>
+</body>
+</html>
