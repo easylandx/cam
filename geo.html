@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌋 Geological & Mineral Booth — Deep Earth Edition</title>
+<title>📷 Gallery Booth — Legendary Rivers & Hydrological Bridges</title>
 <style>
   :root {
-    --body-dark: #120d0a;
-    --body-mid: #2b1a10;
-    --body-light: #4a2e1b;
-    --screen-bg: #0d0907;
-    --cream: #f5efe6;
-    --cream-dim: #d4c3b3;
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
     --shutter-orange: #d97706;
     --shutter-orange-dark: #b45309;
     --amber: #f59e0b;
-    --line: #451a03;
-    --focus: #f59e0b;
+    --line: #334155;
+    --focus: #38bdf8;
   }
 
   * { box-sizing: border-box; }
@@ -25,7 +25,7 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background: radial-gradient(ellipse at top, #3b2219 0%, #1c100b 55%, #0a0503 100%);
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 55%, #020617 100%);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: var(--cream);
     display: flex;
@@ -59,7 +59,7 @@
     margin: 0 0 6px;
   }
   header h1 {
-    font-size: 24px;
+    font-size: 22px;
     margin: 0;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -76,10 +76,10 @@
     border-radius: 22px;
     padding: 18px;
     box-shadow:
-      0 30px 60px -20px rgba(0,0,0,0.85),
-      inset 0 1px 0 rgba(255,255,255,0.15),
-      inset 0 -6px 12px rgba(0,0,0,0.6);
-    border: 1px solid #1c0d06;
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
     position: relative;
   }
 
@@ -93,7 +93,7 @@
   }
   .lens-dot {
     width: 8px; height: 8px; border-radius: 50%;
-    background: var(--shutter-orange);
+    background: var(--amber);
     box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
     display: inline-block;
     margin-right: 6px;
@@ -123,7 +123,7 @@
     text-align: center;
     padding: 20px;
     line-height: 1.6;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   .reticle {
@@ -185,7 +185,7 @@
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-    opacity: 0.22;
+    opacity: 0.18;
     mix-blend-mode: overlay;
     pointer-events: none;
   }
@@ -206,8 +206,8 @@
     background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
     box-shadow:
       0 6px 0 var(--shutter-orange-dark),
-      0 10px 18px rgba(0,0,0,0.6),
-      inset 0 2px 4px rgba(255,255,255,0.4);
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
     cursor: pointer;
     position: relative;
     transition: transform 0.08s, box-shadow 0.08s;
@@ -216,21 +216,21 @@
     transform: translateY(5px);
     box-shadow:
       0 1px 0 var(--shutter-orange-dark),
-      0 2px 6px rgba(0,0,0,0.6),
-      inset 0 2px 4px rgba(255,255,255,0.4);
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
   }
   .shutter-btn::after {
     content: '';
     position: absolute;
     inset: 10px;
     border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.4);
+    border: 2px solid rgba(255,255,255,0.3);
   }
   .shutter-ring {
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    border: 1px solid #1c0d06;
+    border: 1px solid #0f172a;
   }
   .shutter-wrap { position: relative; }
 
@@ -281,7 +281,7 @@
     flex-shrink: 0;
   }
   .auto-btn.active .auto-dot {
-    background: var(--shutter-orange);
+    background: var(--amber);
     animation: autoPulse 1s ease-in-out infinite;
   }
   @keyframes autoPulse {
@@ -294,7 +294,7 @@
     align-items: center;
     gap: 8px;
     text-decoration: none;
-    color: #120d0a;
+    color: #0f172a;
     background: var(--amber);
     padding: 12px 24px;
     border-radius: 999px;
@@ -323,21 +323,21 @@
 
 <div class="rig">
   <header>
-    <p class="kicker hud-font">MODEL GEO-21 · EARTH SCIENCE EXPEDITION</p>
-    <h1>Geological Wonders</h1>
-    <p>Point, click, capture rare minerals, rock formations, and origin mechanisms.</p>
+    <p class="kicker hud-font">MODEL RVR-21 · HYDROLOGICAL SURVEY EDITION</p>
+    <h1>Legendary Rivers &amp; Crossings</h1>
+    <p>Press shutter to survey non-architectural crossings &amp; river dynamics.</p>
   </header>
 
   <div class="camera-body">
     <div class="top-strip hud-font">
-      <span><span class="lens-dot"></span>LIVE</span>
+      <span><span class="lens-dot"></span>SURVEY</span>
       <span>f/4.0 &nbsp;·&nbsp; ISO 100</span>
     </div>
 
     <div class="viewfinder" id="viewfinder">
       <div class="placeholder-text hud-font" id="placeholderText">
-        VIEWFINDER EMPTY<br>
-        press shutter to explore geological features
+        VIEWFINDER READY<br>
+        press shutter to survey 21 natural river bridges &amp; fluid phenomena
       </div>
       <div class="reticle tl"></div>
       <div class="reticle tr"></div>
@@ -352,7 +352,7 @@
     <div class="controls-row">
       <div class="side-readout hud-font">
         <span>SHUTTER</span>
-        <span class="val">1/250</span>
+        <span><span class="val">1/250</span></span>
       </div>
       <div class="shutter-wrap">
         <div class="shutter-ring"></div>
@@ -360,10 +360,10 @@
       </div>
       <div class="side-readout hud-font" style="text-align:right;">
         <span>MODE</span>
-        <span class="val">SEQUENCE</span>
+        <span><span class="val">RIVERS</span></span>
       </div>
     </div>
-    <p class="hint">tap the orange button to take a photo</p>
+    <p class="hint">tap the orange shutter button to capture river features</p>
 
     <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
       <span class="auto-dot" id="autoDot"></span>
@@ -400,7 +400,7 @@
   let autoTimer = null;
   const AUTO_INTERVAL_MS = 1600;
 
-  /* ---------------- Web Audio API Shutter Sound Synthesizer ---------------- */
+  /* ---------------- Audio Synthesizer ---------------- */
   let audioCtx = null;
   function getCtx() {
     if(!audioCtx) {
@@ -442,390 +442,439 @@
   }
 
   /* ---------------- Helpers ---------------- */
-  const ACCENTS = ['#f59e0b','#e11d48','#3b82f6','#10b981','#8b5cf6'];
+  const ACCENTS = ['#f59e0b', '#38bdf8', '#10b981', '#e11d48'];
   function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
   function escapeXml(str){
     return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
   }
 
-  /* ---------------- SVG Earth Frame System ---------------- */
-  function earthAndFrame(bg, index){
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
     let s = '';
-    s += `<rect x="0" y="0" width="300" height="344" fill="#0d0907"/>`;
-    s += `<rect x="0" y="0" width="300" height="180" fill="#1f140e" opacity="0.5"/>`;
+    s += `<rect x="0" y="0" width="300" height="344" fill="#090d12"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#131c26" opacity="0.6"/>`;
     const glow = pickAccent(index);
-    s += `<ellipse cx="150" cy="10" rx="180" ry="80" fill="${glow}" opacity="0.18"/>`;
-    s += `<rect x="0" y="330" width="300" height="14" fill="#050302" opacity="0.8"/>`;
-    s += `<rect x="22" y="20" width="256" height="230" fill="#000" opacity="0.5"/>`;
-    s += `<rect x="18" y="16" width="264" height="238" fill="none" stroke="#2e1a0e" stroke-width="12"/>`;
-    s += `<rect x="18" y="16" width="264" height="238" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.8"/>`;
-    s += `<rect x="28" y="26" width="244" height="218" fill="#140d08"/>`;
-    s += `<rect x="32" y="30" width="236" height="210" fill="${bg}"/>`;
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="330" width="300" height="14" fill="#05080c" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0f172a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
     return s;
   }
 
-  function caption(feature, location, mechanism){
+  function caption(name, region, desc){
     let s = '';
-    s += `<rect x="0" y="260" width="300" height="140" fill="#140c07" opacity="0.98"/>`;
-    s += `<rect x="0" y="260" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
-    s += `<text x="150" y="278" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#f5efe6">${escapeXml(feature)}</text>`;
-    s += `<text x="150" y="292" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#f59e0b">${escapeXml(location)}</text>`;
+    s += `<rect x="0" y="318" width="300" height="82" fill="#090d16" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="333" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="346" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
     
-    // Split long origin mechanism text into 2 lines
-    const words = mechanism.split(' ');
-    let line1 = '', line2 = '';
+    // Multi-line description fitting inside viewfinder
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
     words.forEach(w => {
-      if ((line1 + ' ' + w).length < 52) line1 += (line1 ? ' ' : '') + w;
-      else line2 += (line2 ? ' ' : '') + w;
+      if ((curLine + ' ' + w).length > 50) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3); // Max 3 lines
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${360 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
     });
 
-    s += `<text x="150" y="308" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7" fill="#d4c3b3">${escapeXml(line1)}</text>`;
-    if (line2) {
-      s += `<text x="150" y="318" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7" fill="#d4c3b3">${escapeXml(line2)}</text>`;
-    }
     return s;
   }
 
-  /* ---------------- 21 Geological Features & Rare Minerals SVG Portraits ---------------- */
-  const GEOLOGICAL_LIST = [
+  /* ---------------- 21 Legendary River Visualizations ---------------- */
+  const LANDFORMS = [
     {
-      feature: "Giant's Causeway",
-      location: "Northern Ireland (Western Europe)",
-      mechanism: "Formed by rapid cooling of thick basaltic lava flows that contracted into columnar joints.",
-      bg: "#1c1917",
+      name: 'Living Root Bridges',
+      region: 'Khasi & Jaintia Hills (Northeast India)',
+      desc: 'Ancient river crossings constructed by guiding aerial Ficus elastica roots across roaring monsoon torrents over decades to weave self-healing footbridges.',
+      bg: '#092d18',
       draw: () => {
         let s = '';
-        const cols = [40, 70, 100, 130, 160, 190, 220, 250];
-        cols.forEach((x, i) => {
-          const h = 80 + (i % 3) * 20;
-          s += `<polygon points="${x-12},230 ${x-12},${230-h} ${x},${220-h} ${x+12},${230-h} ${x+12},230" fill="#44403c" stroke="#292524" stroke-width="1.5"/>`;
-          s += `<polygon points="${x-12},${230-h} ${x},${222-h} ${x+12},${230-h} ${x},${238-h}" fill="#78716c"/>`;
-        });
+        s += `<rect x="39" y="160" width="218" height="113" fill="#0284c7"/>`;
+        s += `<path d="M40,200 Q150,250 260,200" stroke="#065f46" stroke-width="12" fill="none"/>`;
+        s += `<path d="M40,170 Q150,220 260,170" stroke="#15803d" stroke-width="8" fill="none"/>`;
+        s += `<line x1="80" y1="180" x2="80" y2="215" stroke="#047857" stroke-width="3"/>`;
+        s += `<line x1="150" y1="195" x2="150" y2="235" stroke="#047857" stroke-width="3"/>`;
+        s += `<line x1="220" y1="180" x2="220" y2="215" stroke="#047857" stroke-width="3"/>`;
+        s += `<rect x="39" y="37" width="40" height="236" fill="#14532d"/>`;
+        s += `<rect x="217" y="37" width="40" height="236" fill="#14532d"/>`;
         return s;
       }
     },
     {
-      feature: "Blue Amber",
-      location: "Dominican Republic (Caribbean Basin)",
-      mechanism: "Fossilized resin of extinct Hymenaea protera tree, fluorescing blue under UV light.",
-      bg: "#020617",
+      name: 'Q\'eswachaka Grass Rope Bridge',
+      region: 'Andes Mountains (Cuzco, Peru)',
+      desc: 'An annual Incan tradition where local communities hand-braid woven Ichu grass ropes across a deep river canyon to renew an ancient hanging footbridge.',
+      bg: '#1c1008',
       draw: () => {
         let s = '';
-        s += `<path d="M90,130 Q110,60 170,80 Q220,110 190,180 Q130,220 90,130 Z" fill="#b45309" stroke="#f59e0b" stroke-width="3"/>`;
-        s += `<path d="M100,120 Q120,75 160,90 Q190,110 170,160 Q130,190 100,120 Z" fill="#0284c7" opacity="0.75"/>`;
-        s += `<circle cx="140" cy="110" r="15" fill="#38bdf8" opacity="0.6"/>`;
+        s += `<polygon points="39,37 100,37 80,273 39,273" fill="#78350f"/>`;
+        s += `<polygon points="257,37 200,37 220,273 257,273" fill="#78350f"/>`;
+        s += `<path d="M80,273 L100,160 L200,160 L220,273 Z" fill="#0284c7"/>`;
+        s += `<path d="M90,120 Q150,180 210,120" stroke="#d97706" stroke-width="6" fill="none"/>`;
+        s += `<path d="M90,100 Q150,160 210,100" stroke="#f59e0b" stroke-width="4" fill="none"/>`;
         return s;
       }
     },
     {
-      feature: "Cave of the Crystals",
-      location: "Chihuahua (Mexico)",
-      mechanism: "Superheated groundwater deposited massive selenite gypsum crystals in a 50°C chamber.",
-      bg: "#180e29",
+      name: 'Devil\'s Pool & Victoria Falls',
+      region: 'Zambezi River (Zambia / Zimbabwe)',
+      desc: 'A natural rock barrier at the edge of the world\'s largest curtain of falling water, creating a calm swimming ledge at the sheer precipice.',
+      bg: '#0f172a',
       draw: () => {
         let s = '';
-        s += `<polygon points="50,230 110,90 130,100 70,230" fill="#e2e8f0" opacity="0.9"/>`;
-        s += `<polygon points="240,230 150,70 130,85 210,230" fill="#cbd5e1" opacity="0.85"/>`;
-        s += `<polygon points="80,230 160,110 180,120 100,230" fill="#ffffff" opacity="0.95"/>`;
-        s += `<polygon points="120,50 140,230 160,230" fill="#f1f5f9" opacity="0.7"/>`;
+        s += `<rect x="39" y="37" width="218" height="100" fill="#0284c7"/>`;
+        s += `<rect x="39" y="137" width="218" height="136" fill="#334155"/>`;
+        s += `<path d="M39,137 L257,137" stroke="#ffffff" stroke-width="8" stroke-dasharray="10,5"/>`;
+        s += `<rect x="130" y="120" width="40" height="22" rx="5" fill="#475569"/>`;
+        s += `<circle cx="150" cy="130" r="10" fill="#38bdf8"/>`;
         return s;
       }
     },
     {
-      feature: "Richat Structure",
-      location: "Mauritania (North Africa)",
-      mechanism: "Deeply eroded geological dome exposing concentric rings of Cretaceous sedimentary rock.",
-      bg: "#291d09",
+      name: 'Pororoca Tidal Bore',
+      region: 'Amazon River (Pará, Brazil)',
+      desc: 'A massive ocean tide wave that surges up to 800 km upstream against the river current, creating a continuous, rideable wall of water.',
+      bg: '#022c22',
       draw: () => {
         let s = '';
-        s += `<ellipse cx="150" cy="130" rx="90" ry="70" fill="none" stroke="#d97706" stroke-width="12"/>`;
-        s += `<ellipse cx="150" cy="130" rx="65" ry="50" fill="none" stroke="#92400e" stroke-width="10"/>`;
-        s += `<ellipse cx="150" cy="130" rx="40" ry="30" fill="none" stroke="#f59e0b" stroke-width="8"/>`;
-        s += `<ellipse cx="150" cy="130" rx="18" ry="12" fill="#78350f"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0f766e"/>`;
+        s += `<path d="M39,140 Q150,110 257,140 L257,273 L39,273 Z" fill="#0f172a"/>`;
+        s += `<path d="M39,135 Q150,105 257,135" stroke="#ccfbf1" stroke-width="12" fill="none"/>`;
+        s += `<path d="M120,115 L140,110 L135,120 Z" fill="#f59e0b"/>`; // Surfer icon representation
         return s;
       }
     },
     {
-      feature: "Painite Crystals",
-      location: "Mogok Region (Myanmar)",
-      mechanism: "Rare bonding of zirconium, boron, and calcium in aluminum-rich skarn deposits.",
-      bg: "#1a0505",
+      name: 'Charekh (Skin Rafts)',
+      region: 'Indus & Sutlej Rivers (Punjab / Ladakh)',
+      desc: 'An ancient method of crossing icy Himalayan rivers using inflated goat or yak hides lashed together to form buoyant, resilient rafts.',
+      bg: '#0f172a',
       draw: () => {
         let s = '';
-        s += `<polygon points="100,200 120,70 170,60 190,180 150,220" fill="#9f1239" stroke="#fda4af" stroke-width="2"/>`;
-        s += `<polygon points="120,70 170,60 150,110 110,115" fill="#f43f5e" opacity="0.8"/>`;
-        s += `<polygon points="150,110 170,60 190,180 160,170" fill="#be123c"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<path d="M39,80 Q150,120 257,80" stroke="#f8fafc" stroke-width="4" fill="none"/>`;
+        s += `<ellipse cx="120" cy="160" rx="16" ry="10" fill="#b45309"/>`;
+        s += `<ellipse cx="150" cy="160" rx="16" ry="10" fill="#b45309"/>`;
+        s += `<ellipse cx="180" cy="160" rx="16" ry="10" fill="#b45309"/>`;
+        s += `<rect x="100" y="145" width="100" height="6" fill="#78350f"/>`;
         return s;
       }
     },
     {
-      feature: "Lapis Lazuli",
-      location: "Hindu Kush (Afghanistan)",
-      mechanism: "Contact metamorphism transformed limestone into intense blue lazurite with pyrite.",
-      bg: "#0a192f",
+      name: 'Coracle Crossings',
+      region: 'River Teifi & Cauvery (UK / India)',
+      desc: 'Circular, lightweight basket-like boats made of woven bamboo/willow covered in waterproof hide or tar, paddled across shallow rapids.',
+      bg: '#064e3b',
       draw: () => {
         let s = '';
-        s += `<path d="M70,140 Q100,60 180,80 Q240,130 210,200 Q110,230 70,140 Z" fill="#1d4ed8"/>`;
-        s += `<circle cx="110" cy="120" r="4" fill="#fbbf24"/><circle cx="160" cy="100" r="3" fill="#fbbf24"/>`;
-        s += `<circle cx="180" cy="150" r="5" fill="#fbbf24"/><circle cx="130" cy="170" r="3" fill="#fbbf24"/>`;
-        s += `<path d="M90,150 Q130,130 150,160" stroke="#f8fafc" stroke-width="3" fill="none" opacity="0.6"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<ellipse cx="148" cy="155" rx="45" ry="35" fill="#1c1917"/>`;
+        s += `<ellipse cx="148" cy="155" rx="38" ry="28" fill="#44403c"/>`;
+        s += `<line x1="148" y1="130" x2="148" y2="180" stroke="#a16207" stroke-width="3"/>`;
         return s;
       }
     },
     {
-      feature: "Surtsey Volcanic Island",
-      location: "Vestmannaeyjar (Iceland)",
-      mechanism: "Submarine Surtseyan eruptions built a fresh basaltic shield above sea level (1963-1967).",
-      bg: "#0c1a24",
+      name: 'Bioluminescent Kayak Runs',
+      region: 'Chagres River Delta (Panama)',
+      desc: 'Nighttime water crossings where paddle strokes ignite blooms of dinoflagellates, turning the river into glowing green and blue light trails.',
+      bg: '#020617',
       draw: () => {
         let s = '';
-        s += `<rect x="32" y="160" width="236" height="80" fill="#1e3a8a"/>`;
-        s += `<polygon points="70,170 150,110 230,170" fill="#334155"/>`;
-        s += `<path d="M150,110 Q140,50 110,30 M150,110 Q170,40 200,20" stroke="#94a3b8" stroke-width="8" fill="none" opacity="0.7"/>`;
-        s += `<circle cx="150" cy="105" r="8" fill="#ef4444"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#030712"/>`;
+        s += `<path d="M60,200 C100,120 180,180 230,80" stroke="#38bdf8" stroke-width="18" fill="none" opacity="0.3"/>`;
+        s += `<path d="M60,200 C100,120 180,180 230,80" stroke="#34d399" stroke-width="6" fill="none"/>`;
+        s += `<circle cx="150" cy="150" r="12" fill="#38bdf8"/>`;
         return s;
       }
     },
     {
-      feature: "Tsingy de Bemaraha",
-      location: "Melaky Region (Madagascar)",
-      mechanism: "Groundwater dissolution of limestone plateau, carving razor-sharp karst pinnacles.",
-      bg: "#111827",
+      name: 'Ice Bridges (Ice Roads)',
+      region: 'Mackenzie River (Canada)',
+      desc: 'Winter natural crossings formed when subzero temperatures freeze thick river ice, turning navigable waterways into heavy-truck land highways.',
+      bg: '#0f172a',
       draw: () => {
         let s = '';
-        for(let i=0; i<9; i++){
-          const x = 50 + i*22;
-          const h = 100 + (i%4)*25;
-          s += `<polygon points="${x-10},230 ${x},${230-h} ${x+10},230" fill="#64748b" stroke="#334155" stroke-width="1"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#38bdf8"/>`;
+        s += `<rect x="110" y="37" width="76" height="236" fill="#e2e8f0"/>`;
+        s += `<line x1="148" y1="37" x2="148" y2="273" stroke="#94a3b8" stroke-width="4" stroke-dasharray="12,12"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Karasu-no-Maki Cable Slides',
+      region: 'Kurobe River (Japan Alps)',
+      desc: 'Historic single-cable zip-line transport systems where villagers crossed steep, inaccessible mountain gorges suspended in wooden baskets.',
+      bg: '#1c1917',
+      draw: () => {
+        let s = '';
+        s += `<polygon points="39,37 100,37 70,273 39,273" fill="#44403c"/>`;
+        s += `<polygon points="257,37 200,37 220,273 257,273" fill="#44403c"/>`;
+        s += `<rect x="70" y="200" width="150" height="73" fill="#0284c7"/>`;
+        s += `<line x1="85" y1="80" x2="210" y2="100" stroke="#f59e0b" stroke-width="3"/>`;
+        s += `<rect x="140" y="98" width="16" height="16" fill="#78350f"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Cascate del Mulino Springs',
+      region: 'Albegna River (Tuscany, Italy)',
+      desc: 'Natural travertine pools where sulfurous thermal springs cascade down stepped limestone terraces, creating a warm wading path across the riverbed.',
+      bg: '#1e293b',
+      draw: () => {
+        let s = '';
+        for(let i=0; i<5; i++){
+          s += `<rect x="${49 + i*15}" y="${60 + i*38}" width="${198 - i*30}" height="30" rx="8" fill="#06b6d4"/>`;
+          s += `<rect x="${49 + i*15}" y="${85 + i*38}" width="${198 - i*30}" height="6" fill="#e2e8f0"/>`;
         }
         return s;
       }
     },
     {
-      feature: "Kilauea Pahoehoe & 'A'a Lava",
-      location: "Hawaii (Pacific Ocean)",
-      mechanism: "Hotspot volcanism creating smooth ropy textures (pahoehoe) and clinkery blocks ('a'a).",
-      bg: "#180805",
+      name: 'Ganges Braided Stream Traversals',
+      region: 'Gangetic Plain (Northern India)',
+      desc: 'Crossing shifting, kilometers-wide braided river channels using temporary sandbar steps (chars) that appear and disappear with monsoons.',
+      bg: '#1c1917',
       draw: () => {
         let s = '';
-        s += `<path d="M40,120 Q100,100 150,130 T260,110" fill="none" stroke="#dc2626" stroke-width="18"/>`;
-        s += `<path d="M40,120 Q100,100 150,130 T260,110" fill="none" stroke="#f59e0b" stroke-width="8"/>`;
-        s += `<path d="M40,180 Q90,160 140,190 T260,170" fill="none" stroke="#78350f" stroke-width="22"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<ellipse cx="80" cy="100" rx="30" ry="15" fill="#d97706"/>`;
+        s += `<ellipse cx="160" cy="140" rx="45" ry="20" fill="#d97706"/>`;
+        s += `<ellipse cx="210" cy="210" rx="35" ry="15" fill="#d97706"/>`;
         return s;
       }
     },
     {
-      feature: "Kimberlite Pipes",
-      location: "Southern Africa (African Craton)",
-      mechanism: "Deep-mantle supersonic eruptions blasting diamonds to surface within carrot-shaped conduits.",
-      bg: "#1a0f0a",
+      name: 'Boti (Log Dugout Canoes)',
+      region: 'Congo River System (Central Africa)',
+      desc: 'Hand-carved hardwood trunks used to navigate dense, labyrinthine river networks and rapids where land-based transit is impossible.',
+      bg: '#064e3b',
       draw: () => {
         let s = '';
-        s += `<polygon points="60,40 240,40 170,230 130,230" fill="#451a03"/>`;
-        s += `<polygon points="135,110 150,90 165,110 150,130" fill="#38bdf8" opacity="0.9"/>`;
-        s += `<polygon points="120,160 130,145 140,160 130,175" fill="#e0f2fe" opacity="0.9"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<path d="M60,150 Q150,190 240,150 Q150,165 60,150 Z" fill="#78350f"/>`;
+        s += `<circle cx="130" cy="150" r="4" fill="#f8fafc"/>`;
+        s += `<circle cx="160" cy="152" r="4" fill="#f8fafc"/>`;
         return s;
       }
     },
     {
-      feature: "Banded Iron Formations",
-      location: "Pilbara (Western Australia)",
-      mechanism: "Great Oxidation Event 2B+ years ago; oxygen precipitated dissolved ocean iron.",
-      bg: "#1f0907",
+      name: 'Plitvice Lakes Travertine Barriers',
+      region: 'Dinaric Alps (Croatia)',
+      desc: 'A natural cascade system where moss, algae, and bacteria deposit calcium carbonate, building biological dams and stepped water bridges.',
+      bg: '#064e3b',
       draw: () => {
         let s = '';
-        for(let y=40; y<220; y+=20){
-          const col = (y/20)%2===0 ? "#991b1b" : "#292524";
-          s += `<rect x="32" y="${y}" width="236" height="12" fill="${col}"/>`;
+        s += `<rect x="39" y="37" width="218" height="100" fill="#0d9488"/>`;
+        s += `<rect x="39" y="150" width="218" height="123" fill="#0f766e"/>`;
+        s += `<rect x="39" y="137" width="218" height="13" fill="#15803d"/>`;
+        s += `<path d="M60,137 L60,150 M120,137 L120,150 M180,137 L180,150" stroke="#ccfbf1" stroke-width="4"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Subterranean River Transit',
+      region: 'Puerto Princesa (Palawan, Philippines)',
+      desc: 'A navigable underground river flowing through a vast limestone cave system directly into the sea, crossed under natural karst vaults.',
+      bg: '#020617',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0f172a"/>`;
+        s += `<path d="M39,120 Q150,40 257,120 L257,37 L39,37 Z" fill="#1e293b"/>`;
+        s += `<rect x="39" y="180" width="218" height="93" fill="#0284c7"/>`;
+        s += `<circle cx="140" cy="170" r="6" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Totora Reed Boats',
+      region: 'Lake Titicaca (Peru / Bolivia)',
+      desc: 'Hand-woven boats and floating islands constructed from native totora reeds, providing buoyancy across high-altitude alpine waters.',
+      bg: '#0c4a6e',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<path d="M60,160 Q150,210 240,160 Q210,130 180,160 Q150,170 120,160 Q90,130 60,160 Z" fill="#eab308"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Tarzan Vine Traversals',
+      region: 'Rio Napo (Amazon Basin, Ecuador)',
+      desc: 'Traditional rainforest river crossings utilizing thick, hanging woody lianas attached to high canopy trees to swing across narrow tributaries.',
+      bg: '#052e16',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#14532d"/>`;
+        s += `<path d="M100,273 Q150,180 200,273 Z" fill="#0284c7"/>`;
+        s += `<path d="M150,37 Q110,140 160,200" stroke="#78350f" stroke-width="4" fill="none"/>`;
+        s += `<circle cx="160" cy="200" r="6" fill="#f59e0b"/>`;
+        return s;
+      }
+    },
+    {
+      name: 'Step-Stone Ford Crossings',
+      region: 'River Rothay (Lake District, England)',
+      desc: 'Historic natural river-stepping passages created using unhewn, flat glacial boulders set directly into shallow riverbed gravels.',
+      bg: '#14532d',
+      draw: () => {
+        let s = '';
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        for(let i=0; i<6; i++){
+          s += `<ellipse cx="${60 + i*32}" cy="${220 - i*28}" rx="12" ry="8" fill="#64748b"/>`;
         }
         return s;
       }
     },
     {
-      feature: "Fly Geyser Terraces",
-      location: "Nevada (United States)",
-      mechanism: "Geothermal drilling tapped aquifer, depositing calcium carbonate travertine cones.",
-      bg: "#061e14",
+      name: 'The Iron Gates Whirlpools',
+      region: 'Danube River (Romania & Serbia)',
+      desc: 'Historical navigation and crossing points marked by intense river narrows and treacherous hydraulic eddies where boatmen used tracking paths.',
+      bg: '#1e1b18',
       draw: () => {
         let s = '';
-        s += `<path d="M80,220 Q120,120 150,110 Q180,120 220,220 Z" fill="#65a30d"/>`;
-        s += `<path d="M110,220 Q135,150 150,140 Q165,150 190,220 Z" fill="#ea580c"/>`;
-        s += `<path d="M150,110 Q145,60 130,30 M150,110 Q155,50 170,20" stroke="#38bdf8" stroke-width="4" fill="none" opacity="0.8"/>`;
+        s += `<polygon points="39,37 110,37 90,273 39,273" fill="#44403c"/>`;
+        s += `<polygon points="257,37 190,37 210,273 257,273" fill="#44403c"/>`;
+        s += `<rect x="100" y="37" width="100" height="236" fill="#0284c7"/>`;
+        s += `<path d="M150,120 A15,15 0 1,0 165,135" stroke="#ffffff" stroke-width="3" fill="none"/>`;
+        s += `<path d="M130,180 A15,15 0 1,0 145,195" stroke="#ffffff" stroke-width="3" fill="none"/>`;
         return s;
       }
     },
     {
-      feature: "Movile Cave Ecosystem",
-      location: "Constanța (Romania)",
-      mechanism: "Sealed subterranean void (5.5M yrs) with chemosynthetic sulfur & methane atmosphere.",
-      bg: "#050b14",
+      name: 'Log Raft Floats',
+      region: 'Drava & Danube (Central Europe)',
+      desc: 'Centuries-old timber transport where cut forest logs were bound together into giant navigable rafts, acting as floating wooden highways.',
+      bg: '#0f172a',
       draw: () => {
         let s = '';
-        s += `<path d="M32,30 Q150,80 268,30 L268,240 Q150,190 32,240 Z" fill="#0f172a"/>`;
-        s += `<ellipse cx="150" cy="140" rx="60" ry="30" fill="#84cc16" opacity="0.4"/>`;
-        s += `<circle cx="130" cy="135" r="3" fill="#a3e635"/><circle cx="170" cy="145" r="4" fill="#a3e635"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        for(let i=0; i<7; i++){
+          s += `<rect x="80" y="${80 + i*20}" width="140" height="14" rx="4" fill="#78350f" stroke="#451a03" stroke-width="1"/>`;
+        }
         return s;
       }
     },
     {
-      feature: "Wave Rock",
-      location: "Western Australia (Granite Belt)",
-      mechanism: "Subterranean chemical weathering of granite inselberg followed by erosion.",
-      bg: "#261206",
+      name: 'Lauca Wetland Crossings (Bofedales)',
+      region: 'Atacama Altiplano (Chile)',
+      desc: 'Natural sponge-like peatland cushions fed by glacial meltwater rivers, forming soft, elevated peat bridges across high-altitude Andean wetlands.',
+      bg: '#0c4a6e',
       draw: () => {
         let s = '';
-        s += `<path d="M50,230 Q190,230 200,100 Q150,50 90,100 L50,230 Z" fill="#d97706"/>`;
-        s += `<path d="M70,230 Q180,220 185,115" fill="none" stroke="#78350f" stroke-width="8"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#0284c7"/>`;
+        s += `<circle cx="90" cy="120" r="35" fill="#15803d"/>`;
+        s += `<circle cx="160" cy="100" r="40" fill="#166534"/>`;
+        s += `<circle cx="120" cy="180" r="45" fill="#15803d"/>`;
+        s += `<circle cx="190" cy="170" r="30" fill="#166534"/>`;
         return s;
       }
     },
     {
-      feature: "Charoite Silicate Deposits",
-      location: "Sakha Republic (Siberia, Russia)",
-      mechanism: "Potassic syenite intrusion interacted with limestone, creating fibrous purple silicate.",
-      bg: "#1e0a24",
+      name: 'Fly River Tidal Bore & Mudflats',
+      region: 'Gulf Province (Papua New Guinea)',
+      desc: 'Navigating shifting river mouth sandbars and massive tidal surges where coastal tribes use deep knowledge of tidal cycles to cross silt estuaries.',
+      bg: '#27120a',
       draw: () => {
         let s = '';
-        s += `<path d="M80,150 Q120,70 180,90 Q230,140 190,200 Q100,230 80,150 Z" fill="#7e22ce"/>`;
-        s += `<path d="M90,140 Q130,90 170,120 Q180,170 110,180" fill="none" stroke="#c084fc" stroke-width="6"/>`;
-        s += `<path d="M110,110 Q150,140 130,190" fill="none" stroke="#e9d5ff" stroke-width="3"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Moeraki Boulders",
-      location: "South Island (New Zealand)",
-      mechanism: "Spherical septarian concretions in mudstone cemented around organic cores.",
-      bg: "#0c1d24",
-      draw: () => {
-        let s = '';
-        s += `<rect x="32" y="170" width="236" height="70" fill="#334155"/>`;
-        s += `<circle cx="150" cy="160" r="50" fill="#78716c"/>`;
-        s += `<path d="M120,140 L180,180 M130,180 L170,140" stroke="#f59e0b" stroke-width="3"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Kavachi Submarine Sharkcano",
-      location: "Solomon Islands (South Pacific)",
-      mechanism: "Subduction volcanism creating active underwater cone known for phreatomagmatic eruptions.",
-      bg: "#031424",
-      draw: () => {
-        let s = '';
-        s += `<polygon points="60,240 150,150 240,240" fill="#1e293b"/>`;
-        s += `<path d="M150,150 Q130,90 100,50 M150,150 Q170,80 200,40" stroke="#cbd5e1" stroke-width="6" fill="none" opacity="0.6"/>`;
-        s += `<polygon points="120,100 135,110 125,120" fill="#94a3b8"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Lake Natron Evaporites",
-      location: "East African Rift (Tanzania)",
-      mechanism: "High evaporation of soda-rich runoff leaving concentrated sodium carbonate deposits.",
-      bg: "#2b0910",
-      draw: () => {
-        let s = '';
-        s += `<rect x="32" y="80" width="236" height="150" fill="#be123c"/>`;
-        s += `<path d="M50,100 Q100,180 150,120 T250,160" fill="none" stroke="#fecdd3" stroke-width="6"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Roraima Quartzite Tepuis",
-      location: "Guiana Highlands (South America)",
-      mechanism: "Precambrian sandstone plateaus weathered into isolated vertical table mountains.",
-      bg: "#081c15",
-      draw: () => {
-        let s = '';
-        s += `<polygon points="60,230 60,110 240,110 240,230" fill="#2d3748"/>`;
-        s += `<rect x="50" y="100" width="200" height="12" fill="#4a5568"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Larimar (Pectolite)",
-      location: "Barahona (Dominican Republic)",
-      mechanism: "Volcanic cavities where cobalt and copper substituted for calcium in hydrothermal crystallization.",
-      bg: "#041e2b",
-      draw: () => {
-        let s = '';
-        s += `<path d="M80,140 Q110,70 180,80 Q230,130 190,200 Q100,230 80,140 Z" fill="#06b6d4"/>`;
-        s += `<path d="M90,130 Q140,110 180,150" stroke="#ecfeff" stroke-width="4" fill="none"/>`;
-        return s;
-      }
-    },
-    {
-      feature: "Vredefort Impact Structure",
-      location: "Free State (South Africa)",
-      mechanism: "2.02B yrs ago, hypervelocity 10-15km asteroid impact created world's largest verified crater.",
-      bg: "#1c130b",
-      draw: () => {
-        let s = '';
-        s += `<ellipse cx="150" cy="130" rx="100" ry="60" fill="none" stroke="#78350f" stroke-width="8"/>`;
-        s += `<ellipse cx="150" cy="130" rx="60" ry="35" fill="none" stroke="#d97706" stroke-width="6"/>`;
-        s += `<circle cx="150" cy="130" r="12" fill="#ef4444"/>`;
+        s += `<rect x="39" y="37" width="218" height="236" fill="#78350f"/>`;
+        s += `<path d="M39,37 C100,100 120,200 257,273 L257,37 Z" fill="#0284c7"/>`;
+        s += `<path d="M80,120 C120,140 180,180 220,200" stroke="#f59e0b" stroke-width="4" stroke-dasharray="6,6" fill="none"/>`;
         return s;
       }
     }
   ];
 
-  /* ---------------- Frame Capture & Render Engine ---------------- */
+  /* ---------------- Camera Shutter Render Engine ---------------- */
   function renderFrame(index) {
-    const item = GEOLOGICAL_LIST[index];
-    let svg = `<svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">`;
-    svg += earthAndFrame(item.bg, index);
-    svg += item.draw();
-    svg += caption(item.feature, item.location, item.mechanism);
+    const lf = LANDFORMS[index];
+    let svg = `<svg viewBox="0 0 300 380" xmlns="http://www.w3.org/2000/svg">`;
+    svg += baseFrame(lf.bg, index);
+    svg += lf.draw();
+    svg += caption(lf.name, lf.region, lf.desc);
     svg += `</svg>`;
     return svg;
   }
 
-  function triggerCapture() {
+  function triggerShutter() {
     playShutterSound();
 
+    // Flash animation
     flashOverlay.classList.remove('go');
     void flashOverlay.offsetWidth;
     flashOverlay.classList.add('go');
 
+    // Indicator flash
     recIndicator.classList.add('flash');
     setTimeout(() => recIndicator.classList.remove('flash'), 600);
 
+    // Update state
     frameNumber++;
     frameCountEl.textContent = `NO. ${String(frameNumber).padStart(3, '0')}`;
 
-    if (placeholderText) placeholderText.style.display = 'none';
+    if (placeholderText) {
+      placeholderText.style.display = 'none';
+    }
 
-    viewfinder.innerHTML = `
-      <div class="reticle tl"></div>
-      <div class="reticle tr"></div>
-      <div class="reticle bl"></div>
-      <div class="reticle br"></div>
-      <div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
-      <div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>
-      <div class="grain"></div>
-      <div class="flash-overlay go" id="flashOverlay"></div>
-      ${renderFrame(currentIndex)}
-    `;
+    // Render visual
+    viewfinder.innerHTML = renderFrame(currentIndex);
+    viewfinder.appendChild(flashOverlay);
+    viewfinder.appendChild(recIndicator);
+    viewfinder.appendChild(frameCountEl);
 
-    currentIndex = (currentIndex + 1) % GEOLOGICAL_LIST.length;
+    // Add reticles back
+    ['tl','tr','bl','br'].forEach(pos => {
+      const r = document.createElement('div');
+      r.className = `reticle ${pos}`;
+      viewfinder.appendChild(r);
+    });
+
+    const grain = document.createElement('div');
+    grain.className = 'grain';
+    viewfinder.appendChild(grain);
+
+    // Advance index
+    currentIndex = (currentIndex + 1) % LANDFORMS.length;
   }
 
-  shutterBtn.addEventListener('click', triggerCapture);
+  /* ---------------- Controls ---------------- */
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) stopAuto();
+    triggerShutter();
+  });
 
-  /* ---------------- Auto Shutter Toggle ---------------- */
+  function startAuto() {
+    autoActive = true;
+    autoBtn.classList.add('active');
+    autoBtn.setAttribute('aria-pressed', 'true');
+    autoLabel.textContent = 'AUTO SHUTTER · ON';
+    triggerShutter();
+    autoTimer = setInterval(triggerShutter, AUTO_INTERVAL_MS);
+  }
+
+  function stopAuto() {
+    autoActive = false;
+    autoBtn.classList.remove('active');
+    autoBtn.setAttribute('aria-pressed', 'false');
+    autoLabel.textContent = 'AUTO SHUTTER · OFF';
+    if(autoTimer) clearInterval(autoTimer);
+  }
+
   autoBtn.addEventListener('click', () => {
-    autoActive = !autoActive;
-    autoBtn.classList.toggle('active', autoActive);
-    autoBtn.setAttribute('aria-pressed', autoActive);
-    
-    if (autoActive) {
-      autoLabel.textContent = 'AUTO SHUTTER · ON';
-      triggerCapture();
-      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
-    } else {
-      autoLabel.textContent = 'AUTO SHUTTER · OFF';
-      clearInterval(autoTimer);
-    }
+    if(autoActive) stopAuto();
+    else startAuto();
   });
 
 })();
