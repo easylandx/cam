@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Traditional Architectural Materials Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #b45309;
+    --shutter-orange-dark: #92400e;
+    --amber: #f59e0b;
+    --line: #334155;
+    --focus: #fbbf24;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #292524 0%, #1c1917 55%, #0c0a09 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #292524;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(245,158,11,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 5;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+    z-index: 5;
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fbbf24, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #292524;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(245,158,11,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #1c1917;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(245,158,11,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(245,158,11,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL ARCH-21 · GLOBAL STRUCTURAL CRAFTSMANSHIP</p>
+    <h1>Traditional Architectural Materials</h1>
+    <p>Press shutter to cycle through 21 heritage masonry techniques and structural materials.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>MATERIAL</span>
+      <span>CRAFT &nbsp;·&nbsp; VERNACULAR</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/500</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">VERIFY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to capture architectural craft</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    try {
+      const ctx = getCtx();
+      const start = ctx.currentTime + delay;
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1);
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = freq;
+      bandpass.Q.value = 0.9;
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+      noise.connect(bandpass).connect(gain).connect(ctx.destination);
+      noise.start(start);
+      noise.stop(start + duration + 0.02);
+    } catch(e) {
+      // Audio context policy fallback
+    }
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#f59e0b', '#d97706', '#b45309', '#e11d48', '#059669'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#1c1917"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#292524" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#0c0a09" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#44403c" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1c1917"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#1c1917" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#f59e0b" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#f59e0b">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine && lines[lines.length-1] !== curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#a8a29e">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Architectural Materials & Techniques ---------------- */
+  const SYSTEMS = [
+    {
+      name: 'Adobe (Sun-Dried Mud Brick)',
+      region: 'Nile Valley & Mesopotamia (Egypt & Iraq / Middle East)',
+      desc: 'An ancient composite building material made of sand, clay, water, and organic binders dried under the sun.',
+      bg: '#78350f',
+      draw: () => `
+        <rect x="60" y="90" width="180" height="35" fill="#b45309" rx="3" stroke="#92400e" stroke-width="2"/>
+        <rect x="75" y="130" width="150" height="35" fill="#d97706" rx="3" stroke="#b45309" stroke-width="2"/>
+        <rect x="90" y="170" width="120" height="35" fill="#b45309" rx="3" stroke="#92400e" stroke-width="2"/>
+        <line x1="120" y1="90" x2="120" y2="125" stroke="#78350f" stroke-width="2"/>
+        <line x1="150" y1="130" x2="150" y2="165" stroke="#92400e" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Pounded Earth (Hangtu)',
+      region: 'Central Plains along the Yellow River (China / East Asia)',
+      desc: 'A foundational prehistoric rammed-earth technique using timber formworks to compress cohesive soils layer-by-layer.',
+      bg: '#451a03',
+      draw: () => `
+        <rect x="70" y="70" width="160" height="140" fill="#78350f" rx="2"/>
+        <line x1="70" y1="105" x2="230" y2="105" stroke="#92400e" stroke-width="3"/>
+        <line x1="70" y1="140" x2="230" y2="140" stroke="#b45309" stroke-width="3"/>
+        <line x1="70" y1="175" x2="230" y2="175" stroke="#92400e" stroke-width="3"/>
+        <rect x="60" y="60" width="180" height="10" fill="#a8a29e"/>
+      `
+    },
+    {
+      name: 'Andesite Ashlar Megaliths',
+      region: 'Sacsayhuamán, Cusco (Peru / South America)',
+      desc: 'Precision-cut, mortarless polygonal masonry composed of dense volcanic andesite stones fitted tightly together.',
+      bg: '#292524',
+      draw: () => `
+        <polygon points="70,190 120,110 170,130 190,190" fill="#57534e" stroke="#78716c" stroke-width="2"/>
+        <polygon points="170,130 220,100 240,190 190,190" fill="#44403c" stroke="#57534e" stroke-width="2"/>
+        <polygon points="70,190 110,230 190,220 190,190" fill="#78716c" stroke="#a8a29e" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Red Cedar Timber & Plank Splicing',
+      region: 'Pacific Northwest Coastal Region (North America)',
+      desc: 'A monumental woodworking tradition utilizing rot-resistant Western Red Cedar logs split along natural grain lines.',
+      bg: '#1c1917',
+      draw: () => `
+        <rect x="110" y="60" width="80" height="170" fill="#9a3412" stroke="#7c2d12" stroke-width="2"/>
+        <line x1="110" y1="100" x2="190" y2="100" stroke="#7c2d12" stroke-width="2"/>
+        <line x1="110" y1="140" x2="190" y2="140" stroke="#7c2d12" stroke-width="2"/>
+        <line x1="110" y1="180" x2="190" y2="180" stroke="#7c2d12" stroke-width="2"/>
+        <circle cx="150" cy="120" r="8" fill="#fde047"/>
+      `
+    },
+    {
+      name: 'Teak Timber Mortise-and-Tenon',
+      region: 'Central Java (Indonesia / Southeast Asia)',
+      desc: 'An intricate indigenous carpentry system utilizing durable tropical teak connected via flexible joints.',
+      bg: '#292524',
+      draw: () => `
+        <rect x="80" y="100" width="140" height="30" fill="#b45309" stroke="#78350f" stroke-width="2"/>
+        <rect x="80" y="145" width="140" height="30" fill="#d97706" stroke="#b45309" stroke-width="2"/>
+        <rect x="130" y="115" width="40" height="30" fill="#78350f"/>
+      `
+    },
+    {
+      name: 'Coral Rag Limestone Masonry',
+      region: 'Swahili Coast (East Africa / Coastal Kenya & Tanzania)',
+      desc: 'A vernacular coastal construction technique utilizing fossilized coral heads bound with lime mortar.',
+      bg: '#1e293b',
+      draw: () => `
+        <rect x="75" y="80" width="150" height="120" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="110" cy="110" r="15" fill="#94a3b8" opacity="0.5"/>
+        <circle cx="170" cy="150" r="20" fill="#94a3b8" opacity="0.5"/>
+        <circle cx="130" cy="170" r="12" fill="#94a3b8" opacity="0.5"/>
+      `
+    },
+    {
+      name: 'Laterite Earth Blocks (Béton Lateritier)',
+      region: 'West African Savanna (Mali, Nigeria, & Ghana / West Africa)',
+      desc: 'Iron- and aluminum-rich porous clay soil cut directly into blocks, hardening upon exposure to air.',
+      bg: '#431407',
+      draw: () => `
+        <rect x="80" y="80" width="65" height="50" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+        <rect x="155" y="80" width="65" height="50" fill="#c2410c" stroke="#7c2d12" stroke-width="2"/>
+        <rect x="80" y="140" width="65" height="50" fill="#9a3412" stroke="#7c2d12" stroke-width="2"/>
+        <rect x="155" y="140" width="65" height="50" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Granite Dry-Stone Walling',
+      region: 'Great Zimbabwe (Zimbabwe / Southern Africa)',
+      desc: 'A monumental dry-stone architecture technique utilizing naturally exfoliating local granite blocks without mortar.',
+      bg: '#1c1917',
+      draw: () => `
+        <path d="M60,200 Q150,160 240,200 L240,220 L60,220 Z" fill="#57534e"/>
+        <rect x="70" y="150" width="40" height="20" fill="#78716c" rx="2"/>
+        <rect x="115" y="145" width="50" height="22" fill="#44403c" rx="2"/>
+        <rect x="170" y="148" width="45" height="20" fill="#a8a29e" rx="2"/>
+      `
+    },
+    {
+      name: 'Volcanic Basalt Ashlar Blocks',
+      region: 'Rapa Nui (Easter Island) (Polynesia / Pacific Ocean)',
+      desc: 'Dense, dark volcanic basalt rocks quarried from volcanic craters and hand-carved into interlocking blocks.',
+      bg: '#0f172a',
+      draw: () => `
+        <rect x="80" y="100" width="140" height="90" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <line x1="150" y1="100" x2="150" y2="190" stroke="#0f172a" stroke-width="3"/>
+        <line x1="80" y1="145" x2="220" y2="145" stroke="#0f172a" stroke-width="3"/>
+      `
+    },
+    {
+      name: 'Porcelain and Terracotta Tile Shingles',
+      region: 'Imperial Kilns of Jingdezhen (China / East Asia)',
+      desc: 'High-fired, impermeable ceramic roof tiles glazed with mineral oxides to shed monsoon rains.',
+      bg: '#1e1b4b',
+      draw: () => `
+        <path d="M70,120 Q110,90 150,120 Q190,90 230,120" fill="none" stroke="#38bdf8" stroke-width="6"/>
+        <path d="M70,150 Q110,120 150,150 Q190,120 230,150" fill="none" stroke="#38bdf8" stroke-width="6"/>
+        <path d="M70,180 Q110,150 150,180 Q190,150 230,180" fill="none" stroke="#38bdf8" stroke-width="6"/>
+      `
+    },
+    {
+      name: 'Random Rubble Slate and Mud Masonry',
+      region: 'Himalayan Foothills (Nepal / South Asia)',
+      desc: 'A rugged mountain construction style combining locally quarried flat schist or slate with thick mud mortar.',
+      bg: '#262626',
+      draw: () => `
+        <rect x="70" y="90" width="160" height="110" fill="#404040" stroke="#52525b" stroke-width="2"/>
+        <line x1="70" y1="115" x2="230" y2="115" stroke="#71717a" stroke-width="4"/>
+        <line x1="70" y1="145" x2="230" y2="145" stroke="#71717a" stroke-width="4"/>
+        <line x1="70" y1="175" x2="230" y2="175" stroke="#71717a" stroke-width="4"/>
+      `
+    },
+    {
+      name: 'Bamboo Pole Framework and Lashing',
+      region: 'Southeast Asian Rainforests (Indonesia, Philippines, & Malaysia)',
+      desc: 'A flexible structural engineering system utilizing high-tensile giant bamboo poles lashed with rattan vines.',
+      bg: '#14532d',
+      draw: () => `
+        <rect x="90" y="70" width="16" height="130" fill="#facc15" rx="5" stroke="#ca8a04" stroke-width="2"/>
+        <rect x="190" y="70" width="16" height="130" fill="#facc15" rx="5" stroke="#ca8a04" stroke-width="2"/>
+        <line x1="90" y1="110" x2="206" y2="110" stroke="#eab308" stroke-width="10"/>
+        <line x1="90" y1="160" x2="206" y2="160" stroke="#eab308" stroke-width="10"/>
+      `
+    },
+    {
+      name: 'Caliche & Coquina Limestone Shell Rock',
+      region: 'St. Augustine, Florida (Spanish Colonial North America)',
+      desc: 'A sedimentary rock composed of ancient microscopic shell fragments and quartz sand hardening over time.',
+      bg: '#78716c',
+      draw: () => `
+        <rect x="75" y="85" width="150" height="110" fill="#d6d3d1" stroke="#a8a29e" stroke-width="2"/>
+        <circle cx="100" cy="110" r="6" fill="#f5f5f4"/>
+        <circle cx="140" cy="130" r="8" fill="#f5f5f4"/>
+        <circle cx="180" cy="160" r="7" fill="#f5f5f4"/>
+        <circle cx="120" cy="170" r="5" fill="#f5f5f4"/>
+      `
+    },
+    {
+      name: 'Granite Ashlar & Intercept Masonry',
+      region: 'Inca Empire (Andes Cordillera / South America)',
+      desc: 'Highly refined stone cutting utilizing high-silica granite blocks featuring concave-convex matching faces.',
+      bg: '#334155',
+      draw: () => `
+        <polygon points="70,180 110,110 160,120 180,180" fill="#64748b" stroke="#94a3b8" stroke-width="2"/>
+        <polygon points="160,120 210,100 230,180 180,180" fill="#475569" stroke="#64748b" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Hydraulic Roman Pozzolanic Concrete',
+      region: 'Pozzuoli, Bay of Naples (Italy / Southern Europe)',
+      desc: 'An ancient binding material combining slaked lime with volcanic ash allowing underwater curing.',
+      bg: '#1c1917',
+      draw: () => `
+        <path d="M70,180 C70,110 230,110 230,180 Z" fill="#78716c" stroke="#a8a29e" stroke-width="3"/>
+        <circle cx="150" cy="140" r="30" fill="none" stroke="#44403c" stroke-width="6"/>
+      `
+    },
+    {
+      name: 'Sun-Dried Mud Brick (Adobe Pueblo)',
+      region: 'Taos Pueblo (New Mexico, United States / North America)',
+      desc: 'Thick-walled indigenous adobe architecture utilizing local clay-rich soil and straw for thermal mass.',
+      bg: '#7c2d12',
+      draw: () => `
+        <path d="M75,190 L90,100 L210,100 L225,190 Z" fill="#ea580c" stroke="#9a3412" stroke-width="2"/>
+        <rect x="130" y="140" width="40" height="50" fill="#431407" rx="3"/>
+      `
+    },
+    {
+      name: 'Portland Limestone',
+      region: 'Isle of Portland, Dorset (England / British Isles)',
+      desc: 'A fine-grained, highly durable Jurassic limestone celebrated for its uniform pale hue and weathering resistance.',
+      bg: '#e2e8f0',
+      draw: () => `
+        <rect x="75" y="80" width="150" height="120" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="75" y1="120" x2="225" y2="120" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="75" y1="160" x2="225" y2="160" stroke="#cbd5e1" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Timber-Frame Half-Timbering (Fachwerk)',
+      region: 'Lower Saxony (Germany / Central Europe)',
+      desc: 'A structural skeletal carpentry tradition where heavy oak timbers are joined via mortise-and-tenon pegs.',
+      bg: '#451a03',
+      draw: () => `
+        <rect x="75" y="80" width="150" height="120" fill="#fef08a" stroke="#78350f" stroke-width="4"/>
+        <line x1="75" y1="80" x2="225" y2="200" stroke="#78350f" stroke-width="4"/>
+        <line x1="225" y1="80" x2="75" y2="200" stroke="#78350f" stroke-width="4"/>
+      `
+    },
+    {
+      name: 'Dry-Stone Limestone Walling',
+      region: 'Burren, County Clare (Ireland / Western Europe)',
+      desc: 'An ancient pastoral masonry technique stacking local carboniferous limestone slabs without mortar.',
+      bg: '#3f3f46',
+      draw: () => `
+        <rect x="70" y="90" width="160" height="110" fill="#71717a" stroke="#a1a1aa" stroke-width="2"/>
+        <line x1="70" y1="112" x2="230" y2="112" stroke="#27272a" stroke-width="3"/>
+        <line x1="70" y1="134" x2="230" y2="134" stroke="#27272a" stroke-width="3"/>
+        <line x1="70" y1="156" x2="230" y2="156" stroke="#27272a" stroke-width="3"/>
+        <line x1="70" y1="178" x2="230" y2="178" stroke="#27272a" stroke-width="3"/>
+      `
+    },
+    {
+      name: 'Cedar Shingle & Timber Frame Minka',
+      region: 'Traditional Japanese Minka (Japan / East Asia)',
+      desc: 'Post-and-beam wooden framing coupled with breathable mud-plaster walls and interlocking joinery.',
+      bg: '#1c1917',
+      draw: () => `
+        <polygon points="150,60 70,120 230,120" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+        <rect x="85" y="120" width="130" height="80" fill="#d4d4d8" stroke="#78350f" stroke-width="2"/>
+        <line x1="150" y1="120" x2="150" y2="200" stroke="#451a03" stroke-width="3"/>
+      `
+    },
+    {
+      name: 'Quarried Soapstone & Tuff Carved Masonry',
+      region: 'Lalibela (Ethiopia / East Africa)',
+      desc: 'Monolithic rock-cut architecture hewn directly downwards from solid volcanic scoria and tuff strata.',
+      bg: '#4c0519',
+      draw: () => `
+        <rect x="90" y="80" width="120" height="120" fill="#9f1239" stroke="#881337" stroke-width="2"/>
+        <polygon points="150,55 90,90 210,90" fill="#e11d48"/>
+        <rect x="135" y="140" width="30" height="60" fill="#4c0519"/>
+      `
+    }
+  ];
+
+  function renderSystem(index) {
+    currentIndex = index % SYSTEMS.length;
+    const sys = SYSTEMS[currentIndex];
+    
+    let svgContent = baseFrame(sys.bg, currentIndex);
+    svgContent += sys.draw();
+    svgContent += caption(sys.name, sys.region, sys.desc);
+
+    const recIndicator = viewfinder.querySelector('#recIndicator');
+    const isFlashing = recIndicator ? recIndicator.classList.contains('flash') : false;
+
+    viewfinder.innerHTML = `
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">${svgContent}</svg>
+      <div class="rec-indicator hud-font ${isFlashing ? 'flash' : ''}" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture() {
+    frameNumber++;
+    playShutterSound();
+
+    const currentFlash = viewfinder.querySelector('#flashOverlay');
+    if (currentFlash) {
+      currentFlash.classList.remove('go');
+      void currentFlash.offsetWidth;
+      currentFlash.classList.add('go');
+    }
+
+    const currentRec = viewfinder.querySelector('#recIndicator');
+    if (currentRec) {
+      currentRec.classList.add('flash');
+      setTimeout(() => {
+        const rc = viewfinder.querySelector('#recIndicator');
+        if(rc) rc.classList.remove('flash');
+      }, 900);
+    }
+
+    renderSystem(currentIndex);
+    currentIndex = (currentIndex + 1) % SYSTEMS.length;
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ACTIVE';
+      autoBtn.setAttribute('aria-pressed', 'true');
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      autoBtn.setAttribute('aria-pressed', 'false');
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Initial render state
+  renderSystem(0);
+})();
+</script>
+</body>
+</html>

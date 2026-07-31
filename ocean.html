@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Advanced Oceanography &amp; Hydrographic Systems</title>
+<style>
+  :root {
+    --body-dark: #08121a;
+    --body-mid: #0f1e2c;
+    --body-light: #162a3d;
+    --screen-bg: #03070b;
+    --cream: #e0f2fe;
+    --cream-dim: #7dd3fc;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #1e3a5f;
+    --focus: #38bdf8;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0c2340 0%, #061528 55%, #020813 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e3a5f;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #38bdf8, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #030712;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL OCEAN-21 · DETAILED HYDROGRAPHIC SPECIFICATIONS</p>
+    <h1>Oceanography Milestones</h1>
+    <p>Detailed technical schematics and precision graphics of 21 historical systems.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SYS_INDEX</span>
+      <span>SCHEMATIC &nbsp;·&nbsp; ACCURATE</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>RENDERED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>RESOLUTION</span>
+        <span><span class="val">VECTOR</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Next system"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">ANALYZE</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the shutter button to step through engineering graphics</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO CYCLE · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    try {
+      playClickBurst(0,    0.045, 0.7, 2400);
+      playClickBurst(0.07, 0.035, 0.55, 1600);
+    } catch(e) {}
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#38bdf8', '#34d399', '#60a5fa', '#f43f5e', '#a78bfa', '#fbbf24'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame Layout ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#030712"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0b1329" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#02060f" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e3a5f" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#040d1a"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#030712" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#7dd3fc">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Detailed Engineering Render Functions ---------------- */
+  const SYSTEMS = [
+    {
+      name: 'Lead-Line Depth Sounding',
+      region: 'Ancient Mediterranean / Global Maritime',
+      desc: 'Hemp line with calibrated fathom knots and hollow lead weight containing tallow to sample seabed substrate.',
+      bg: '#05101f',
+      draw: () => `
+        <path d="M148,45 L148,220" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <line x1="143" y1="80" x2="153" y2="80" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="143" y1="120" x2="153" y2="120" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="143" y1="160" x2="153" y2="160" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="143" y1="200" x2="153" y2="200" stroke="#38bdf8" stroke-width="2"/>
+        <polygon points="148,250 137,220 159,220" fill="#cbd5e1" stroke="#475569" stroke-width="1"/>
+        <path d="M137,250 Q148,258 159,250 Z" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'Pytheas’s Meridian Altitude Cross-Staff',
+      region: 'Massalia (c. 325 BCE)',
+      desc: 'Wooden rod with sliding transverse vane measuring solar elevation angle above the horizon for latitude estimation.',
+      bg: '#061424',
+      draw: () => `
+        <line x1="60" y1="150" x2="236" y2="150" stroke="#b45309" stroke-width="8" stroke-linecap="round"/>
+        <rect x="138" y="90" width="20" height="120" fill="#d97706" rx="2"/>
+        <circle cx="148" cy="90" r="16" fill="none" stroke="#fef3c7" stroke-width="2"/>
+        <line x1="148" y1="50" x2="148" y2="80" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/>
+      `
+    },
+    {
+      name: 'Secchi Disk Turbidity Meter',
+      region: 'Rome / Papal States (1865)',
+      desc: '20cm weighted metal plate divided into alternating black and white quadrants to gauge water clarity and photic depth.',
+      bg: '#041520',
+      draw: () => `
+        <line x1="148" y1="45" x2="148" y2="95" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="148" cy="155" r="50" fill="#0f172a" stroke="#cbd5e1" stroke-width="3"/>
+        <path d="M148,105 A50,50 0 0,1 198,155 L148,155 Z" fill="#f8fafc"/>
+        <path d="M148,205 A50,50 0 0,1 98,155 L148,155 Z" fill="#f8fafc"/>
+      `
+    },
+    {
+      name: 'Challenger Dredge & Sounding Rig',
+      region: 'Royal Navy Expedition (1872–76)',
+      desc: 'Tapered hemp sounding rope paired with a heavy steel naturalists dredge frame and detachable weights.',
+      bg: '#030c17',
+      draw: () => `
+        <rect x="110" y="80" width="76" height="60" fill="none" stroke="#38bdf8" stroke-width="2" rx="6"/>
+        <path d="M90,140 L110,180 L188,180 L206,140 Z" fill="#64748b" opacity="0.4" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="148" y1="45" x2="148" y2="80" stroke="#cbd5e1" stroke-width="2"/>
+        <circle cx="148" cy="210" r="14" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'Ekman Current Meter',
+      region: 'Sweden / Hydrographic Laboratory (1905)',
+      desc: 'Submersible vane directing an internal impeller, featuring an ingenious bronze ball-drop telemetry registry mechanism.',
+      bg: '#07182e',
+      draw: () => `
+        <rect x="120" y="80" width="56" height="90" fill="none" stroke="#38bdf8" stroke-width="2" rx="4"/>
+        <circle cx="148" cy="125" r="22" fill="none" stroke="#34d399" stroke-width="2"/>
+        <path d="M100,125 L120,115 L120,135 Z" fill="#38bdf8"/>
+        <circle cx="148" cy="80" r="6" fill="#f59e0b"/>
+        <line x1="148" y1="45" x2="148" y2="80" stroke="#94a3b8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Fessenden Acoustic Oscillator',
+      region: 'Submarine Signal Co., Boston (1914)',
+      desc: 'Heavy electromagnetic oscillator plate mounted in ship hull, transmitting and receiving low-frequency sound pulses.',
+      bg: '#061325',
+      draw: () => `
+        <circle cx="148" cy="130" r="55" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <circle cx="148" cy="130" r="35" fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <circle cx="148" cy="130" r="15" fill="#f59e0b"/>
+        <path d="M70,70 Q148,40 226,70" fill="none" stroke="#34d399" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Nansen Reversing Water Bottle',
+      region: 'Christiania, Norway (1910)',
+      desc: 'Cylindrical metal water bottle pivoting on end-caps and reversing via messenger weight to trap undisturbed samples.',
+      bg: '#051120',
+      draw: () => `
+        <rect x="134" y="65" width="28" height="130" rx="14" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <circle cx="148" cy="80" r="6" fill="#f59e0b"/>
+        <circle cx="148" cy="180" r="6" fill="#f59e0b"/>
+        <line x1="148" y1="45" x2="148" y2="65" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="148" y1="195" x2="148" y2="215" stroke="#94a3b8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Meteor Atlantic Echo-Sounding Survey',
+      region: 'German Research Vessel (1925–27)',
+      desc: 'Continuous sonic depth recording profile revealing rugged mid-ocean ridges across the South Atlantic basin.',
+      bg: '#081a30',
+      draw: () => `
+        <path d="M60,180 Q100,90 148,150 Q196,210 236,110" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <path d="M60,180 L236,180" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="2,4"/>
+        <line x1="148" y1="45" x2="148" y2="150" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="3,3"/>
+      `
+    },
+    {
+      name: 'Bathythermograph (BT)',
+      region: 'Spilhaus / Woods Hole (1938)',
+      desc: 'Streamlined mechanical brass cylinder housing a bourdon tube and smoked-glass slide for thermal profiling.',
+      bg: '#041221',
+      draw: () => `
+        <path d="M136,55 L160,55 L170,140 L158,195 L138,195 L126,140 Z" fill="#38bdf8" opacity="0.35" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="148" cy="195" r="10" fill="#f59e0b"/>
+        <line x1="148" y1="35" x2="148" y2="55" stroke="#94a3b8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Aqua-Lung Open-Circuit SCUBA',
+      region: 'Cousteau & Gagnan, Paris (1943)',
+      desc: 'High-pressure compressed air cylinders connected to a mechanical demand regulator matching ambient water pressure.',
+      bg: '#030d1a',
+      draw: () => `
+        <rect x="126" y="80" width="20" height="110" rx="8" fill="#64748b" stroke="#cbd5e1" stroke-width="1.5"/>
+        <rect x="150" y="80" width="20" height="110" rx="8" fill="#64748b" stroke="#cbd5e1" stroke-width="1.5"/>
+        <circle cx="148" cy="115" r="22" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <path d="M148,93 Q148,65 180,75" fill="none" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Precision Depth Recorder (PDR)',
+      region: 'Lamont Geological Observatory (1950s)',
+      desc: 'High-speed electromechanical dry-paper graphic recorder providing high-resolution bathymetric echograms.',
+      bg: '#071628',
+      draw: () => `
+        <rect x="74" y="65" width="148" height="110" fill="#030712" stroke="#38bdf8" stroke-width="2" rx="4"/>
+        <rect x="90" y="85" width="116" height="70" fill="#040f1a" stroke="#1e3a5f" stroke-width="1"/>
+        <path d="M90,140 L110,105 L130,125 L160,95 L206,150" fill="none" stroke="#34d399" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Heezen-Tharp Physiographic Relief Map',
+      region: 'Columbia University Cartography (1950s–70s)',
+      desc: 'Hand-painted physiographic panoramic projection translating raw acoustic profiles into vivid 3D seafloor topography.',
+      bg: '#0a1d35',
+      draw: () => `
+        <path d="M50,160 Q90,90 148,140 Q206,190 250,120 L250,210 L50,210 Z" fill="#0f2847" stroke="#38bdf8" stroke-width="2"/>
+        <path d="M50,120 Q90,60 148,110 Q206,160 250,90" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+      `
+    },
+    {
+      name: 'Trieste Deep-Sea Bathyscaphe',
+      region: 'Piccard & Walsh, Mariana Trench (1960)',
+      desc: 'Free-diving submersible featuring a massive gasoline float chamber and forged thick-walled steel observation sphere.',
+      bg: '#030a14',
+      draw: () => `
+        <ellipse cx="148" cy="115" rx="65" ry="32" fill="#38bdf8" opacity="0.3" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="148" cy="160" r="20" fill="#64748b" stroke="#f8fafc" stroke-width="2"/>
+        <rect x="138" y="175" width="20" height="25" fill="#f59e0b" rx="2"/>
+      `
+    },
+    {
+      name: 'Salinometer & CTD Profiling Instrument',
+      region: 'Guildline & Electronic Oceanography (1960s)',
+      desc: 'Conductivity, Temperature, and Depth sensor rosette package measuring micro-variable oceanographic parameters.',
+      bg: '#051424',
+      draw: () => `
+        <rect x="132" y="55" width="32" height="140" fill="none" stroke="#38bdf8" stroke-width="2" rx="4"/>
+        <circle cx="148" cy="85" r="10" fill="#f59e0b"/>
+        <circle cx="148" cy="120" r="10" fill="#34d399"/>
+        <circle cx="148" cy="155" r="10" fill="#60a5fa"/>
+      `
+    },
+    {
+      name: 'SEASAT Radar Altimeter Satellite',
+      region: 'NASA Orbital Oceanography (1978)',
+      desc: 'First civilian satellite radar altimeter mapping marine geoid variations, sea surface height, and wave spectra.',
+      bg: '#08172b',
+      draw: () => `
+        <circle cx="148" cy="85" r="16" fill="#cbd5e1" stroke="#38bdf8" stroke-width="2"/>
+        <rect x="128" y="110" width="40" height="15" fill="#1e3a5f" rx="2"/>
+        <path d="M90,170 Q148,120 206,170" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="3,3"/>
+      `
+    },
+    {
+      name: 'Multibeam Echo Sounder (MBES) Array',
+      region: 'Swath Hydrographic Mapping (Late 20th C.)',
+      desc: 'Hull-mounted sonar transducer array projecting a broad acoustic fan across the seabed for 100% bottom coverage.',
+      bg: '#041220',
+      draw: () => `
+        <circle cx="148" cy="65" r="10" fill="#f59e0b"/>
+        <line x1="148" y1="75" x2="70" y2="185" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="148" y1="75" x2="108" y2="190" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="148" y1="75" x2="148" y2="195" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="148" y1="75" x2="188" y2="190" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="148" y1="75" x2="226" y2="185" stroke="#38bdf8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Global Argo Profiling Float Array',
+      region: 'International Ocean Observation (1999–Present)',
+      desc: 'Autonomous robotic drifter cycling between surface and 2,000m depth, measuring thermal and salinity structure.',
+      bg: '#06172a',
+      draw: () => `
+        <rect x="138" y="70" width="20" height="90" rx="10" fill="#38bdf8"/>
+        <circle cx="148" cy="115" r="35" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4,4"/>
+        <line x1="148" y1="45" x2="148" y2="70" stroke="#f59e0b" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Autonomous Underwater Vehicle (AUV)',
+      region: 'Deep-Sea Benthic Survey Robotics',
+      desc: 'Torpedo-form untethered robotic submarine utilizing pre-programmed inertial navigation and side-scan sonar.',
+      bg: '#030e1b',
+      draw: () => `
+        <path d="M80,120 Q148,95 216,120 Q216,145 216,145 Q148,170 80,145 Z" fill="#38bdf8" opacity="0.4" stroke="#38bdf8" stroke-width="2"/>
+        <polygon points="216,132.5 236,115 236,150" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'SAR Satellite Oceanography',
+      region: 'Synthetic Aperture Radar Orbitals',
+      desc: 'Active microwave imaging radar sensing ocean surface roughness, internal waves, currents, and sea ice drift.',
+      bg: '#071526',
+      draw: () => `
+        <rect x="110" y="75" width="76" height="22" fill="#cbd5e1" rx="3" stroke="#38bdf8" stroke-width="1.5"/>
+        <line x1="148" y1="97" x2="148" y2="135" stroke="#f59e0b" stroke-width="2"/>
+        <path d="M70,165 Q110,145 148,165 Q186,185 226,165" fill="none" stroke="#38bdf8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'ROV Jason Deep-Sea Robotic System',
+      region: 'Woods Hole Oceanographic Institution',
+      desc: 'Remotely operated vehicle tethered via fiber-optic cable, equipped with high-definition cameras and precision manipulators.',
+      bg: '#04101d',
+      draw: () => `
+        <rect x="112" y="85" width="72" height="50" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="148" y1="45" x2="148" y2="85" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="132" cy="110" r="7" fill="#f59e0b"/>
+        <circle cx="164" cy="110" r="7" fill="#34d399"/>
+      `
+    },
+    {
+      name: 'GEBCO Seabed 2030 Compilation Grid',
+      region: 'Global Bathymetric Project (IHO / IOC)',
+      desc: 'Collaborative digital terrain model integrating global multibeam, satellite altimetry, and crowd-sourced bathymetry.',
+      bg: '#030b15',
+      draw: () => `
+        <circle cx="148" cy="120" r="50" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <ellipse cx="148" cy="120" rx="50" ry="20" fill="none" stroke="#34d399" stroke-width="1.5"/>
+        <line x1="98" y1="120" x2="198" y2="120" stroke="#f59e0b" stroke-width="1.5"/>
+        <line x1="148" y1="70" x2="148" y2="170" stroke="#60a5fa" stroke-width="1.5"/>
+      `
+    }
+  ];
+
+  function renderSystem(index) {
+    const item = SYSTEMS[index];
+    const svgContent = baseFrame(item.bg, index) + item.draw() + caption(item.name, item.region, item.desc);
+    viewfinder.innerHTML = `<svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">${svgContent}</svg>` +
+      `<div class="reticle tl"></div><div class="reticle tr"></div><div class="reticle bl"></div><div class="reticle br"></div>` +
+      `<div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>RENDERED</div>` +
+      `<div class="frame-count hud-font" id="frameCount">NO. ${String(index + 1).padStart(3, '0')}</div>` +
+      `<div class="grain"></div><div class="flash-overlay" id="flashOverlay"></div>`;
+  }
+
+  function triggerCapture() {
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % SYSTEMS.length;
+
+    renderSystem(currentIndex);
+
+    const activeFlash = viewfinder.querySelector('#flashOverlay');
+    const activeRec = viewfinder.querySelector('#recIndicator');
+
+    if(activeFlash) {
+      activeFlash.classList.remove('go');
+      void activeFlash.offsetWidth;
+      activeFlash.classList.add('go');
+    }
+    if(activeRec) {
+      activeRec.classList.add('flash');
+      setTimeout(() => {
+        activeRec.classList.remove('flash');
+      }, 700);
+    }
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) toggleAuto();
+    triggerCapture();
+  });
+
+  function toggleAuto() {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO CYCLE · ON';
+      autoBtn.setAttribute('aria-pressed', 'true');
+      triggerCapture();
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO CYCLE · OFF';
+      autoBtn.setAttribute('aria-pressed', 'false');
+      clearInterval(autoTimer);
+    }
+  }
+
+  autoBtn.addEventListener('click', toggleAuto);
+
+  // Initial render
+  renderSystem(0);
+})();
+</script>
+</body>
+</html>
