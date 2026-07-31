@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🤖 Gallery Booth — Historical Robotics, Automata &amp; Cybernetic Machines</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #334155;
+    --focus: #7dd3fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #090d16 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #7dd3fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">ARCHIVE TECH-21 · HISTORICAL AUTOMATA &amp; ROBOTS</p>
+    <h1>Iconic Robotics</h1>
+    <p>Press shutter to examine 26 iconic robotics, automata, and cybernetic machines.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>TECH SYSTEM</span>
+      <span>f/1.8 &nbsp;·&nbsp; GRID</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">ROBOT</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to cycle through machines</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24', '#c084fc'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#070d1a"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0f172a" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#02060a" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0b1320"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#070d1a" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 26 Distinct, Accurate Historical & Modern Automata / Robots ---------------- */
+  const TECHS = [
+    {
+      name: "Al-Jazari’s Elephant Clock",
+      region: "Upper Mesopotamia (1206)",
+      desc: "Masterpiece combining water-flow mechanics, a hidden scribe dropping balls, and a rotating pegged drum inside a decorated pachyderm.",
+      bg: "#2b2212",
+      draw: () => `
+        <!-- Elephant body & head -->
+        <rect x="110" y="110" width="80" height="55" rx="14" fill="#b45309"/>
+        <path d="M110,125 Q90,125 85,150 Q80,175 95,170" fill="none" stroke="#b45309" stroke-width="12" stroke-linecap="round"/>
+        <circle cx="115" cy="120" r="4" fill="#fef3c7"/>
+        <!-- Castle / Clock tower on top -->
+        <rect x="125" y="65" width="50" height="45" fill="#d97706"/>
+        <polygon points="120,65 150,45 180,65" fill="#92400e"/>
+        <!-- Central Dial / Mechanism Indicator -->
+        <circle cx="150" cy="85" r="12" fill="#fef3c7"/>
+        <line x1="150" y1="75" x2="150" y2="85" stroke="#b45309" stroke-width="3"/>
+      `
+    },
+    {
+      name: "Vaucanson’s Digesting Duck",
+      region: "Grenoble, France (1739)",
+      desc: "Clockwork marvel containing hundreds of articulated brass internal parts in its wings to simulate eating, digestion, and excretion.",
+      bg: "#102a43",
+      draw: () => `
+        <!-- Duck Body & Wings -->
+        <ellipse cx="145" cy="145" rx="42" ry="26" fill="#cbd5e1"/>
+        <path d="M125,135 Q145,115 170,135" fill="none" stroke="#94a3b8" stroke-width="6"/>
+        <circle cx="182" cy="122" r="13" fill="#cbd5e1"/>
+        <circle cx="186" cy="119" r="2" fill="#0f172a"/>
+        <polygon points="193,121 212,125 193,129" fill="#f59e0b"/>
+        <!-- Exposed clockwork gears inside translucent midsection -->
+        <circle cx="140" cy="145" r="10" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,2"/>
+        <circle cx="158" cy="150" r="7" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="130" y1="165" x2="135" y2="185" stroke="#94a3b8" stroke-width="4"/>
+        <line x1="155" y1="165" x2="160" y2="185" stroke="#94a3b8" stroke-width="4"/>
+      `
+    },
+    {
+      name: "Jaquet-Droz Writer Automaton",
+      region: "Switzerland (1774)",
+      desc: "Lifelike child doll powered by internal cam stacks that can dip a goose-feather quill into ink and write custom 40-letter scripts.",
+      bg: "#1e1b4b",
+      draw: () => `
+        <!-- Desk & Paper -->
+        <rect x="100" y="155" width="100" height="8" fill="#4338ca"/>
+        <rect x="120" y="140" width="35" height="15" fill="#f8fafc"/>
+        <!-- Doll Torso & Head -->
+        <rect x="125" y="95" width="45" height="60" rx="8" fill="#6366f1"/>
+        <circle cx="147" cy="78" r="14" fill="#e0e7ff"/>
+        <!-- Quill Arm -->
+        <path d="M150,110 L135,142 L125,145" fill="none" stroke="#a5b4fc" stroke-width="5" stroke-linecap="round"/>
+        <line x1="115" y1="135" x2="128" y2="145" stroke="#38bdf8" stroke-width="2"/>
+      `
+    },
+    {
+      name: "Karakuri Tea-Serving Ningyo",
+      region: "Edo Period Japan (19th Cent.)",
+      desc: "Traditional spring-driven mechanical doll utilizing whalebone springs and gear escapements to gracefully walk forward carrying a teacup tray.",
+      bg: "#3b1219",
+      draw: () => `
+        <!-- Kimono Figurine -->
+        <path d="M135,90 L165,90 L175,175 L125,175 Z" fill="#f43f5e"/>
+        <circle cx="150" cy="72" r="13" fill="#ffe4e6"/>
+        <!-- Tray Held Out Front -->
+        <rect x="120" y="115" width="60" height="6" rx="2" fill="#fb7185"/>
+        <circle cx="150" cy="107" r="6" fill="#fef08a"/>
+        <!-- Base wheels -->
+        <circle cx="140" cy="182" r="6" fill="#881337"/>
+        <circle cx="160" cy="182" r="6" fill="#881337"/>
+      `
+    },
+    {
+      name: "Westinghouse Elektro the Robot",
+      region: "Pittsburgh, USA (1939)",
+      desc: "7-foot tall aluminum humanoid controlled by voice-frequency audio commands, capable of walking, smoking cigarettes, and counting on fingers.",
+      bg: "#18181b",
+      draw: () => `
+        <!-- Cylindrical / Blocky metallic body -->
+        <rect x="122" y="85" width="56" height="95" rx="4" fill="#71717a"/>
+        <rect x="132" y="65" width="36" height="22" rx="4" fill="#a16207"/>
+        <circle cx="142" cy="74" r="3" fill="#38bdf8"/>
+        <circle cx="158" cy="74" r="3" fill="#38bdf8"/>
+        <rect x="138" y="105" width="24" height="40" fill="#27272a"/>
+        <!-- Legs / Feet -->
+        <rect x="130" y="180" width="14" height="15" fill="#52525b"/>
+        <rect x="156" y="180" width="14" height="15" fill="#52525b"/>
+      `
+    },
+    {
+      name: "Grey Walter’s Machina Speculatrix",
+      region: "Bristol, UK (1948)",
+      desc: "Early cybernetic tortoise featuring primitive analog neural networks, photoelectric sensors, and bumper switches to exhibit phototaxis and obstacle avoidance.",
+      bg: "#11261c",
+      draw: () => `
+        <!-- Dome shell -->
+        <ellipse cx="150" cy="150" rx="48" ry="32" fill="#15803d"/>
+        <!-- Steering front wheel & sensor mast -->
+        <circle cx="185" cy="140" r="10" fill="#4ade80"/>
+        <line x1="150" y1="118" x2="185" y2="140" stroke="#86efac" stroke-width="3"/>
+        <line x1="102" y1="150" x2="85" y2="150" stroke="#bbf7d0" stroke-width="5" stroke-linecap="round"/>
+        <!-- Rear caster -->
+        <circle cx="112" cy="150" r="6" fill="#166534"/>
+      `
+    },
+    {
+      name: "Unimate Robotic Arm",
+      region: "Danbury, USA (1961)",
+      desc: "The world's first industrial robot, consisting of a massive hydraulic-powered arm governed by a magnetic drum memory system for die-casting.",
+      bg: "#27272a",
+      draw: () => `
+        <!-- Heavy base and articulated hydraulic arm -->
+        <rect x="120" y="160" width="60" height="35" rx="4" fill="#52525b"/>
+        <path d="M135,160 L135,110 L175,100 L195,120" fill="none" stroke="#eab308" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="135" cy="160" r="8" fill="#facc15"/>
+        <circle cx="175" cy="100" r="7" fill="#facc15"/>
+        <rect x="190" y="115" width="14" height="10" fill="#71717a"/>
+      `
+    },
+    {
+      name: "Stanford Cart",
+      region: "Stanford, USA (1979)",
+      desc: "Remote-controlled mobile robot featuring a top-mounted TV camera that executed early stereo computer vision to navigate obstacle courses.",
+      bg: "#1e293b",
+      draw: () => `
+        <!-- Chassis and large wheels -->
+        <rect x="115" y="130" width="70" height="30" rx="4" fill="#334155"/>
+        <circle cx="130" cy="168" r="14" fill="#64748b"/>
+        <circle cx="170" cy="168" r="14" fill="#64748b"/>
+        <!-- Camera rig on top -->
+        <rect x="140" y="95" width="20" height="35" fill="#0ea5e9"/>
+        <circle cx="150" cy="95" r="8" fill="#38bdf8"/>
+      `
+    },
+    {
+      name: "SRI International Shakey",
+      region: "Menlo Park, USA (1966)",
+      desc: "The first mobile robot able to reason about its actions, driven by STRIPS AI software to perceive its environment and push objects.",
+      bg: "#3b2f12",
+      draw: () => `
+        <!-- Stacked metallic chassis modules -->
+        <rect x="125" y="110" width="50" height="70" rx="4" fill="#ca8a04"/>
+        <rect x="132" y="85" width="36" height="25" fill="#facc15"/>
+        <!-- Antenna & TV Camera -->
+        <line x1="150" y1="85" x2="150" y2="65" stroke="#fef08a" stroke-width="3"/>
+        <circle cx="150" cy="65" r="5" fill="#38bdf8"/>
+        <!-- Base drive wheels -->
+        <circle cx="150" cy="185" r="12" fill="#854d0e"/>
+      `
+    },
+    {
+      name: "Waseda Wabot-1",
+      region: "Tokyo, Japan (1973)",
+      desc: "Pioneering full-scale humanoid robot equipped with limb control systems, tactile sensors, and rudimentary Japanese vocal synthesis.",
+      bg: "#3b1219",
+      draw: () => `
+        <!-- Humanoid torso and limbs -->
+        <rect x="128" y="90" width="44" height="95" rx="6" fill="#e11d48"/>
+        <circle cx="150" cy="70" r="14" fill="#ffe4e6"/>
+        <rect x="138" y="102" width="24" height="30" fill="#881337"/>
+        <line x1="108" y1="120" x2="128" y2="120" stroke="#fb7185" stroke-width="6" stroke-linecap="round"/>
+        <line x1="172" y1="120" x2="192" y2="120" stroke="#fb7185" stroke-width="6" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: "Cincinnati Milacron T3",
+      region: "Cincinnati, USA (1974)",
+      desc: "The 'Tomorrow Tool', an influential industrial electric-servo robot that standardized multi-axis articulated arm geometry for heavy manufacturing.",
+      bg: "#1b263b",
+      draw: () => `
+        <!-- Heavy industrial base & segmented arm -->
+        <rect x="125" y="165" width="50" height="30" fill="#475569"/>
+        <path d="M150,165 L150,115 L180,95" fill="none" stroke="#0ea5e9" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="150" cy="115" r="7" fill="#38bdf8"/>
+        <rect x="175" y="90" width="16" height="12" fill="#94a3b8"/>
+      `
+    },
+    {
+      name: "Raibert 3D Hopping Robot",
+      region: "Cambridge, USA (1984)",
+      desc: "Seminal single-legged robotic hopper that successfully demonstrated dynamic balance and active equilibrium control algorithms.",
+      bg: "#112233",
+      draw: () => `
+        <!-- Body gyroscope canister & single spring leg -->
+        <circle cx="150" cy="100" r="18" fill="#0284c7"/>
+        <line x1="150" y1="118" x2="150" y2="185" stroke="#38bdf8" stroke-width="6"/>
+        <circle cx="150" cy="150" r="8" fill="#e0f2fe"/>
+        <ellipse cx="150" cy="190" rx="14" ry="5" fill="#7dd3fc"/>
+      `
+    },
+    {
+      name: "KUKA IR 360 Industrial Robot",
+      region: "Augsburg, Germany (1973)",
+      desc: "One of the first completely electro-mechanical six-axis articulated industrial robots, replacing heavy hydraulics with reliable servomotors.",
+      bg: "#3b2712",
+      draw: () => `
+        <!-- Orange industrial arm profile -->
+        <rect x="125" y="165" width="50" height="30" fill="#d97706"/>
+        <path d="M150,165 L150,125 L175,100 L190,115" fill="none" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="150" cy="125" r="7" fill="#fef3c7"/>
+        <circle cx="175" cy="100" r="6" fill="#fef3c7"/>
+      `
+    },
+    {
+      name: "NASA Sojourner Mars Rover",
+      region: "Pasadena, USA (1997)",
+      desc: "The first wheeled robotic vehicle to operate on another planet, utilizing a clever rocker-bogie suspension system for rocky terrain traversal.",
+      bg: "#3b1a12",
+      draw: () => `
+        <!-- Solar panel deck & 6 wheels -->
+        <polygon points="120,135 180,135 170,155 130,155" fill="#ea580c"/>
+        <circle cx="125" cy="170" r="9" fill="#c2410c"/>
+        <circle cx="150" cy="170" r="9" fill="#c2410c"/>
+        <circle cx="175" cy="170" r="9" fill="#c2410c"/>
+        <line x1="125" y1="155" x2="175" y2="155" stroke="#fed7aa" stroke-width="3"/>
+        <!-- Camera mast -->
+        <rect x="145" y="112" width="10" height="23" fill="#ffedd5"/>
+      `
+    },
+    {
+      name: "Sony AIBO Robotic Pet",
+      region: "Tokyo, Japan (1999)",
+      desc: "Pioneering commercial entertainment robot featuring embedded AI, autonomous emotional states, and color vision cameras.",
+      bg: "#1e1b4b",
+      draw: () => `
+        <!-- Robotic dog silhouette -->
+        <ellipse cx="150" cy="142" rx="34" ry="20" fill="#818cf8"/>
+        <circle cx="175" cy="124" r="12" fill="#c7d2fe"/>
+        <polygon points="168,105 175,116 182,105" fill="#4f46e5"/>
+        <line x1="128" y1="158" x2="122" y2="185" stroke="#6366f1" stroke-width="4" stroke-linecap="round"/>
+        <line x1="172" y1="158" x2="178" y2="185" stroke="#6366f1" stroke-width="4" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: "Honda ASIMO Humanoid",
+      region: "Wako, Japan (2000)",
+      desc: "Milestone bipedal humanoid robot engineered by Honda capable of intelligent environment mapping and fluid human-like walking.",
+      bg: "#0f172a",
+      draw: () => `
+        <!-- Sleek astronaut-like white humanoid suit -->
+        <rect x="134" y="90" width="32" height="100" rx="10" fill="#ffffff"/>
+        <circle cx="150" cy="72" r="13" fill="#f8fafc"/>
+        <rect x="140" y="78" width="20" height="10" rx="3" fill="#0f172a"/>
+        <rect x="140" y="110" width="20" height="35" fill="#cbd5e1"/>
+      `
+    },
+    {
+      name: "iRobot Roomba Vacuum",
+      region: "Bedford, USA (2002)",
+      desc: "The breakthrough household autonomous robot that popularized consumer robotics through sensor-driven random-bounce cleaning patterns.",
+      bg: "#18181b",
+      draw: () => `
+        <!-- Circular disc body -->
+        <ellipse cx="150" cy="150" rx="52" ry="26" fill="#3f3f46"/>
+        <ellipse cx="150" cy="145" rx="42" ry="20" fill="#27272a"/>
+        <circle cx="150" cy="143" r="10" fill="#18181b"/>
+        <!-- Power button light -->
+        <circle cx="150" cy="143" r="4" fill="#22c55e"/>
+      `
+    },
+    {
+      name: "Boston Dynamics BigDog",
+      region: "Waltham, USA (2005)",
+      desc: "Rough-terrain hydraulic quadruped designed to carry heavy payloads across rubble and snow while maintaining dynamic balance.",
+      bg: "#292524",
+      draw: () => `
+        <!-- Compact rugged body with four articulating legs -->
+        <rect x="120" y="125" width="60" height="28" rx="6" fill="#78716c"/>
+        <line x1="130" y1="153" x2="118" y2="185" stroke="#a8a29e" stroke-width="5" stroke-linecap="round"/>
+        <line x1="170" y1="153" x2="182" y2="185" stroke="#a8a29e" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="150" cy="115" r="10" fill="#57534e"/>
+      `
+    },
+    {
+      name: "da Vinci Surgical System",
+      region: "Sunnyvale, USA (1999)",
+      desc: "Revolutionary teleoperated surgical robotic platform translating surgeon hand movements into micro-scaled wrist instrument articulation.",
+      bg: "#082f49",
+      draw: () => `
+        <!-- Robotic cart and multi-jointed surgical arms -->
+        <rect x="135" y="105" width="30" height="85" rx="4" fill="#0284c7"/>
+        <path d="M110,135 L190,135" stroke="#e0f2fe" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="150" cy="150" r="12" fill="#38bdf8"/>
+        <line x1="150" y1="135" x2="150" y2="105" stroke="#7dd3fc" stroke-width="4"/>
+      `
+    },
+    {
+      name: "NASA Perseverance Rover",
+      region: "Pasadena, USA (2020)",
+      desc: "Advanced astrobiology robotic laboratory featuring autonomous hazard avoidance, core-sampling drills, and the Ingenuity helicopter mount.",
+      bg: "#3b1a12",
+      draw: () => `
+        <!-- Rover body and robotic sampling arm -->
+        <rect x="118" y="125" width="64" height="35" rx="6" fill="#9a3412"/>
+        <circle cx="128" cy="172" r="11" fill="#ea580c"/>
+        <circle cx="150" cy="172" r="11" fill="#ea580c"/>
+        <circle cx="172" cy="172" r="11" fill="#ea580c"/>
+        <line x1="150" y1="125" x2="178" y2="95" stroke="#fed7aa" stroke-width="4" stroke-linecap="round"/>
+        <rect x="135" y="100" width="16" height="25" fill="#ffedd5"/>
+      `
+    },
+    {
+      name: "Boston Dynamics Atlas",
+      region: "Waltham, USA (2013)",
+      desc: "Advanced electric-hydraulic bipedal humanoid robot capable of high-dynamic acrobatics, backflips, and parkour agility.",
+      bg: "#111827",
+      draw: () => `
+        <!-- High-agility humanoid silhouette -->
+        <rect x="133" y="85" width="34" height="105" rx="6" fill="#374151"/>
+        <circle cx="150" cy="65" r="12" fill="#9ca3af"/>
+        <line x1="115" y1="118" x2="185" y2="118" stroke="#6b7280" stroke-width="6" stroke-linecap="round"/>
+        <rect x="142" y="105" width="16" height="40" fill="#1f2937"/>
+      `
+    },
+    {
+      name: "Tesla Optimus",
+      region: "Fremont &amp; Austin, USA (2022)",
+      desc: "General-purpose humanoid built on Tesla's vehicle-derived actuators, batteries, and neural-network vision stack for factory and household tasks.",
+      bg: "#1c1917",
+      draw: () => `
+        <!-- Matte humanoid shell -->
+        <rect x="132" y="88" width="36" height="98" rx="12" fill="#e7e5e4"/>
+        <circle cx="150" cy="70" r="13" fill="#f5f5f4"/>
+        <rect x="141" y="76" width="18" height="7" rx="2" fill="#18181b"/>
+        <rect x="138" y="105" width="24" height="34" fill="#a8a29e"/>
+        <line x1="118" y1="115" x2="132" y2="130" stroke="#d6d3d1" stroke-width="6" stroke-linecap="round"/>
+        <line x1="182" y1="115" x2="168" y2="130" stroke="#d6d3d1" stroke-width="6" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: "Figure 02 (Figure AI)",
+      region: "San Jose, USA (2024)",
+      desc: "Vision-language-model-driven humanoid designed for warehouse and manufacturing work, with onboard cameras and conversational voice reasoning.",
+      bg: "#0c0a09",
+      draw: () => `
+        <!-- Dark sculpted humanoid with visor face -->
+        <rect x="131" y="90" width="38" height="96" rx="10" fill="#27272a"/>
+        <ellipse cx="150" cy="70" rx="15" ry="13" fill="#111827"/>
+        <rect x="141" y="66" width="18" height="6" rx="3" fill="#38bdf8"/>
+        <rect x="139" y="106" width="22" height="32" fill="#3f3f46"/>
+        <line x1="120" y1="118" x2="133" y2="135" stroke="#52525b" stroke-width="6" stroke-linecap="round"/>
+        <line x1="180" y1="118" x2="167" y2="135" stroke="#52525b" stroke-width="6" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: "Digit (Agility Robotics)",
+      region: "Salem, Oregon, USA (2019)",
+      desc: "Bipedal logistics robot with distinctive backward-bending bird-like legs, engineered to carry totes and packages between warehouse shelves and trucks.",
+      bg: "#1e2b1e",
+      draw: () => `
+        <!-- Bird-legged bipedal frame with tote -->
+        <rect x="135" y="95" width="30" height="45" rx="6" fill="#16a34a"/>
+        <circle cx="150" cy="80" r="10" fill="#052e16"/>
+        <path d="M138,140 L128,160 L134,178" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round"/>
+        <path d="M162,140 L172,160 L166,178" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round"/>
+        <rect x="118" y="112" width="20" height="16" rx="2" fill="#86efac"/>
+      `
+    },
+    {
+      name: "Phoenix (Sanctuary AI)",
+      region: "Vancouver, Canada (2023)",
+      desc: "General-purpose humanoid distinguished by its 20-degree-of-freedom hands, designed to reproduce fine dexterous manipulation for retail and logistics.",
+      bg: "#1e1b2e",
+      draw: () => `
+        <!-- Slim humanoid with articulated hand emphasis -->
+        <rect x="134" y="92" width="32" height="90" rx="10" fill="#a78bfa"/>
+        <circle cx="150" cy="74" r="12" fill="#ede9fe"/>
+        <rect x="140" y="98" width="20" height="30" fill="#7c3aed"/>
+        <line x1="120" y1="112" x2="132" y2="132" stroke="#c4b5fd" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="118" cy="112" r="7" fill="#ddd6fe"/>
+        <line x1="180" y1="112" x2="168" y2="132" stroke="#c4b5fd" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="182" cy="112" r="7" fill="#ddd6fe"/>
+      `
+    },
+    {
+      name: "Unitree H1 / G1",
+      region: "Hangzhou, China (2023)",
+      desc: "Compact, agile humanoid platform pairing high-torque joint modules with acrobatic locomotion, offered at a fraction of rival robots' cost.",
+      bg: "#141821",
+      draw: () => `
+        <!-- Compact agile humanoid -->
+        <rect x="135" y="96" width="30" height="82" rx="9" fill="#0ea5e9"/>
+        <circle cx="150" cy="78" r="11" fill="#0c4a6e"/>
+        <rect x="141" y="100" width="18" height="26" fill="#0369a1"/>
+        <line x1="122" y1="110" x2="135" y2="124" stroke="#38bdf8" stroke-width="5" stroke-linecap="round"/>
+        <line x1="178" y1="110" x2="165" y2="124" stroke="#38bdf8" stroke-width="5" stroke-linecap="round"/>
+        <line x1="140" y1="178" x2="136" y2="192" stroke="#0c4a6e" stroke-width="6" stroke-linecap="round"/>
+        <line x1="160" y1="178" x2="164" y2="192" stroke="#0c4a6e" stroke-width="6" stroke-linecap="round"/>
+      `
+    }
+  ];
+
+  function renderCurrent(){
+    const t = TECHS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(t.bg, currentIndex)}
+        ${t.draw()}
+        ${caption(t.name, t.region, t.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % TECHS.length;
+    renderCurrent();
+
+    const activeFlash = viewfinder.querySelector('#flashOverlay');
+    const activeRec = viewfinder.querySelector('#recIndicator');
+
+    if(activeFlash){
+      activeFlash.classList.remove('go');
+      void activeFlash.offsetWidth;
+      activeFlash.classList.add('go');
+    }
+    if(activeRec){
+      activeRec.classList.add('flash');
+      setTimeout(() => { activeRec.classList.remove('flash'); }, 900);
+    }
+
+    try {
+      playShutterSound();
+    } catch(e) {}
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoBtn.setAttribute('aria-pressed', 'true');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoBtn.setAttribute('aria-pressed', 'false');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Initial load
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
