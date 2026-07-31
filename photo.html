@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Photography, Cinematography &amp; Optics Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #fbbf24;
+    --line: #334155;
+    --focus: #fde047;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e1b18 0%, #0c0a09 55%, #050505 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #292524;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(251,191,36,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fde047, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #1c1917;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(251,191,36,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #1c1917;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(251,191,36,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(251,191,36,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL OPTICS-21 · PHOTO &amp; CINEMA EDITION</p>
+    <h1>Milestones in Light Capture</h1>
+    <p>Press shutter or Spacebar to cycle through 21 optical milestones.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>OPTICS ARCHIVE</span>
+      <span>f/1.4 &nbsp;·&nbsp; ISO 100</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 001</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/250</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">LENS</span></span>
+      </div>
+    </div>
+    <p class="hint">tap shutter button or press [Space] / [Enter]</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2400;
+
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0, 0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  const ACCENTS = ['#fbbf24', '#f87171', '#34d399', '#60a5fa', '#c084fc'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#1c1917"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#292524" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#0c0a09" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#44403c" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1c1917"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#1c1917" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#fbbf24" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#fbbf24">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#a8a29e">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  const TECHS = [
+    {
+      name: 'Camera Obscura (Pinhole Projection)',
+      region: 'Baghdad & Basra (Iraq / Middle East)',
+      desc: 'Ibn al-Haytham’s foundational optical principle utilizing a darkened chamber with a small aperture to project inverted real-world light imagery.',
+      bg: '#141824',
+      draw: () => `
+        <rect x="75" y="75" width="150" height="110" rx="4" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+        <line x1="75" y1="130" x2="45" y2="100" stroke="#f59e0b" stroke-dasharray="3,3"/>
+        <line x1="75" y1="130" x2="45" y2="160" stroke="#f59e0b" stroke-dasharray="3,3"/>
+        <circle cx="45" cy="130" r="14" fill="#3b82f6" opacity="0.7"/>
+        <path d="M75,130 L205,100 L205,160 Z" fill="#ef4444" opacity="0.2"/>
+        <line x1="75" y1="130" x2="205" y2="160" stroke="#ef4444" stroke-width="1.5"/>
+        <line x1="75" y1="130" x2="205" y2="100" stroke="#ef4444" stroke-width="1.5"/>
+        <rect x="200" y="95" width="8" height="70" fill="#f8fafc"/>
+      `
+    },
+    {
+      name: 'Johann Heinrich Schulze’s Photosensitive Silver Salts',
+      region: 'Altdorf (Germany / Central Europe)',
+      desc: 'The pioneering 1717 chemical discovery that silver nitrate darkens upon exposure to sunlight, proving light drives photochemical reactions.',
+      bg: '#221a14',
+      draw: () => `
+        <path d="M120,150 L150,110 L180,150 Z" fill="#b45309" stroke="#d97706" stroke-width="2"/>
+        <rect x="135" y="150" width="30" height="35" rx="2" fill="#78350f"/>
+        <path d="M100,75 C120,65 150,75 160,90" stroke="#fde047" stroke-width="3" fill="none"/>
+        <circle cx="160" cy="90" r="5" fill="#fde047"/>
+        <circle cx="150" cy="165" r="8" fill="#18181b"/>
+        <text x="150" y="168" text-anchor="middle" font-size="8" fill="#fde047">AgNO3</text>
+      `
+    },
+    {
+      name: 'Nicéphore Niépce’s Heliography',
+      region: 'Saint-Loup-de-Varennes (France / Western Europe)',
+      desc: 'The world’s first permanent photograph captured by exposing a bitumen-coated pewter plate inside a camera obscura for hours.',
+      bg: '#1c1917',
+      draw: () => `
+        <rect x="90" y="90" width="120" height="85" rx="6" fill="#44403c" stroke="#78716c" stroke-width="2"/>
+        <rect x="105" y="110" width="90" height="50" fill="#292524" stroke="#57534e"/>
+        <rect x="115" y="120" width="70" height="30" fill="#1c1917" stroke="#d97706" stroke-width="1.5"/>
+        <line x1="125" y1="130" x2="175" y2="130" stroke="#78716c" stroke-width="2"/>
+        <line x1="125" y1="140" x2="165" y2="140" stroke="#78716c" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Louis Daguerre’s Daguerreotype Process',
+      region: 'Paris (France / Western Europe)',
+      desc: 'The first commercially viable photographic process producing mirror-like images by exposing iodine-fumed silvered copper plates.',
+      bg: '#111827',
+      draw: () => `
+        <rect x="95" y="85" width="110" height="95" rx="4" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+        <rect x="107" y="97" width="86" height="71" fill="#cbd5e1" stroke="#94a3b8"/>
+        <path d="M107,97 L193,168" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+        <circle cx="150" cy="132.5" r="18" fill="#0f172a" opacity="0.8"/>
+        <text x="150" y="136" text-anchor="middle" font-size="9" fill="#f8fafc">Ag/Cu</text>
+      `
+    },
+    {
+      name: 'Henry Fox Talbot’s Calotype (Talbotype)',
+      region: 'Lacock Abbey, Wiltshire (England / British Isles)',
+      desc: 'A paper-based negative-positive photographic breakthrough allowing multiple paper prints from a single light-sensitive paper negative.',
+      bg: '#241e18',
+      draw: () => `
+        <rect x="100" y="80" width="100" height="110" rx="2" fill="#d7ccc8" stroke="#8d6e63" stroke-width="2"/>
+        <rect x="115" y="95" width="70" height="80" fill="#3e2723"/>
+        <path d="M125,120 L150,150 L175,120" fill="none" stroke="#d7ccc8" stroke-width="3"/>
+        <circle cx="150" cy="110" r="8" fill="#d7ccc8"/>
+      `
+    },
+    {
+      name: 'Frederick Scott Archer’s Collodion Wet-Plate',
+      region: 'London (England / British Isles)',
+      desc: 'A mid-19th-century technique coating glass plates with iodized collodion, requiring exposure and development while wet.',
+      bg: '#0f1f2e',
+      draw: () => `
+        <rect x="95" y="85" width="110" height="95" rx="4" fill="#38bdf8" opacity="0.2" stroke="#0ea5e9" stroke-width="2"/>
+        <rect x="105" y="95" width="90" height="75" fill="#0284c7" opacity="0.5"/>
+        <path d="M105,95 Q150,115 195,95" fill="none" stroke="#e0f2fe" stroke-width="3"/>
+        <circle cx="150" cy="132" r="14" fill="#e0f2fe" opacity="0.7"/>
+      `
+    },
+    {
+      name: 'James Clerk Maxwell’s Three-Color Additive Projection',
+      region: 'Edinburgh (Scotland / British Isles)',
+      desc: 'The creation of the first durable color photograph demonstrated by projecting three black-and-white plates through red, green, and blue filters.',
+      bg: '#090d16',
+      draw: () => `
+        <circle cx="135" cy="120" r="28" fill="#ef4444" mix-blend-mode="screen" opacity="0.6"/>
+        <circle cx="165" cy="120" r="28" fill="#22c55e" mix-blend-mode="screen" opacity="0.6"/>
+        <circle cx="150" cy="150" r="28" fill="#3b82f6" mix-blend-mode="screen" opacity="0.6"/>
+        <circle cx="150" cy="133" r="10" fill="#f8fafc" opacity="0.9"/>
+      `
+    },
+    {
+      name: 'George Eastman’s Kodak Roll-Film Camera',
+      region: 'Rochester, New York (United States / North America)',
+      desc: 'The 1888 consumer revolution replacing fragile glass plates with flexible cellulose-nitrate roll film with the slogan "You press the button."',
+      bg: '#1c1311',
+      draw: () => `
+        <rect x="90" y="95" width="120" height="80" rx="12" fill="#5c2c16" stroke="#854d0e" stroke-width="2"/>
+        <circle cx="150" cy="135" r="22" fill="#1c1917" stroke="#d97706" stroke-width="3"/>
+        <circle cx="150" cy="135" r="10" fill="#292524"/>
+        <circle cx="115" cy="115" r="4" fill="#facc15"/>
+        <rect x="180" y="110" width="12" height="20" rx="2" fill="#a1a1aa"/>
+      `
+    },
+    {
+      name: 'Edison & Dickson’s Kinetograph',
+      region: 'West Orange, New Jersey (United States / North America)',
+      desc: 'The first motion picture camera utilizing perforated 35mm celluloid film strips driven by intermittent gear claws.',
+      bg: '#171717',
+      draw: () => `
+        <rect x="100" y="90" width="100" height="90" rx="4" fill="#3f3f46" stroke="#71717a" stroke-width="2"/>
+        <circle cx="130" cy="135" r="16" fill="#27272a" stroke="#a1a1aa" stroke-width="2"/>
+        <circle cx="130" cy="135" r="6" fill="#f59e0b"/>
+        <rect x="160" y="105" width="25" height="60" fill="#27272a" stroke="#52525b"/>
+        <circle cx="172.5" cy="120" r="5" fill="#facc15"/>
+        <circle cx="172.5" cy="150" r="5" fill="#facc15"/>
+      `
+    },
+    {
+      name: 'Lumière Brothers’ Cinématographe',
+      region: 'Lyon (France / Western Europe)',
+      desc: 'A portable 3-in-1 device functioning as a camera, printer, and projector, sparking global cinema with public screenings in 1895.',
+      bg: '#231512',
+      draw: () => `
+        <rect x="105" y="85" width="90" height="95" rx="6" fill="#7c2d12" stroke="#9a3412" stroke-width="2"/>
+        <circle cx="150" cy="120" r="16" fill="#1c1917" stroke="#fbbf24" stroke-width="2"/>
+        <circle cx="150" cy="120" r="7" fill="#fde047"/>
+        <circle cx="135" cy="160" r="10" fill="#44403c"/>
+        <circle cx="165" cy="160" r="10" fill="#44403c"/>
+      `
+    },
+    {
+      name: 'Oskar Barnack’s Leica 35mm Prototype',
+      region: 'Wetzlar (Germany / Central Europe)',
+      desc: 'The compact camera engineering milestone repurposing standard 35mm cinema film for high-mobility street photography.',
+      bg: '#18181b',
+      draw: () => `
+        <rect x="95" y="100" width="110" height="65" rx="8" fill="#3f3f46" stroke="#71717a" stroke-width="2"/>
+        <rect x="120" y="90" width="60" height="12" rx="2" fill="#52525b"/>
+        <circle cx="150" cy="135" r="22" fill="#18181b" stroke="#eab308" stroke-width="2.5"/>
+        <circle cx="150" cy="135" r="14" fill="#09090b"/>
+        <circle cx="150" cy="135" r="6" fill="#60a5fa" opacity="0.7"/>
+      `
+    },
+    {
+      name: 'Technicolor Two & Three-Color Cinematic Process',
+      region: 'Boston & Los Angeles (United States / North America)',
+      desc: 'A sophisticated dye-transfer imbibition printing system combining three separate color records onto a single vibrant film print.',
+      bg: '#111322',
+      draw: () => `
+        <rect x="90" y="90" width="120" height="85" rx="4" fill="#1e1b4b" stroke="#4338ca" stroke-width="2"/>
+        <path d="M110,140 Q150,90 190,140" fill="none" stroke="#ef4444" stroke-width="4"/>
+        <path d="M110,145 Q150,95 190,145" fill="none" stroke="#22c55e" stroke-width="4"/>
+        <path d="M110,150 Q150,100 190,150" fill="none" stroke="#3b82f6" stroke-width="4"/>
+      `
+    },
+    {
+      name: 'Agfa & Kodak Color Reversal Film',
+      region: 'Wolfen & Rochester (Germany & United States)',
+      desc: 'The mid-1930s introduction of multi-layered color transparency films containing microscopic dye couplers for RGB light spectra.',
+      bg: '#1c1914',
+      draw: () => `
+        <rect x="100" y="85" width="100" height="95" rx="4" fill="#713f12" stroke="#a16207" stroke-width="2"/>
+        <rect x="110" y="95" width="80" height="75" fill="#fef08a"/>
+        <line x1="110" y1="120" x2="190" y2="120" stroke="#ef4444" stroke-width="4"/>
+        <line x1="110" y1="135" x2="190" y2="135" stroke="#22c55e" stroke-width="4"/>
+        <line x1="110" y1="150" x2="190" y2="150" stroke="#3b82f6" stroke-width="4"/>
+      `
+    },
+    {
+      name: 'Edwin Land’s Polaroid Instant Land Camera',
+      region: 'Cambridge, Massachusetts (United States / North America)',
+      desc: 'The 1948 photographic breakthrough integrating self-developing chemical reagent pods directly into instant film packs.',
+      bg: '#241513',
+      draw: () => `
+        <rect x="95" y="90" width="110" height="85" rx="8" fill="#991b1b" stroke="#b91c1c" stroke-width="2"/>
+        <rect x="110" y="140" width="80" height="25" fill="#fef08a" rx="2"/>
+        <circle cx="150" cy="115" r="16" fill="#1c1917" stroke="#f87171" stroke-width="2"/>
+        <circle cx="150" cy="115" r="7" fill="#38bdf8"/>
+      `
+    },
+    {
+      name: 'Harold "Doc" Edgerton’s High-Speed Strobe',
+      region: 'Cambridge, Massachusetts (United States / North America)',
+      desc: 'Pioneering electronic micro-second flash photography capable of freezing ultra-fast phenomena like a bullet piercing an apple.',
+      bg: '#0a0f1d',
+      draw: () => `
+        <circle cx="150" cy="132" r="35" fill="#38bdf8" opacity="0.2"/>
+        <circle cx="150" cy="132" r="20" fill="#fef08a" opacity="0.5"/>
+        <path d="M120,110 L180,154 M180,110 L120,154" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="150" cy="132" r="6" fill="#ffffff"/>
+      `
+    },
+    {
+      name: 'Nikon F Professional SLR Camera System',
+      region: 'Tokyo (Japan / East Asia)',
+      desc: 'The rugged 1959 single-lens reflex system featuring interchangeable lenses, finders, and motor drives for photojournalists.',
+      bg: '#18181b',
+      draw: () => `
+        <rect x="95" y="100" width="110" height="70" rx="6" fill="#27272a" stroke="#52525b" stroke-width="2"/>
+        <path d="M130,100 L135,88 L165,88 L170,100 Z" fill="#3f3f46" stroke="#71717a"/>
+        <circle cx="150" cy="138" r="24" fill="#09090b" stroke="#fde047" stroke-width="2"/>
+        <circle cx="150" cy="138" r="14" fill="#1e293b"/>
+        <circle cx="150" cy="138" r="6" fill="#60a5fa" opacity="0.8"/>
+      `
+    },
+    {
+      name: 'Steven Sasson (Eastman Kodak) First Digital Camera',
+      region: 'Rochester, New York (United States / North America)',
+      desc: 'The invention of the world’s first solid-state digital camera converting optical images via a 100x100 pixel CCD sensor onto cassette tape.',
+      bg: '#1c1917',
+      draw: () => `
+        <rect x="85" y="100" width="130" height="65" rx="6" fill="#44403c" stroke="#78716c" stroke-width="2"/>
+        <rect x="105" y="115" width="35" height="35" fill="#1c1917" stroke="#a8a29e" stroke-width="2"/>
+        <rect x="155" y="115" width="45" height="35" fill="#292524" stroke="#57534e" stroke-width="2"/>
+        <circle cx="177" cy="132.5" r="8" fill="#d97706"/>
+      `
+    },
+    {
+      name: 'IMAX Large-Format 70mm Projection System',
+      region: 'Toronto, Ontario (Canada / North America)',
+      desc: 'An ultra-high-resolution cinematic format utilizing horizontally fed 70mm film stock running past massive lenses for immersive projection.',
+      bg: '#090d16',
+      draw: () => `
+        <rect x="85" y="105" width="130" height="55" rx="4" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+        <rect x="100" y="115" width="100" height="35" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="100" cy="132.5" r="6" fill="#38bdf8"/>
+        <circle cx="200" cy="132.5" r="6" fill="#38bdf8"/>
+        <line x1="120" y1="115" x2="120" y2="150" stroke="#38bdf8" stroke-dasharray="2,2"/>
+        <line x1="180" y1="115" x2="180" y2="150" stroke="#38bdf8" stroke-dasharray="2,2"/>
+      `
+    },
+    {
+      name: 'Sony Mavica Electronic Still Camera',
+      region: 'Tokyo (Japan / East Asia)',
+      desc: 'A pioneering early analog electronic camera capturing video signals onto magnetic floppy disks ("Video Floppy").',
+      bg: '#1f1f23',
+      draw: () => `
+        <rect x="90" y="100" width="120" height="65" rx="6" fill="#52525b" stroke="#71717a" stroke-width="2"/>
+        <circle cx="130" cy="132" r="18" fill="#18181b" stroke="#eab308" stroke-width="2"/>
+        <rect x="160" y="115" width="35" height="35" rx="2" fill="#27272a" stroke="#a1a1aa" stroke-width="1.5"/>
+        <circle cx="177.5" cy="132.5" r="6" fill="#eab308"/>
+      `
+    },
+    {
+      name: 'Consumer Digital Single-Lens Reflex (DSLR)',
+      region: 'Tokyo & Sendai (Japan / East Asia)',
+      desc: 'The late-1990s and 2000s convergence of high-density CMOS image sensors and fast processors replacing silver-halide film.',
+      bg: '#141417',
+      draw: () => `
+        <rect x="95" y="102" width="110" height="65" rx="8" fill="#1f1d1b" stroke="#3f3f46" stroke-width="2"/>
+        <path d="M125,102 L132,88 L168,88 L175,102 Z" fill="#27272a" stroke="#52525b"/>
+        <circle cx="150" cy="138" r="24" fill="#09090b" stroke="#3b82f6" stroke-width="2.5"/>
+        <circle cx="150" cy="138" r="14" fill="#1d4ed8" opacity="0.4"/>
+        <circle cx="150" cy="138" r="6" fill="#93c5fd"/>
+      `
+    },
+    {
+      name: 'Computational Smartphone Photography',
+      region: 'Cupertino, California (United States / North America)',
+      desc: 'Modern pocket sensor arrays paired with machine learning algorithms and multi-frame stacking to bypass optical physics constraints.',
+      bg: '#0a0f1d',
+      draw: () => `
+        <rect x="110" y="85" width="80" height="95" rx="14" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+        <rect x="120" y="95" width="60" height="75" rx="8" fill="#0f172a"/>
+        <circle cx="135" cy="110" r="7" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="160" cy="110" r="5" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+        <circle cx="147" cy="125" r="4" fill="#0284c7" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="135" y="145" width="30" height="4" rx="2" fill="#334155"/>
+      `
+    }
+  ];
+
+  function renderCurrent(){
+    const t = TECHS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(t.bg, currentIndex)}
+        ${t.draw()}
+        ${caption(t.name, t.region, t.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+
+    const overlay = viewfinder.querySelector('#flashOverlay');
+    const rec = viewfinder.querySelector('#recIndicator');
+
+    if(overlay){
+      overlay.classList.remove('go');
+      void overlay.offsetWidth;
+      overlay.classList.add('go');
+    }
+    if(rec){
+      rec.classList.add('flash');
+      setTimeout(() => {
+        if(rec) rec.classList.remove('flash');
+      }, 700);
+    }
+
+    currentIndex = (currentIndex + 1) % TECHS.length;
+    renderCurrent();
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      triggerCapture();
+    }
+  });
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderCurrent();
+})();
+</script>
+</body>
+</html>

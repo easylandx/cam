@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Metallurgy, Metalworking &amp; Alloy Engineering Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #fbbf24;
+    --line: #334155;
+    --focus: #fde047;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1e1b18 0%, #0c0a09 55%, #050505 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #292524;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(251,191,36,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fde047, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #1c1917;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(251,191,36,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #1c1917;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(251,191,36,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(251,191,36,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  <footer></footer>
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL METALS-21 · HISTORICAL &amp; INDUSTRIAL EDITION</p>
+    <h1>Milestones in Metallurgy</h1>
+    <p>Press shutter to examine 21 metalworking breakthroughs and their geographical origins.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>METALLURGY ARCHIVE</span>
+      <span>f/2.0 &nbsp;·&nbsp; ORE</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine metallurgical milestones
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/500</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">ALLOY</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the orange shutter button to cycle through milestones</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2000;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2200);
+    playClickBurst(0.07, 0.035, 0.55, 1400);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#fbbf24', '#f87171', '#34d399', '#60a5fa', '#c084fc'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Map Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#1c1917"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#292524" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#0c0a09" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#44403c" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#1c1917"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#1c1917" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#fbbf24" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#fbbf24">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#a8a29e">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Metallurgical Milestones SVG Visualizations ---------------- */
+  const TECHS = [
+    {
+      name: 'Native Copper Cold-Hammering',
+      region: 'Great Lakes Region (North America)',
+      desc: 'The earliest pre-Columbian metalworking practice, annealing and hammering native copper nuggets into durable hand tools and decorative artifacts without melting.',
+      bg: '#3f2a1d',
+      draw: () => `<path d="M100,160 L200,160 L180,180 L120,180 Z" fill="#b45309"/><rect x="135" y="110" width="30" height="50" rx="4" fill="#d97706"/><path d="M120,80 L180,80 L160,110 L140,110 Z" fill="#78350f"/><rect x="144" y="50" width="12" height="40" fill="#57534e"/>`
+    },
+    {
+      name: 'Anatolian Smelted Copper',
+      region: 'Çayönü (Anatolia / Turkey)',
+      desc: 'The dawn of extractive pyrometallurgy utilizing charcoal-fired pit furnaces to reduce copper carbonate ores into molten metallic copper.',
+      bg: '#3b1c12',
+      draw: () => `<path d="M100,200 L120,100 L180,100 L200,200 Z" fill="#44403c"/><ellipse cx="150" cy="100" rx="30" ry="10" fill="#ea580c"/><circle cx="150" cy="130" r="16" fill="#f97316"/><path d="M130,160 Q150,140 170,160" fill="none" stroke="#fef08a" stroke-width="3"/>`
+    },
+    {
+      name: 'Cire Perdue (Lost-Wax Casting)',
+      region: 'Indus Valley (Pakistan & NW India)',
+      desc: 'An ancient precision casting technique using a wax model encased in clay to create complex, hollow bronze and brass sculptures with intricate detail.',
+      bg: '#2e2318',
+      draw: () => `<path d="M120,80 L180,80 L170,220 L130,220 Z" fill="#a8a29e"/><rect x="138" y="90" width="24" height="110" fill="#78350f"/><line x1="150" y1="60" x2="150" y2="80" stroke="#d97706" stroke-width="6"/><circle cx="150" cy="135" r="14" fill="#fbbf24"/>`
+    },
+    {
+      name: 'Bronze Age Tin-Bronze Alloying',
+      region: 'Near East & Aegean Basin',
+      desc: 'The strategic alloying of copper with roughly 10% tin to drastically lower melting points, increase cast fluidity, and produce hard, durable cutting weapons.',
+      bg: '#362b14',
+      draw: () => `<polygon points="150,65 170,190 150,220 130,190" fill="#eab308"/><rect x="144" y="220" width="12" height="30" fill="#57534e"/><circle cx="150" cy="140" r="30" fill="none" stroke="#fef08a" stroke-width="3" stroke-dasharray="5,5"/>`
+    },
+    {
+      name: 'Anatolian Iron Smelting',
+      region: 'Hattusa (Anatolia / Hittite Empire)',
+      desc: 'The pioneering industrial production of wrought iron via direct reduction bloomeries, guarded closely before the geopolitical collapse spread ironworking globally.',
+      bg: '#262626',
+      draw: () => `<path d="M110,210 L125,90 L175,90 L190,210 Z" fill="#171717"/><rect x="135" y="140" width="30" height="40" rx="4" fill="#dc2626"/><circle cx="150" cy="105" r="10" fill="#f97316"/><line x1="90" y1="160" x2="125" y2="160" stroke="#78350f" stroke-width="6"/>`
+    },
+    {
+      name: 'Etruscan Granulation & Soldering',
+      region: 'Vetulonia & Etruria (Italy)',
+      desc: 'An exquisite ancient gold-working technique bonding microscopic gold spheres onto metal surfaces using copper-salt capillary solders without visible joining seams.',
+      bg: '#382e11',
+      draw: () => `<rect x="100" y="110" width="100" height="80" rx="8" fill="#ca8a04"/><circle cx="125" cy="150" r="7" fill="#fef08a"/><circle cx="140" cy="150" r="7" fill="#fef08a"/><circle cx="155" cy="150" r="7" fill="#fef08a"/><circle cx="170" cy="150" r="7" fill="#fef08a"/><circle cx="185" cy="150" r="7" fill="#fef08a"/>`
+    },
+    {
+      name: 'Ancient Chinese Blast Furnace',
+      region: 'Henan Province (China)',
+      desc: 'A 5th-century BCE metallurgical breakthrough utilizing tall blast furnaces fueled by coal and piston bellows to melt iron completely, producing high-carbon cast iron.',
+      bg: '#2c1f19',
+      draw: () => `<rect x="125" y="70" width="50" height="150" rx="8" fill="#57534e"/><rect x="135" y="180" width="30" height="25" fill="#ea580c"/><rect x="100" y="130" width="25" height="35" rx="4" fill="#78350f"/><line x1="125" y1="147" x2="100" y2="147" stroke="#a8a29e" stroke-width="4"/>`
+    },
+    {
+      name: 'Urumi (Wootz Steel Crucible)',
+      region: 'Southern India & Sri Lanka',
+      desc: 'The legendary ancient crucible steelmaking process producing high-carbon Wootz steel ingots with microscopic carbon nanotubes, exported globally as flexible Damascus steel.',
+      bg: '#1e293b',
+      draw: () => `<path d="M150,60 Q170,150 150,240 Q130,150 150,60" fill="#38bdf8" opacity="0.8"/><line x1="150" y1="60" x2="150" y2="240" stroke="#f8fafc" stroke-width="2"/><path d="M140,100 Q160,130 140,160" fill="none" stroke="#e2e8f0" stroke-width="2"/>`
+    },
+    {
+      name: 'Japanese Tamahagane Tatara',
+      region: 'Shimane Prefecture (Japan)',
+      desc: 'A traditional clay-tub furnace (tatara) process using iron sand and charcoal to produce heterogeneous tamahagane steel, folded repeatedly by swordsmiths.',
+      bg: '#2b1b17',
+      draw: () => `<path d="M95,190 Q150,80 205,190 Z" fill="#78350f"/><rect x="120" y="135" width="60" height="35" fill="#ea580c"/><line x1="100" y1="190" x2="200" y2="190" stroke="#d97706" stroke-width="8"/><circle cx="150" cy="110" r="12" fill="#f97316"/>`
+    },
+    {
+      name: 'European Water-Powered Blast Furnace',
+      region: 'Central Europe & Sweden',
+      desc: 'A medieval high-output smelting innovation replacing manual bellows with water-wheel-driven mechanical blast systems to scale up pig iron production.',
+      bg: '#13222e',
+      draw: () => `<rect x="110" y="80" width="80" height="130" fill="#334155"/><circle cx="150" cy="180" r="30" fill="none" stroke="#38bdf8" stroke-width="6"/><line x1="150" y1="150" x2="150" y2="210" stroke="#38bdf8" stroke-width="4"/><line x1="120" y1="180" x2="180" y2="180" stroke="#38bdf8" stroke-width="4"/><path d="M135,70 L165,70 L170,80 L130,80 Z" fill="#64748b"/>`
+    },
+    {
+      name: 'Bessemer Steel Conversion Process',
+      region: 'Sheffield (England / British Isles)',
+      desc: 'Henry Bessemer’s revolutionary 1856 industrial process blowing air through molten pig iron to oxidize impurities, enabling mass production of structural steel.',
+      bg: '#33231d',
+      draw: () => `<path d="M120,90 L180,115 L165,210 L135,210 Z" fill="#78350f"/><circle cx="150" cy="150" r="18" fill="#f97316"/><line x1="150" y1="210" x2="150" y2="245" stroke="#ef4444" stroke-width="6"/><circle cx="150" cy="235" r="4" fill="#fef08a"/>`
+    },
+    {
+      name: 'Siemens-Martin Open-Hearth Steel',
+      region: 'France & Wales (Europe)',
+      desc: 'A regenerative reverberatory furnace process that melted large batches of scrap metal and pig iron to produce high-quality structural steel for global industrialization.',
+      bg: '#2b2118',
+      draw: () => `<rect x="95" y="100" width="110" height="90" rx="10" fill="#57534e"/><rect x="110" y="125" width="80" height="45" fill="#ea580c"/><line x1="120" y1="100" x2="120" y2="75" stroke="#a8a29e" stroke-width="6"/><line x1="180" y1="100" x2="180" y2="75" stroke="#a8a29e" stroke-width="6"/>`
+    },
+    {
+      name: 'Héroult Electric Arc Furnace (EAF)',
+      region: 'Froges (France / Western Europe)',
+      desc: 'Paul Héroult’s 1899 electrical smelting invention utilizing high-intensity electric arcs between carbon electrodes to melt and recycle scrap steel efficiently.',
+      bg: '#1c1917',
+      draw: () => `<rect x="105" y="135" width="90" height="75" fill="#292524"/><line x1="125" y1="70" x2="125" y2="145" stroke="#a8a29e" stroke-width="8"/><line x1="175" y1="70" x2="175" y2="145" stroke="#a8a29e" stroke-width="8"/><path d="M125,145 L150,110 L175,145" fill="none" stroke="#facc15" stroke-width="6"/>`
+    },
+    {
+      name: 'Brearley’s Stainless Steel',
+      region: 'Sheffield (England / British Isles)',
+      desc: 'The accidental 1913 discovery that adding roughly 12% chromium to molten low-carbon steel prevents oxidation, creating rust-free cutlery and surgical tools.',
+      bg: '#1e293b',
+      draw: () => `<path d="M142,65 L158,65 L158,195 Q150,215 142,195 Z" fill="#e2e8f0"/><rect x="138" y="195" width="24" height="40" rx="4" fill="#475569"/><circle cx="150" cy="115" r="12" fill="#38bdf8" opacity="0.6"/>`
+    },
+    {
+      name: 'Kroll Process for Titanium',
+      region: 'Luxembourg & Delaware (USA)',
+      desc: 'William J. Kroll’s vital metallurgical breakthrough reducing titanium tetrachloride with molten magnesium under an inert gas atmosphere to yield ductile pure titanium.',
+      bg: '#17202a',
+      draw: () => `<rect x="110" y="90" width="80" height="120" rx="12" fill="#334155"/><circle cx="150" cy="150" r="30" fill="#38bdf8" opacity="0.4"/><line x1="150" y1="60" x2="150" y2="90" stroke="#94a3b8" stroke-width="6"/><rect x="135" y="105" width="30" height="12" fill="#64748b"/>`
+    },
+    {
+      name: 'Alcoa Hall-Héroult Aluminum',
+      region: 'Pittsburgh, Pennsylvania (USA)',
+      desc: 'The industrial electrochemical process dissolving alumina in a molten bath of cryolite to produce inexpensive, lightweight aluminum metal on a mass scale.',
+      bg: '#1e293b',
+      draw: () => `<rect x="105" y="100" width="90" height="90" rx="8" fill="#475569"/><rect x="115" y="135" width="70" height="45" fill="#38bdf8" opacity="0.7"/><line x1="150" y1="65" x2="150" y2="100" stroke="#e2e8f0" stroke-width="6"/><circle cx="150" cy="82" r="5" fill="#facc15"/>`
+    },
+    {
+      name: 'Superplastic Aluminum-Lithium',
+      region: 'Farnborough (England / British Isles)',
+      desc: 'Advanced lightweight structural alloys incorporating lithium into aluminum matrices to maximize stiffness-to-weight ratios for high-performance aircraft and spaceframes.',
+      bg: '#0f172a',
+      draw: () => `<polygon points="150,65 200,150 175,225 125,225 100,150" fill="none" stroke="#60a5fa" stroke-width="5"/><circle cx="150" cy="150" r="25" fill="#93c5fd" opacity="0.5"/><path d="M140,140 L160,160 M160,140 L140,160" stroke="#1e293b" stroke-width="3"/>`
+    },
+    {
+      name: 'Ni-Resist & Inconel Superalloys',
+      region: 'Huntington, West Virginia (USA)',
+      desc: 'High-temperature austenitic alloys engineered to retain mechanical strength, creep resistance, and oxidation immunity under extreme jet-engine turbine environments.',
+      bg: '#2d1b2d',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="none" stroke="#a855f7" stroke-width="10"/><path d="M120,150 L150,120 L180,150 L150,180 Z" fill="#d946ef"/><circle cx="150" cy="150" r="10" fill="#f3e8ff"/>`
+    },
+    {
+      name: 'Selective Laser Melting (SLM) 3D',
+      region: 'Aachen (Germany / Central Europe)',
+      desc: 'A modern additive manufacturing technology using high-power fiber lasers to fuse fine metal powders layer by layer into complex, hollow internal-channel components.',
+      bg: '#111827',
+      draw: () => `<rect x="105" y="180" width="90" height="15" fill="#374151"/><rect x="115" y="155" width="70" height="25" fill="#4b5563"/><rect x="125" y="130" width="50" height="25" fill="#6b7280"/><line x1="150" y1="65" x2="150" y2="130" stroke="#ef4444" stroke-width="4"/><circle cx="150" cy="130" r="6" fill="#fef08a"/>`
+    },
+    {
+      name: 'Bulk Metallic Glass (Amorphous)',
+      region: 'Pasadena, California (USA)',
+      desc: 'Advanced multi-component metallic alloys cooled rapidly to lock atoms into a disordered, glass-like atomic structure, yielding exceptional elasticity and yield strength.',
+      bg: '#18181b',
+      draw: () => `<rect x="105" y="90" width="90" height="120" rx="14" fill="#3f3f46" opacity="0.9"/><circle cx="130" cy="125" r="7" fill="#f43f5e"/><circle cx="170" cy="135" r="6" fill="#38bdf8"/><circle cx="140" cy="170" r="8" fill="#fbbf24"/><circle cx="170" cy="180" r="5" fill="#a855f7"/><circle cx="155" cy="145" r="6" fill="#10b981"/>`
+    },
+    {
+      name: 'High-Entropy Alloys (HEAs)',
+      region: 'Taipei & Raleigh (Taiwan & USA)',
+      desc: 'A radical alloy design philosophy mixing five or more metallic elements in near-equimolar ratios to create multi-principal element matrices with unprecedented fracture toughness.',
+      bg: '#1a1e29',
+      draw: () => `<polygon points="150,75 195,110 180,180 120,180 105,110" fill="none" stroke="#38bdf8" stroke-width="4"/><circle cx="150" cy="75" r="6" fill="#ef4444"/><circle cx="195" cy="110" r="6" fill="#f59e0b"/><circle cx="180" cy="180" r="6" fill="#10b981"/><circle cx="120" cy="180" r="6" fill="#8b5cf6"/><circle cx="105" cy="110" r="6" fill="#ec4899"/><circle cx="150" cy="140" r="8" fill="#fef08a"/>`
+    }
+  ];
+
+  function renderCurrent(){
+    const t = TECHS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(t.bg, currentIndex)}
+        ${t.draw()}
+        ${caption(t.name, t.region, t.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+
+    const overlay = viewfinder.querySelector('#flashOverlay');
+    const rec = viewfinder.querySelector('#recIndicator');
+
+    if(overlay){
+      overlay.classList.remove('go');
+      void overlay.offsetWidth;
+      overlay.classList.add('go');
+    }
+    if(rec){
+      rec.classList.add('flash');
+      setTimeout(() => {
+        if(rec) rec.classList.remove('flash');
+      }, 700);
+    }
+
+    currentIndex = (currentIndex + 1) % TECHS.length;
+    renderCurrent();
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  // Keyboard navigation
+  window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      triggerCapture();
+    }
+  });
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Initial render setup
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
