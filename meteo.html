@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Meteorological Instruments &amp; Weather Tracking Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #334155;
+    --focus: #7dd3fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #090d16 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #7dd3fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL WX-21 · METEOROLOGICAL INSTRUMENTS EDITION</p>
+    <h1>Weather Tracking Systems &amp; Devices</h1>
+    <p>Press shutter to cycle through 21 historical and modern atmospheric measuring instruments.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>INSTRUMENT</span>
+      <span>f/1.4 &nbsp;·&nbsp; ATMOS</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">METEO</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to capture meteorological marvels</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#060c14"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0d1b2a" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#020408" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0a101d"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#060c14" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Physically Accurate Meteorological Instruments SVG Visualizations ---------------- */
+  const INSTRUMENTS = [
+    {
+      name: 'Torricellian Mercury Barometer',
+      region: 'Florence (Italy / Southern Europe)',
+      desc: "Evangelista Torricelli’s 1643 invention balancing a column of liquid mercury against atmospheric pressure inside a sealed glass tube.",
+      bg: '#111827',
+      draw: () => `
+        <rect x="140" y="55" width="20" height="195" rx="10" fill="none" stroke="#94a3b8" stroke-width="3"/>
+        <line x1="150" y1="75" x2="150" y2="155" stroke="#ef4444" stroke-width="6"/>
+        <path d="M136,220 C136,205 164,205 164,220 L168,245 C168,252 160,258 150,258 C140,258 132,252 132,245 Z" fill="none" stroke="#94a3b8" stroke-width="3"/>
+        <path d="M136,225 C136,215 164,215 164,225 L166,245 C166,250 159,255 150,255 C141,255 134,250 134,245 Z" fill="#ef4444"/>
+        <line x1="125" y1="80" x2="135" y2="80" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="125" y1="120" x2="135" y2="120" stroke="#cbd5e1" stroke-width="2"/>
+        <line x1="125" y1="160" x2="135" y2="160" stroke="#cbd5e1" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Hooke’s Dial Hygrometer',
+      region: 'London (England / British Isles)',
+      desc: 'A 17th-century mechanical humidity sensor utilizing hygroscopic expansion and contraction of an oat beard or animal gut attached to a needle.',
+      bg: '#1e1b4b',
+      draw: () => `
+        <circle cx="150" cy="145" r="52" fill="none" stroke="#cbd5e1" stroke-width="4"/>
+        <circle cx="150" cy="145" r="46" fill="#0f172a"/>
+        <line x1="150" y1="103" x2="150" y2="110" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="150" y1="180" x2="150" y2="187" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="108" y1="145" x2="115" y2="145" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="185" y1="145" x2="192" y2="145" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="150" y1="145" x2="178" y2="120" stroke="#f43f5e" stroke-width="3"/>
+        <circle cx="150" cy="145" r="7" fill="#cbd5e1"/>
+        <path d="M120,205 Q150,230 180,205" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-dasharray="3,3"/>
+      `
+    },
+    {
+      name: 'Fahrenheit Mercury Thermometer',
+      region: 'Amsterdam & Danzig (Netherlands & Poland / Europe)',
+      desc: 'Daniel Gabriel Fahrenheit’s standardized glass capillary tube thermometer utilizing uniform mercury expansion calibrated against fixed points.',
+      bg: '#0f172a',
+      draw: () => `
+        <rect x="144" y="55" width="12" height="190" rx="6" fill="none" stroke="#cbd5e1" stroke-width="3"/>
+        <line x1="150" y1="100" x2="150" y2="215" stroke="#dc2626" stroke-width="4"/>
+        <circle cx="150" cy="230" r="10" fill="#dc2626"/>
+        <line x1="138" y1="80" x2="144" y2="80" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="138" y1="120" x2="144" y2="120" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="138" y1="160" x2="144" y2="160" stroke="#94a3b8" stroke-width="2"/>
+        <line x1="138" y1="200" x2="144" y2="200" stroke="#94a3b8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'De Saussure Hair Hygrometer',
+      region: 'Geneva (Switzerland / Central Europe)',
+      desc: 'Horace-Bénédet de Saussure’s precision humidity instrument utilizing a human hair kept under tension by a small counterweight.',
+      bg: '#18181b',
+      draw: () => `
+        <rect x="125" y="75" width="50" height="150" rx="4" fill="none" stroke="#71717a" stroke-width="3"/>
+        <circle cx="150" cy="95" r="14" fill="none" stroke="#a1a1aa" stroke-width="2"/>
+        <line x1="150" y1="109" x2="150" y2="195" stroke="#fef08a" stroke-width="2"/>
+        <polygon points="146,195 154,195 150,210" fill="#a1a1aa"/>
+        <path d="M135,140 Q150,130 165,140" fill="none" stroke="#38bdf8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Luke Howard’s Cloud Classification',
+      region: 'London (England / British Isles)',
+      desc: 'The foundational meteorological nomenclature system (1802) defining distinct cloud genera—cumulus, stratus, cirrus, and nimbus.',
+      bg: '#0c4a6e',
+      draw: () => `
+        <path d="M95,120 Q110,100 130,120 Q150,105 170,125 Q190,110 205,130" fill="none" stroke="#bae6fd" stroke-width="3"/>
+        <path d="M85,160 Q105,140 125,160 Q150,140 180,165 Q205,145 220,165" fill="#e0f2fe" opacity="0.8"/>
+        <rect x="90" y="190" width="120" height="15" rx="4" fill="#64748b" opacity="0.6"/>
+        <line x1="110" y1="210" x2="105" y2="230" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="150" y1="210" x2="145" y2="230" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="190" y1="210" x2="185" y2="230" stroke="#38bdf8" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Robinson Cup Anemometer',
+      region: 'Armagh Observatory, Northern Ireland (British Isles)',
+      desc: 'A spinning mechanical wind-speed sensor utilizing four hemispherical cups mounted on orthogonal arms rotating proportional to wind velocity.',
+      bg: '#172554',
+      draw: () => `
+        <line x1="150" y1="230" x2="150" y2="95" stroke="#93c5fd" stroke-width="5"/>
+        <line x1="100" y1="115" x2="200" y2="115" stroke="#93c5fd" stroke-width="3"/>
+        <line x1="120" y1="115" x2="180" y2="115" stroke="#60a5fa" stroke-width="3" transform="rotate(45 150 115)"/>
+        <path d="M88,115 A12,12 0 0,1 100,103 Z" fill="#3b82f6"/>
+        <path d="M200,115 A12,12 0 0,0 212,127 Z" fill="#3b82f6"/>
+        <path d="M120,133 A12,12 0 0,1 108,121 Z" fill="#3b82f6" transform="rotate(45 150 115)"/>
+        <path d="M180,97 A12,12 0 0,0 192,109 Z" fill="#3b82f6" transform="rotate(45 150 115)"/>
+        <rect x="135" y="230" width="30" height="10" rx="3" fill="#64748b"/>
+      `
+    },
+    {
+      name: 'FitzRoy Storm Barometer',
+      region: 'London (England / British Isles)',
+      desc: 'A chemical storm-glass and barometric indicator combination developed in the 19th century to help maritime sailors forecast gales.',
+      bg: '#2e1065',
+      draw: () => `
+        <rect x="130" y="70" width="40" height="150" rx="20" fill="none" stroke="#c084fc" stroke-width="3"/>
+        <path d="M132,130 C132,130 150,110 168,130 L168,205 C168,213 160,218 150,218 C140,218 132,213 132,205 Z" fill="#7c3aed" opacity="0.6"/>
+        <circle cx="150" cy="165" r="12" fill="#c084fc" opacity="0.4"/>
+        <rect x="122" y="220" width="56" height="14" rx="4" fill="#4c1d95"/>
+      `
+    },
+    {
+      name: 'Teisserenc de Bort’s Meteorograph',
+      region: 'Trappes (France / Western Europe)',
+      desc: 'The late 19th-century atmospheric sounding system combining lightweight clockwork barographs and thermographs suspended beneath balloons.',
+      bg: '#1f2937',
+      draw: () => `
+        <circle cx="150" cy="95" r="30" fill="#f87171"/>
+        <line x1="150" y1="125" x2="150" y2="165" stroke="#9ca3af" stroke-width="2"/>
+        <rect x="130" y="165" width="40" height="50" rx="6" fill="#4b5563" stroke="#9ca3af" stroke-width="2"/>
+        <circle cx="150" cy="190" r="10" fill="#1f2937"/>
+      `
+    },
+    {
+      name: 'Dines Pressure-Tube Anemometer',
+      region: 'London (England / British Isles)',
+      desc: 'A rugged mechanical wind-measuring instrument using a wind vane to point a Pitot tube into the wind, utilizing dynamic pressure changes.',
+      bg: '#111827',
+      draw: () => `
+        <rect x="146" y="115" width="8" height="110" fill="#6b7280"/>
+        <path d="M120,95 L180,95 L170,115 L130,115 Z" fill="#9ca3af"/>
+        <line x1="180" y1="105" x2="200" y2="105" stroke="#38bdf8" stroke-width="4"/>
+        <path d="M115,95 L130,85 L130,105 Z" fill="#4b5563"/>
+        <rect x="140" y="225" width="20" height="8" rx="2" fill="#9ca3af"/>
+      `
+    },
+    {
+      name: 'Radiosonde Atmospheric Sounding Device',
+      region: 'Trappes (France / Western Europe)',
+      desc: 'A battery-powered telemetry instrument package carried aloft by weather balloons to continuously measure vertical profiles.',
+      bg: '#0f172a',
+      draw: () => `
+        <circle cx="150" cy="75" r="28" fill="#e2e8f0"/>
+        <line x1="150" y1="103" x2="150" y2="145" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="135" y="145" width="30" height="55" rx="4" fill="#334155" stroke="#64748b" stroke-width="2"/>
+        <line x1="135" y1="165" x2="165" y2="165" stroke="#64748b" stroke-width="2"/>
+        <line x1="150" y1="200" x2="150" y2="225" stroke="#94a3b8" stroke-width="1.5"/>
+        <circle cx="150" cy="227" r="4" fill="#38bdf8"/>
+      `
+    },
+    {
+      name: 'Swinbank Net Radiometer',
+      region: 'Melbourne (Australia / Oceania)',
+      desc: 'A specialized radiation-sensing instrument utilizing sensitive thermopiles protected by thin polyethylene domes.',
+      bg: '#14281d',
+      draw: () => `
+        <ellipse cx="150" cy="130" rx="26" ry="14" fill="none" stroke="#4ade80" stroke-width="3"/>
+        <ellipse cx="150" cy="130" rx="26" ry="14" fill="#bbf7d0" opacity="0.3"/>
+        <rect x="135" y="142" width="30" height="6" fill="#22c55e"/>
+        <ellipse cx="150" cy="170" rx="26" ry="14" fill="none" stroke="#4ade80" stroke-width="3"/>
+        <ellipse cx="150" cy="170" rx="26" ry="14" fill="#bbf7d0" opacity="0.3"/>
+        <line x1="150" y1="148" x2="150" y2="156" stroke="#16a34a" stroke-width="4"/>
+        <rect x="147" y="176" width="6" height="45" fill="#16a34a"/>
+      `
+    },
+    {
+      name: 'Campbell-Stokes Sunshine Recorder',
+      region: 'London (England / British Isles)',
+      desc: 'A solid glass sphere focusing direct sunlight onto a specially curved, graduated cardboard strip to record daily hours of bright sunshine.',
+      bg: '#31100b',
+      draw: () => `
+        <circle cx="150" cy="130" r="32" fill="none" stroke="#fcd34d" stroke-width="3"/>
+        <circle cx="150" cy="130" r="28" fill="#fef3c7" opacity="0.3"/>
+        <path d="M110,185 Q150,215 190,185" fill="none" stroke="#ea580c" stroke-width="5"/>
+        <path d="M125,162 Q150,180 175,162" fill="none" stroke="#f97316" stroke-width="2"/>
+        <path d="M130,95 L150,65 L170,95" fill="none" stroke="#78350f" stroke-width="3"/>
+        <rect x="140" y="195" width="20" height="35" rx="3" fill="#78350f"/>
+      `
+    },
+    {
+      name: 'Tipping-Bucket Rain Gauge',
+      region: 'London (England / British Isles)',
+      desc: 'An automated precipitation-measuring device featuring a seesaw dual-bucket mechanism that tips and triggers an electronic pulse.',
+      bg: '#06283d',
+      draw: () => `
+        <path d="M115,95 L185,95 L165,135 L135,135 Z" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <rect x="125" y="135" width="50" height="85" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <polygon points="140,165 160,165 165,185 135,185" fill="#0284c7"/>
+        <circle cx="150" cy="175" r="4" fill="#38bdf8"/>
+        <line x1="150" y1="185" x2="150" y2="210" stroke="#0284c7" stroke-width="3"/>
+      `
+    },
+    {
+      name: 'NEXRAD Doppler Weather Radar',
+      region: 'Norman, Oklahoma (United States / North America)',
+      desc: 'A ground-based pulse-Doppler radar network utilizing the Doppler effect to measure precipitation intensity and radial wind shear.',
+      bg: '#1e1b4b',
+      draw: () => `
+        <circle cx="150" cy="140" r="42" fill="none" stroke="#818cf8" stroke-width="3" stroke-dasharray="6,4"/>
+        <path d="M120,140 A30,30 0 0,1 180,140 Z" fill="none" stroke="#6366f1" stroke-width="4"/>
+        <line x1="150" y1="140" x2="175" y2="115" stroke="#f43f5e" stroke-width="3"/>
+        <circle cx="150" cy="140" r="6" fill="#4f46e5"/>
+        <rect x="142" y="182" width="16" height="35" rx="3" fill="#4338ca"/>
+      `
+    },
+    {
+      name: 'TIROS-1 Meteorological Satellite',
+      region: 'Princeton, New Jersey (United States / North America)',
+      desc: 'The world’s first successful weather satellite (1960), equipped with television camera arrays to capture synoptic space-based images.',
+      bg: '#042f2e',
+      draw: `
+        <polygon points="150,90 185,135 170,195 130,195 115,135" fill="#2dd4bf" stroke="#99f6e4" stroke-width="2"/>
+        <circle cx="150" cy="142" r="16" fill="#0f766e"/>
+        <circle cx="150" cy="142" r="8" fill="#14b8a6"/>
+        <line x1="100" y1="120" x2="115" y2="135" stroke="#99f6e4" stroke-width="2"/>
+        <line x1="200" y1="120" x2="185" y2="135" stroke="#99f6e4" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'GOES Satellite Imager',
+      region: 'Greenbelt, Maryland (United States / North America)',
+      desc: 'A geostationary satellite sensor architecture providing continuous, high-resolution multi-spectral imagery for real-time hurricane tracking.',
+      bg: '#172554',
+      draw: () => `
+        <circle cx="150" cy="135" r="28" fill="#3b82f6"/>
+        <rect x="95" y="125" width="35" height="20" rx="3" fill="#60a5fa"/>
+        <rect x="170" y="125" width="35" height="20" rx="3" fill="#60a5fa"/>
+        <line x1="130" y1="135" x2="95" y2="135" stroke="#93c5fd" stroke-width="2"/>
+        <line x1="170" y1="135" x2="205" y2="135" stroke="#93c5fd" stroke-width="2"/>
+        <circle cx="150" cy="135" r="10" fill="#1d4ed8"/>
+      `
+    },
+    {
+      name: 'Fujita Scale Tornado Intensity',
+      region: 'Chicago, Illinois (United States / North America)',
+      desc: 'The empirical wind-damage scale introduced by Ted Fujita in 1971 to correlate structural damage severity with rotational tornado speeds.',
+      bg: '#450a0a',
+      draw: () => `
+        <path d="M120,85 L180,85 L165,205 L135,205 Z" fill="#f87171" opacity="0.4"/>
+        <path d="M125,95 Q150,130 175,95" fill="none" stroke="#ef4444" stroke-width="3"/>
+        <path d="M133,125 Q150,150 167,125" fill="none" stroke="#ef4444" stroke-width="3"/>
+        <path d="M141,155 Q150,170 159,155" fill="none" stroke="#ef4444" stroke-width="3"/>
+        <circle cx="150" cy="195" r="5" fill="#dc2626"/>
+      `
+    },
+    {
+      name: 'Automated Surface Observing System (ASOS)',
+      region: 'Washington, D.C. (United States / North America)',
+      desc: 'A joint federal automated sensor network deployed across airports to continuously monitor surface weather parameters.',
+      bg: '#1e293b',
+      draw: () => `
+        <rect x="144" y="105" width="12" height="110" fill="#64748b"/>
+        <circle cx="150" cy="95" r="12" fill="#38bdf8"/>
+        <line x1="130" y1="125" x2="170" y2="125" stroke="#94a3b8" stroke-width="3"/>
+        <line x1="138" y1="145" x2="162" y2="145" stroke="#94a3b8" stroke-width="2"/>
+        <rect x="135" y="215" width="30" height="8" rx="2" fill="#475569"/>
+      `
+    },
+    {
+      name: 'Microwave Sounding Unit (MSU)',
+      region: 'Pasadena, California (United States / North America)',
+      desc: 'Spaceborne passive microwave radiometers capable of measuring atmospheric temperature profiles through clouds.',
+      bg: '#27272a',
+      draw: () => `
+        <rect x="110" y="115" width="80" height="50" rx="8" fill="#52525b" stroke="#a1a1aa" stroke-width="2"/>
+        <circle cx="150" cy="140" r="16" fill="#18181b" stroke="#71717a" stroke-width="2"/>
+        <circle cx="150" cy="140" r="6" fill="#38bdf8"/>
+        <line x1="150" y1="85" x2="150" y2="115" stroke="#71717a" stroke-width="4"/>
+      `
+    },
+    {
+      name: 'GPS Radio Occultation Sounding',
+      region: 'Boulder, Colorado (United States / North America)',
+      desc: 'A satellite-based atmospheric sensing technique measuring bending and phase delay of GPS radio signals through density gradients.',
+      bg: '#0f172a',
+      draw: () => `
+        <circle cx="150" cy="140" r="45" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,4"/>
+        <circle cx="150" cy="140" r="22" fill="#0284c7"/>
+        <circle cx="150" cy="140" r="8" fill="#38bdf8"/>
+        <path d="M105,95 Q150,55 195,95" fill="none" stroke="#7dd3fc" stroke-width="3"/>
+        <line x1="150" y1="140" x2="185" y2="105" stroke="#f43f5e" stroke-width="2"/>
+      `
+    },
+    {
+      name: 'Phased-Array Weather Radar',
+      region: 'Boulder, Colorado (United States / North America)',
+      desc: 'An advanced electronic beam-steering radar system eliminating mechanical dish rotation for instantaneous 3D volumetric scanning.',
+      bg: '#18181b',
+      draw: () => `
+        <rect x="115" y="105" width="70" height="70" rx="8" fill="#3f3f46" stroke="#71717a" stroke-width="2"/>
+        <circle cx="132" cy="122" r="5" fill="#38bdf8"/>
+        <circle cx="168" cy="122" r="5" fill="#38bdf8"/>
+        <circle cx="132" cy="158" r="5" fill="#38bdf8"/>
+        <circle cx="168" cy="158" r="5" fill="#38bdf8"/>
+        <circle cx="150" cy="140" r="6" fill="#f43f5e"/>
+        <rect x="142" y="175" width="16" height="35" rx="3" fill="#52525b"/>
+      `
+    }
+  ];
+
+  function renderCurrent(){
+    const inst = INSTRUMENTS[currentIndex];
+    const drawContent = typeof inst.draw === 'function' ? inst.draw() : inst.draw;
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(inst.bg, currentIndex)}
+        ${drawContent}
+        ${caption(inst.name, inst.region, inst.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % INSTRUMENTS.length;
+
+    renderCurrent();
+
+    const currentRec = viewfinder.querySelector('#recIndicator');
+    const currentFlash = viewfinder.querySelector('#flashOverlay');
+    const currentFrame = viewfinder.querySelector('#frameCount');
+
+    if(currentRec) currentRec.classList.add('flash');
+    if(currentFlash) {
+      currentFlash.classList.remove('go');
+      void currentFlash.offsetWidth;
+      currentFlash.classList.add('go');
+    }
+    if(currentFrame) currentFrame.textContent = `NO. ${String(currentIndex + 1).padStart(3, '0')}`;
+
+    setTimeout(() => {
+      if(currentRec) currentRec.classList.remove('flash');
+    }, 400);
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Initial render state
+  renderCurrent();
+})();
+</script>
+</body>
+</html>

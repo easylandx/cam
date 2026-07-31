@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Cat Breeds &amp; Domestic Categories Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #fbbf24;
+    --line: #334155;
+    --focus: #f59e0b;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #451a03 0%, #1c0f04 55%, #090502 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(251,191,36,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fde047, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(251,191,36,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(251,191,36,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(251,191,36,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL FELIS-21 · CAT BREEDS &amp; CATEGORIES</p>
+    <h1>Feline Breeds &amp; Domestic Traits</h1>
+    <p>Press shutter to cycle through 21 distinct cat breeds and recognized domestic categories.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SPECIMEN</span>
+      <span>f/1.8 &nbsp;·&nbsp; FELINE</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine cat breeds
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">FELINE</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the shutter button to examine feline specimens</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#fbbf24', '#38bdf8', '#f43f5e', '#a855f7', '#34d399'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#110d08"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#1f150c" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#090502" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#2c1d11" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#140f09"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#110d08" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#fbbf24" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#fbbf24">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        lines.push(curLine ? curLine + ' ' + w : w);
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- Detailed 21 Cat Breeds & Categories Visualizations ---------------- */
+  const CATS = [
+    {
+      name: 'Egyptian Mau',
+      region: 'Cairo (Egypt / North Africa)',
+      desc: 'A natural spotted shorthair breed characterized by a distinctive forehead "M" marking, cheetah-like spots, and a loose skin flap aiding running acceleration.',
+      bg: '#2b1b0e',
+      draw: () => `
+        <!-- Sleek athletic body -->
+        <path d="M120,220 Q110,170 135,140 L165,140 Q190,170 180,220 Z" fill="#d97706"/>
+        <path d="M135,130 Q150,110 165,130 L170,150 L130,150 Z" fill="#b45309"/>
+        <!-- Large expressive ears & M marking -->
+        <polygon points="125,115 110,75 140,100" fill="#92400e"/>
+        <polygon points="175,115 190,75 160,100" fill="#92400e"/>
+        <path d="M142,105 L150,115 L158,105" fill="none" stroke="#78350f" stroke-width="2"/>
+        <!-- Green gooseberry eyes & spots -->
+        <ellipse cx="140" cy="122" rx="4" ry="3" fill="#10b981"/>
+        <ellipse cx="160" cy="122" rx="4" ry="3" fill="#10b981"/>
+        <circle cx="145" cy="170" r="3" fill="#451a03"/><circle cx="155" cy="185" r="3.5" fill="#451a03"/><circle cx="135" cy="190" r="2.5" fill="#451a03"/>
+      `
+    },
+    {
+      name: 'Maine Coon',
+      region: 'Wiscasset, Maine (United States / North America)',
+      desc: 'A large, rugged semi-longhair working breed adapted to harsh northern winters, featuring large snow-shoe paws and a heavy double coat.',
+      bg: '#1e2022',
+      draw: () => `
+        <!-- Massive furry silhouette & ruff -->
+        <ellipse cx="150" cy="175" rx="58" ry="48" fill="#475569"/>
+        <circle cx="150" cy="130" r="38" fill="#64748b"/>
+        <!-- Lynx-tipped ears -->
+        <polygon points="125,100 110,50 142,85" fill="#334155"/>
+        <line x1="110" y1="50" x2="104" y2="40" stroke="#cbd5e1" stroke-width="2"/>
+        <polygon points="175,100 190,50 158,85" fill="#334155"/>
+        <line x1="190" y1="50" x2="196" y2="40" stroke="#cbd5e1" stroke-width="2"/>
+        <!-- Square muzzle & amber eyes -->
+        <rect x="138" y="132" width="24" height="16" rx="6" fill="#94a3b8"/>
+        <circle cx="136" cy="120" r="4.5" fill="#f59e0b"/>
+        <circle cx="164" cy="120" r="4.5" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'British Shorthair',
+      region: 'London (England / British Isles)',
+      desc: 'A sturdy, cobby-bodied breed with a dense plush coat, round face, and copper eyes, developed from street cats crossed with Persian stock.',
+      bg: '#1e293b',
+      draw: () => `
+        <!-- Cobby round robust build -->
+        <circle cx="150" cy="175" r="52" fill="#64748b"/>
+        <circle cx="150" cy="128" r="42" fill="#64748b"/>
+        <!-- Neat rounded small ears -->
+        <polygon points="118,105 105,82 132,98" fill="#475569"/>
+        <polygon points="182,105 195,82 168,98" fill="#475569"/>
+        <!-- Big copper eyes -->
+        <circle cx="136" cy="122" r="6" fill="#c2410c"/>
+        <circle cx="164" cy="122" r="6" fill="#c2410c"/>
+      `
+    },
+    {
+      name: 'Persian',
+      region: 'Khorasan & Persia (Iran / Middle East)',
+      desc: 'An ancient longhaired aristocrat distinguished by its brachycephalic flat facial structure, heavy bone density, and voluminous double coat.',
+      bg: '#332922',
+      draw: () => `
+        <!-- Huge fluffy cloud coat -->
+        <circle cx="150" cy="165" r="65" fill="#e7e5e4"/>
+        <circle cx="150" cy="135" r="45" fill="#f5f5f4"/>
+        <!-- Low set tiny ears -->
+        <polygon points="120,110 108,95 132,105" fill="#d6d3d1"/>
+        <polygon points="180,110 192,95 168,105" fill="#d6d3d1"/>
+        <!-- Flat face sweet expression -->
+        <circle cx="138" cy="132" r="4" fill="#0284c7"/>
+        <circle cx="162" cy="132" r="4" fill="#0284c7"/>
+        <polygon points="147,138 153,138 150,142" fill="#78716c"/>
+      `
+    },
+    {
+      name: 'Siamese',
+      region: 'Ayutthaya Kingdom (Thailand / Southeast Asia)',
+      desc: 'An agile, slender oriental breed recognized by its striking point-coloration caused by a temperature-sensitive tyrosinase mutation.',
+      bg: '#26221f',
+      draw: () => `
+        <!-- Slender tubular body & pale fawn coat -->
+        <path d="M128,220 L138,135 L162,135 L172,220 Z" fill="#fef08a"/>
+        <!-- Triangular wedge head & dark points -->
+        <polygon points="150,85 125,135 175,135" fill="#292524"/>
+        <!-- Giant flared ears -->
+        <polygon points="130,105 102,60 142,90" fill="#1c1917"/>
+        <polygon points="170,105 198,60 158,90" fill="#1c1917"/>
+        <!-- Striking deep blue almond eyes -->
+        <polygon points="136,115 144,112 140,118" fill="#38bdf8"/>
+        <polygon points="164,115 156,112 160,118" fill="#38bdf8"/>
+      `
+    },
+    {
+      name: 'Norwegian Forest Cat',
+      region: 'Scandinavian Woodlands (Norway / Northern Europe)',
+      desc: 'A large muscular natural breed featuring a woolly insulating undercoat, water-repellent top hairs, and specialized claw mechanics.',
+      bg: '#19221d',
+      draw: () => `
+        <!-- Strong triangular head shape & long coat -->
+        <ellipse cx="150" cy="170" rx="55" ry="42" fill="#334155"/>
+        <polygon points="150,90 115,145 185,145" fill="#475569"/>
+        <!-- Tufted tall ears -->
+        <polygon points="125,110 112,65 145,92" fill="#1e293b"/>
+        <line x1="112" y1="65" x2="106" y2="55" stroke="#94a3b8" stroke-width="2"/>
+        <polygon points="175,110 188,65 155,92" fill="#1e293b"/>
+        <line x1="188" y1="65" x2="194" y2="55" stroke="#94a3b8" stroke-width="2"/>
+        <circle cx="137" cy="130" r="4.5" fill="#22c55e"/>
+        <circle cx="163" cy="130" r="4.5" fill="#22c55e"/>
+      `
+    },
+    {
+      name: 'Abyssinian',
+      region: 'Ethiopian Highlands (East Africa / Great Britain)',
+      desc: 'An active, slender shorthair characterized by a ticked agouti coat where individual hairs feature multiple bands of dark pigmentation.',
+      bg: '#3d2314',
+      draw: () => `
+        <!-- Graceful lithe frame -->
+        <path d="M130,220 L140,135 L160,135 L170,220 Z" fill="#ea580c"/>
+        <ellipse cx="150" cy="120" rx="24" ry="21" fill="#ea580c"/>
+        <!-- Cup-like broad ears with thumbprint markings -->
+        <polygon points="132,102 118,65 148,88" fill="#c2410c"/>
+        <polygon points="168,102 182,65 152,88" fill="#c2410c"/>
+        <!-- Amber/hazel luminous eyes with dark rims -->
+        <circle cx="139" cy="118" r="4" fill="#ca8a04"/>
+        <circle cx="161" cy="118" r="4" fill="#ca8a04"/>
+        <path d="M139,112 Q139,124 139,112" stroke="#431407" stroke-width="1.5"/>
+      `
+    },
+    {
+      name: 'Ragdoll',
+      region: 'Riverside, California (United States / North America)',
+      desc: 'A large, semi-longhaired blue-eyed cat bred for a docile temperament, going completely limp when cradled in human arms.',
+      bg: '#252932',
+      draw: () => `
+        <!-- Large plush body with color point mask -->
+        <ellipse cx="150" cy="170" rx="52" ry="40" fill="#f8fafc"/>
+        <circle cx="150" cy="128" r="30" fill="#f1f5f9"/>
+        <!-- Inverted V white facial blaze & blue eyes -->
+        <path d="M140,105 L150,130 L160,105 Z" fill="#475569"/>
+        <polygon points="128,108 118,78 142,98" fill="#334155"/>
+        <polygon points="172,108 182,78 158,98" fill="#334155"/>
+        <circle cx="137" cy="122" r="4" fill="#0284c7"/>
+        <circle cx="163" cy="122" r="4" fill="#0284c7"/>
+      `
+    },
+    {
+      name: 'American Shorthair',
+      region: 'North American Farmlands (United States / North America)',
+      desc: 'A working-class domestic descendant of European mousing cats, valued for robust health, heavy bone structure, and balanced proportions.',
+      bg: '#222831',
+      draw: () => `
+        <!-- Powerful working build & classic tabby swirls -->
+        <ellipse cx="150" cy="175" rx="50" ry="42" fill="#94a3b8"/>
+        <circle cx="150" cy="125" r="30" fill="#94a3b8"/>
+        <polygon points="125,105 115,75 142,95" fill="#64748b"/>
+        <polygon points="175,105 185,75 158,95" fill="#64748b"/>
+        <!-- Classic swirling tabby flank stripes -->
+        <path d="M125,160 Q150,180 175,160" fill="none" stroke="#334155" stroke-width="4"/>
+        <circle cx="138" cy="120" r="4" fill="#ea580c"/>
+        <circle cx="162" cy="120" r="4" fill="#ea580c"/>
+      `
+    },
+    {
+      name: 'Russian Blue',
+      region: 'Arkhangelsk (Russia / Eastern Europe)',
+      desc: 'A sleek, silver-tipped shorthair featuring a double-layered plush coat, vibrant green eyes, and a gentle, reserved temperament.',
+      bg: '#17202a',
+      draw: () => `
+        <!-- Sleek fine-boned build & slate blue coat -->
+        <path d="M128,220 L138,135 L162,135 L172,220 Z" fill="#64748b"/>
+        <circle cx="150" cy="122" r="26" fill="#64748b"/>
+        <!-- Distinctive wide-set vivid green eyes -->
+        <polygon points="130,102 120,72 145,90" fill="#475569"/>
+        <polygon points="170,102 180,72 155,90" fill="#475569"/>
+        <circle cx="139" cy="118" r="4.5" fill="#10b981"/>
+        <circle cx="161" cy="118" r="4.5" fill="#10b981"/>
+      `
+    },
+    {
+      name: 'Sphynx',
+      region: 'Toronto, Ontario (Canada / North America)',
+      desc: 'A hairless breed resulting from a natural genetic mutation, featuring warm suede-like skin texture and prominent oversized ears.',
+      bg: '#38251e',
+      draw: () => `
+        <!-- Wrinkled hairless physique -->
+        <path d="M132,220 L140,135 L160,135 L168,220 Z" fill="#fbcfe8"/>
+        <ellipse cx="150" cy="120" rx="22" ry="24" fill="#fbcfe8"/>
+        <!-- Enormous bat-like ears -->
+        <polygon points="128,105 100,45 145,85" fill="#f472b6"/>
+        <polygon points="172,105 200,45 155,85" fill="#f472b6"/>
+        <path d="M142,125 Q150,132 158,125" fill="none" stroke="#db2777" stroke-width="1.5"/>
+      `
+    },
+    {
+      name: 'Japanese Bobtail',
+      region: 'Kyoto (Japan / East Asia)',
+      desc: 'An ancient breed characterized by a distinct short, kinked pom-pom tail formed by fused caudal vertebrae and high agility.',
+      bg: '#202020',
+      draw: () => `
+        <!-- Athletic body with calico patches & pom tail -->
+        <ellipse cx="150" cy="170" rx="42" ry="40" fill="#f8fafc"/>
+        <path d="M120,150 Q140,120 160,160 Z" fill="#dc2626"/>
+        <circle cx="150" cy="120" r="26" fill="#f8fafc"/>
+        <polygon points="130,100 120,68 145,88" fill="#1c1917"/>
+        <polygon points="170,100 180,68 155,88" fill="#dc2626"/>
+        <!-- Pom-pom tail curve -->
+        <path d="M185,150 Q200,140 190,130" fill="none" stroke="#dc2626" stroke-width="8" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Turkish Van',
+      region: 'Lake Van Region (Turkey / Middle East)',
+      desc: 'A rare natural swimming cat recognized by its semi-long white coat and distinct reddish-brown markings confined strictly to head and tail.',
+      bg: '#2b2621',
+      draw: () => `
+        <!-- White body with auburn head cap markings -->
+        <ellipse cx="150" cy="170" rx="50" ry="40" fill="#fafaf9"/>
+        <path d="M125,125 Q150,80 175,125 Z" fill="#c2410c"/>
+        <polygon points="125,105 112,72 140,90" fill="#9a3412"/>
+        <polygon points="175,105 188,72 160,90" fill="#9a3412"/>
+        <circle cx="138" cy="118" r="4" fill="#0284c7"/>
+        <circle cx="162" cy="118" r="4" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'Birman',
+      region: 'Temple of Lao Tsun (Burma / Southeast Asia)',
+      desc: 'A semi-longhair breed featuring deep blue eyes, point-coloration, and pure white "gloved" paws resulting from a recessive genetic trait.',
+      bg: '#28231d',
+      draw: () => `
+        <!-- Sacred cat with pristine white gloved feet -->
+        <ellipse cx="150" cy="170" rx="48" ry="38" fill="#f5f5f4"/>
+        <circle cx="150" cy="122" r="27" fill="#f5f5f4"/>
+        <ellipse cx="150" cy="118" rx="15" ry="12" fill="#44403c"/>
+        <rect x="122" y="195" width="12" height="10" rx="4" fill="#ffffff"/>
+        <rect x="166" y="195" width="12" height="10" rx="4" fill="#ffffff"/>
+        <circle cx="138" cy="118" r="3.5" fill="#38bdf8"/>
+        <circle cx="162" cy="118" r="3.5" fill="#38bdf8"/>
+      `
+    },
+    {
+      name: 'Scottish Fold',
+      region: 'Coupar Angus, Perthshire (Scotland / British Isles)',
+      desc: 'A medium-sized round-headed cat featuring an incomplete dominant gene mutation causing ear cartilage to fold forward and downward.',
+      bg: '#24211e',
+      draw: () => `
+        <!-- Perfectly round owl-like head & folded ears -->
+        <circle cx="150" cy="165" r="48" fill="#d4d4d8"/>
+        <circle cx="150" cy="130" r="35" fill="#d4d4d8"/>
+        <!-- Folded cap ears drooping downward -->
+        <path d="M120,110 Q112,118 122,122" fill="#a1a1aa" stroke="#71717a" stroke-width="2"/>
+        <path d="M180,110 Q188,118 178,122" fill="#a1a1aa" stroke="#71717a" stroke-width="2"/>
+        <circle cx="137" cy="128" r="4" fill="#b45309"/>
+        <circle cx="163" cy="128" r="4" fill="#b45309"/>
+      `
+    },
+    {
+      name: 'Devon Rex',
+      region: 'Buckfastleigh, Devon (England / British Isles)',
+      desc: 'A mischievous breed distinguished by an even sparser wavy coat, massive low-set "elfin" ears, and a pixie-like wedge-shaped head.',
+      bg: '#2b1e16',
+      draw: () => `
+        <!-- Pixie wedge head with colossal radar ears -->
+        <path d="M132,220 L140,135 L160,135 L168,220 Z" fill="#d97706"/>
+        <polygon points="135,115 95,50 150,90" fill="#b45309"/>
+        <polygon points="165,115 205,50 150,90" fill="#b45309"/>
+        <ellipse cx="150" cy="120" rx="18" ry="20" fill="#d97706"/>
+        <circle cx="140" cy="118" r="3.5" fill="#16a34a"/>
+        <circle cx="160" cy="118" r="3.5" fill="#16a34a"/>
+      `
+    },
+    {
+      name: 'Turkish Angora',
+      region: 'Ankara Region (Turkey / Western Asia)',
+      desc: 'An ancient natural longhaired breed prized for its silky single coat, elegant tapering body, and occasional odd-eyed white coloration.',
+      bg: '#22252a',
+      draw: () => `
+        <!-- Slender longhaired frame with plume tail -->
+        <path d="M130,220 L140,135 L160,135 L170,220 Z" fill="#ffffff"/>
+        <circle cx="150" cy="120" rx="25" ry="23" fill="#ffffff"/>
+        <polygon points="130,102 118,68 145,88" fill="#f1f5f9"/>
+        <polygon points="170,102 182,68 155,88" fill="#f1f5f9"/>
+        <!-- Heterochromia (Odd eyes) -->
+        <circle cx="139" cy="118" r="4" fill="#38bdf8"/>
+        <circle cx="161" cy="118" r="4" fill="#f59e0b"/>
+      `
+    },
+    {
+      name: 'Tortoiseshell Cat',
+      region: 'Global Domestic Populations (Worldwide)',
+      desc: 'A coat-color phenotype characterized by mottled black and orange mosaic patterns resulting from X-chromosome inactivation in females.',
+      bg: '#1f1510',
+      draw: () => `
+        <!-- Mottled mosaic calico patchwork coat -->
+        <ellipse cx="150" cy="170" rx="48" ry="40" fill="#18181b"/>
+        <path d="M110,140 Q140,100 170,150 Q130,190 110,140 Z" fill="#c2410c"/>
+        <circle cx="150" cy="122" rx="25" ry="23" fill="#27272a"/>
+        <path d="M138,105 Q150,92 162,115 Z" fill="#ea580c"/>
+        <circle cx="138" cy="120" r="3.5" fill="#eab308"/>
+        <circle cx="162" cy="120" r="3.5" fill="#eab308"/>
+      `
+    },
+    {
+      name: 'Orange Tabby / Ginger',
+      region: 'Global Domestic Populations (Worldwide)',
+      desc: 'A popular coat-color phenotype driven by the X-linked O gene, producing striped agouti markings and higher male predominance.',
+      bg: '#331a08',
+      draw: () => `
+        <!-- Striking striped ginger tabby silhouette -->
+        <ellipse cx="150" cy="170" rx="48" ry="40" fill="#f97316"/>
+        <path d="M120,140 L180,140" stroke="#9a3412" stroke-width="5"/>
+        <path d="M125,160 L175,160" stroke="#9a3412" stroke-width="5"/>
+        <path d="M130,180 L170,180" stroke="#9a3412" stroke-width="5"/>
+        <circle cx="150" cy="120" r="26" fill="#f97316"/>
+        <polygon points="132,102 120,72 145,90" fill="#ea580c"/>
+        <polygon points="168,102 180,72 155,90" fill="#ea580c"/>
+        <circle cx="138" cy="118" r="4" fill="#16a34a"/>
+        <circle cx="162" cy="118" r="4" fill="#16a34a"/>
+      `
+    },
+    {
+      name: 'Domestic Shorthair (DSH)',
+      region: 'Global Urban & Rural Settlements (Worldwide)',
+      desc: 'The ubiquitous non-purebred household cat encompassing mixed lineages, prized for high genetic diversity and robust immune systems.',
+      bg: '#1c222d',
+      draw: () => `
+        <!-- Balanced proportions household cat -->
+        <ellipse cx="150" cy="170" rx="46" ry="40" fill="#0ea5e9"/>
+        <circle cx="150" cy="122" r="26" fill="#0ea5e9"/>
+        <polygon points="130,102 118,72 145,90" fill="#0284c7"/>
+        <polygon points="170,102 182,72 155,90" fill="#0284c7"/>
+        <circle cx="138" cy="118" r="4" fill="#fbbf24"/>
+        <circle cx="162" cy="118" r="4" fill="#fbbf24"/>
+      `
+    },
+    {
+      name: 'Chartreux',
+      region: 'Paris (France / Western Europe)',
+      desc: 'A legendary French monastic cat featuring a woolly blue-gray double coat, smiling facial structure, and deep copper-to-gold eyes.',
+      bg: '#1b212c',
+      draw: () => `
+        <!-- Robust robust frame with smiling expression -->
+        <circle cx="150" cy="170" rx="50" ry="42" fill="#64748b"/>
+        <circle cx="150" cy="128" r="32" fill="#64748b"/>
+        <polygon points="125,105 115,80 140,95" fill="#475569"/>
+        <polygon points="175,105 185,80 160,95" fill="#475569"/>
+        <path d="M138,136 Q150,146 162,136" fill="none" stroke="#334155" stroke-width="2.5"/>
+        <circle cx="137" cy="122" r="4.5" fill="#d97706"/>
+        <circle cx="163" cy="122" r="4.5" fill="#d97706"/>
+      `
+    }
+  ];
+
+  function renderCurrent(){
+    const c = CATS[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(c.bg, currentIndex)}
+        ${c.draw()}
+        ${caption(c.name, c.region, c.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % CATS.length;
+    renderCurrent();
+
+    const fo = document.getElementById('flashOverlay');
+    const ri = document.getElementById('recIndicator');
+    if(fo) {
+      fo.classList.remove('go');
+      void fo.offsetWidth;
+      fo.classList.add('go');
+    }
+    if(ri) {
+      ri.classList.add('flash');
+      setTimeout(() => ri.classList.remove('flash'), 500);
+    }
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
