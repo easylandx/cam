@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Cellular Structures &amp; Molecular Machines Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #15803d;
+    --shutter-orange-dark: #166534;
+    --amber: #22c55e;
+    --line: #334155;
+    --focus: #4ade80;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #064e3b 0%, #022c22 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(34,197,94,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #4ade80, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(34,197,94,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(34,197,94,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(34,197,94,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer { padding-top: 6px; padding-bottom: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flash-overlay.go { animation: none; }
+    .shutter-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MODEL CELL-21 · MICROSCOPIC EDITION</p>
+    <h1>Cellular Structures &amp; Machines</h1>
+    <p>Press shutter to examine 21 microscopic cellular structures and molecular blocks.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>SPECIMEN</span>
+      <span>f/1.4 &nbsp;·&nbsp; NANO-MACRO</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine cellular components
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">BIO</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the green shutter button to capture microscopic structures</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easypagex.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyPageX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 1800;
+
+  /* ---------------- Audio Synthesizer ---------------- */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  /* ---------------- Helpers ---------------- */
+  const ACCENTS = ['#22c55e', '#38bdf8', '#f59e0b', '#ec4899', '#a855f7'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  /* ---------------- SVG Frame System ---------------- */
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#06110a"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0d2318" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#020805" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#163322" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0a1a12"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#06110a" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#22c55e" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="348" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9.5" fill="#22c55e">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${362 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* ---------------- 21 Microscopic Cellular Structures & Molecular Machines SVG Visualizations ---------------- */
+  const SPECIES = [
+    {
+      name: 'Mitochondrial ATP Synthase Rotary Motor',
+      region: 'Eukaryotic Cellular Cytoplasm (Universal Biological Origin)',
+      desc: 'A microscopic molecular turbine embedded in inner mitochondrial membranes that synthesizes cellular energy (ATP) using proton-motive force via physical mechanical rotation.',
+      bg: '#162b1a',
+      draw: () => `<circle cx="150" cy="150" r="45" fill="none" stroke="#4ade80" stroke-width="6" stroke-dasharray="10,5"/><circle cx="150" cy="150" r="20" fill="#22c55e"/><path d="M150,105 L150,195 M105,150 L195,150" stroke="#86efac" stroke-width="4"/>`
+    },
+    {
+      name: 'Ribosome Peptide Synthesis Factory',
+      region: 'Endoplasmic Reticulum & Cytoplasm (Universal Cellular Origin)',
+      desc: 'A macromolecular ribonucleoprotein complex that decodes messenger RNA templates to link amino acids into functional proteins through catalytic peptide bond formation.',
+      bg: '#1b263b',
+      draw: () => `<ellipse cx="150" cy="140" rx="50" ry="30" fill="#38bdf8"/><ellipse cx="150" cy="170" rx="55" ry="25" fill="#0284c7"/><line x1="100" y1="155" x2="200" y2="155" stroke="#bae6fd" stroke-width="3"/>`
+    },
+    {
+      name: 'DNA Double-Helix Antiparallel Backbone',
+      region: 'Nucleus of Eukaryotic Cells (Universal Genetic Origin)',
+      desc: 'A microscopic molecular polymer structure formed by complementary base-pairing twisted into a stable double helix to store biological heredity information.',
+      bg: '#1e1b4b',
+      draw: () => `<path d="M110,80 Q190,115 110,150 Q190,185 110,220" fill="none" stroke="#818cf8" stroke-width="6"/><path d="M190,80 Q110,115 190,150 Q110,185 190,220" fill="none" stroke="#c7d2fe" stroke-width="6"/><line x1="125" y1="98" x2="175" y2="98" stroke="#f43f5e" stroke-width="4"/><line x1="140" y1="150" x2="160" y2="150" stroke="#38bdf8" stroke-width="4"/><line x1="125" y1="202" x2="175" y2="202" stroke="#f43f5e" stroke-width="4"/>`
+    },
+    {
+      name: 'Microtubule Cytoskeletal Polypeptide Tubules',
+      region: 'Eukaryotic Cytoplasm (Universal Cellular Origin)',
+      desc: 'Dynamic hollow protein filaments composed of alpha and beta-tubulin heterodimers that provide structural framework, intracellular transport tracks, and mitotic spindle fibers.',
+      bg: '#0f172a',
+      draw: () => `<rect x="110" y="80" width="80" height="140" rx="10" fill="none" stroke="#38bdf8" stroke-width="8" stroke-dasharray="12,6"/><line x1="110" y1="115" x2="190" y2="115" stroke="#bae6fd" stroke-width="2"/><line x1="110" y1="150" x2="190" y2="150" stroke="#bae6fd" stroke-width="2"/><line x1="110" y1="185" x2="190" y2="185" stroke="#bae6fd" stroke-width="2"/>`
+    },
+    {
+      name: 'Lipid Bilayer Cell Membrane',
+      region: 'Cellular Boundaries (Universal Biological Origin)',
+      desc: 'A self-assembling amphiphilic phospholipid double-sheet matrix embedded with cholesterol and transmembrane proteins that regulates selective permeability and cellular homeostasis.',
+      bg: '#2e1065',
+      draw: () => `<rect x="90" y="130" width="120" height="40" fill="#a78bfa" opacity="0.3"/><path d="M100,130 L100,110 M120,130 L120,110 M140,130 L140,110 M160,130 L160,110 M180,130 L180,110 M200,130 L200,110" stroke="#f472b6" stroke-width="4"/><path d="M100,170 L100,190 M120,170 L120,190 M140,170 L140,190 M160,170 L160,190 M180,170 L180,190 M200,170 L200,190" stroke="#f472b6" stroke-width="4"/><rect x="135" y="105" width="30" height="90" rx="5" fill="#38bdf8"/>`
+    },
+    {
+      name: 'Bacteriophage T4 Viral Injector Mechanism',
+      region: 'Microbial Ecosystems (Global Biosphere)',
+      desc: 'A nanoscale biological syringe featuring a contractile protein sheath that locks onto host bacterial cells, driving a hollow tail core through the cell wall to inject viral DNA.',
+      bg: '#18181b',
+      draw: () => `<polygon points="150,70 190,110 110,110" fill="#a1a1aa"/><rect x="140" y="110" width="20" height="80" fill="#71717a"/><line x1="130" y1="190" x2="110" y2="220" stroke="#52525b" stroke-width="5"/><line x1="170" y1="190" x2="190" y2="220" stroke="#52525b" stroke-width="5"/>`
+    },
+    {
+      name: 'Chloroplast Thylakoid Membrane Grana',
+      region: 'Plant Mesophyll Cells (Global Terrestrial & Aquatic Flora)',
+      desc: 'Stacked microscopic coin-like membrane compartments containing chlorophyll pigments that execute light-dependent reactions of photosynthesis and carbon fixation.',
+      bg: '#064e3b',
+      draw: () => `<rect x="110" y="100" width="80" height="14" rx="6" fill="#34d399"/><rect x="110" y="120" width="80" height="14" rx="6" fill="#34d399"/><rect x="110" y="140" width="80" height="14" rx="6" fill="#34d399"/><rect x="110" y="160" width="80" height="14" rx="6" fill="#34d399"/><rect x="110" y="180" width="80" height="14" rx="6" fill="#34d399"/>`
+    },
+    {
+      name: 'Golgi Apparatus Glycoprotein Processing Cisternae',
+      region: 'Eukaryotic Cytoplasm (Universal Eukaryotic Origin)',
+      desc: 'A series of flattened, stacked membrane sacs that modify, sort, and package proteins and lipids synthesized in the endoplasmic reticulum for secretion.',
+      bg: '#3b0764',
+      draw: () => `<path d="M100,100 Q150,80 200,100" fill="none" stroke="#f472b6" stroke-width="8" stroke-linecap="round"/><path d="M90,125 Q150,105 210,125" fill="none" stroke="#f472b6" stroke-width="8" stroke-linecap="round"/><path d="M95,150 Q150,130 205,150" fill="none" stroke="#f472b6" stroke-width="8" stroke-linecap="round"/><path d="M105,175 Q150,155 195,175" fill="none" stroke="#f472b6" stroke-width="8" stroke-linecap="round"/>`
+    },
+    {
+      name: 'Kinesin Motor Protein Molecular Shuttles',
+      region: 'Eukaryotic Axons & Cytoplasm (Universal Eukaryotic Origin)',
+      desc: 'Nanoscale biological walking machines that utilize ATP hydrolysis to transport cellular cargo and vesicles directionally along microtubule tracks.',
+      bg: '#312e81',
+      draw: () => `<line x1="90" y1="180" x2="210" y2="180" stroke="#93c5fd" stroke-width="6"/><path d="M130,180 L130,130 L160,130 L160,180" fill="none" stroke="#fde047" stroke-width="4"/><circle cx="145" cy="115" r="15" fill="#f43f5e"/>`
+    },
+    {
+      name: 'CRISPR-Cas9 Endonuclease Immune Complex',
+      region: 'Streptococcus pyogenes Bacterial Strains (Global Microbial Ecosystems)',
+      desc: 'An adaptive prokaryotic immune defense system utilizing guide RNA combined with Cas9 endonuclease to precisely locate and cleave targeted viral DNA sequences.',
+      bg: '#0f172a',
+      draw: () => `<rect x="110" y="100" width="80" height="90" rx="20" fill="#38bdf8" opacity="0.8"/><path d="M120,130 Q150,180 180,130" fill="none" stroke="#facc15" stroke-width="5"/><circle cx="150" cy="145" r="8" fill="#f43f5e"/>`
+    },
+    {
+      name: 'Lysosome Acidic Hydrolytic Vesicle',
+      region: 'Intracellular Cytoplasm (Universal Eukaryotic Origin)',
+      desc: 'A membrane-bound organelle maintained at an acidic internal pH by proton pumps, packed with hydrolytic enzymes designed to degrade cellular waste and pathogens.',
+      bg: '#4c0519',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="#fda4af" opacity="0.4"/><circle cx="150" cy="150" r="45" fill="none" stroke="#fb7185" stroke-width="4"/><circle cx="130" cy="140" r="8" fill="#f43f5e"/><circle cx="165" cy="160" r="12" fill="#e11d48"/><circle cx="145" cy="170" r="6" fill="#be123c"/>`
+    },
+    {
+      name: 'Actin Microfilament Contractile Networks',
+      region: 'Cellular Cortex (Universal Eukaryotic Origin)',
+      desc: 'Dynamic protein polymers composed of globular actin monomers that drive cellular motility, cytoplasmic streaming, muscle contraction, and shape changes.',
+      bg: '#14532d',
+      draw: () => `<path d="M90,120 Q120,170 150,120 Q180,70 210,120" fill="none" stroke="#4ade80" stroke-width="6"/><path d="M90,180 Q120,130 150,180 Q180,230 210,180" fill="none" stroke="#86efac" stroke-width="6"/>`
+    },
+    {
+      name: 'Endoplasmic Reticulum Protein Folding Matrix',
+      region: 'Eukaryotic Cytoplasm (Universal Eukaryotic Origin)',
+      desc: 'A sprawling, interconnected network of tubular membrane cisternae responsible for protein translation, folding quality control, and lipid biosynthesis.',
+      bg: '#1e3a8a',
+      draw: () => `<path d="M100,100 C150,100 130,200 200,180" fill="none" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/><path d="M110,140 C170,140 160,80 190,120" fill="none" stroke="#93c5fd" stroke-width="8" stroke-linecap="round"/><circle cx="130" cy="120" r="4" fill="#fde047"/><circle cx="170" cy="160" r="4" fill="#fde047"/>`
+    },
+    {
+      name: 'Nuclear Pore Complex Macromolecular Gatekeeper',
+      region: 'Nuclear Envelope (Universal Eukaryotic Origin)',
+      desc: 'A massive protein basket channel spanning the nuclear membrane that actively regulates the selective transport of macromolecules between the nucleus and cytoplasm.',
+      bg: '#27272a',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="none" stroke="#71717a" stroke-width="10"/><circle cx="150" cy="150" r="25" fill="none" stroke="#a1a1aa" stroke-width="6"/><line x1="150" y1="100" x2="150" y2="125" stroke="#e4e4e7" stroke-width="4"/><line x1="150" y1="175" x2="150" y2="200" stroke="#e4e4e7" stroke-width="4"/>`
+    },
+    {
+      name: 'Peroxisome Metabolic Oxidative Microbody',
+      region: 'Cellular Cytoplasm (Universal Eukaryotic Origin)',
+      desc: 'A single-membrane organelle containing oxidative enzymes that break down fatty acids, metabolize amino acids, and neutralize toxic hydrogen peroxide.',
+      bg: '#3f3f46',
+      draw: () => `<circle cx="150" cy="150" r="45" fill="#71717a" opacity="0.6"/><circle cx="150" cy="150" r="40" fill="none" stroke="#d4d4d8" stroke-width="4"/><rect x="130" y="135" width="40" height="30" rx="8" fill="#f43f5e"/>`
+    },
+    {
+      name: 'Bacterial Flagellar Rotary Nano-Motor',
+      region: 'Prokaryotic Cell Walls (Universal Bacterial Origin)',
+      desc: 'A helical protein filament driven by a proton-powered rotary stator motor that spins at high speeds to propel bacteria through fluid environments.',
+      bg: '#111827',
+      draw: () => `<path d="M150,190 Q110,160 190,130 Q110,100 150,70" fill="none" stroke="#38bdf8" stroke-width="6"/><circle cx="150" cy="210" r="16" fill="#f59e0b"/>`
+    },
+    {
+      name: 'Transfer RNA (tRNA) Anticodon Adaptor Loop',
+      region: 'Cytoplasmic Matrix (Universal Biological Origin)',
+      desc: 'A folded RNA hairpin molecule featuring a specific three-nucleotide anticodon sequence that translates genetic code by delivering matching amino acids to ribosomes.',
+      bg: '#31100b',
+      draw: () => `<path d="M130,100 L130,170 Q130,200 150,200 Q170,200 170,170 L170,100" fill="none" stroke="#fb923c" stroke-width="8" stroke-linecap="round"/><circle cx="150" cy="85" r="10" fill="#facc15"/>`
+    },
+    {
+      name: 'Apoptotic Caspase Cascade Executioner',
+      region: 'Multicellular Metazoan Tissues (Global Animal Kingdom)',
+      desc: 'A tightly regulated intracellular proteolytic enzyme cascade that systematically disassembles doomed cells during programmed cell death (apoptosis) without triggering inflammation.',
+      bg: '#581c87',
+      draw: () => `<circle cx="150" cy="150" r="50" fill="none" stroke="#c084fc" stroke-width="6" stroke-dasharray="8,8"/><circle cx="150" cy="150" r="25" fill="#e879f9"/><path d="M115,115 L185,185 M185,115 L115,185" stroke="#f43f5e" stroke-width="6"/>`
+    },
+    {
+      name: 'Gap Junction Intercellular Channel Array',
+      region: 'Animal Epithelial Tissues (Global Metazoan Origin)',
+      desc: 'Hexagonal clusters of connexin protein hemichannels that directly connect the cytoplasm of adjacent cells, allowing rapid chemical and electrical signaling.',
+      bg: '#0c4a6e',
+      draw: () => `<polygon points="150,110 185,130 185,170 150,190 115,170 115,130" fill="none" stroke="#38bdf8" stroke-width="6"/><circle cx="150" cy="150" r="20" fill="#bae6fd"/>`
+    },
+    {
+      name: 'Plasmodesmata Plant Cell-Wall Cytoplasmic Bridge',
+      region: 'Plant Vascular & Parenchyma Tissues (Global Plantae Kingdom)',
+      desc: 'Microscopic channels traversing plant cell walls that facilitate direct intercellular communication and transport of nutrients, hormones, and RNA.',
+      bg: '#143614',
+      draw: () => `<rect x="90" y="110" width="120" height="80" rx="10" fill="#166534"/><rect x="135" y="90" width="30" height="120" fill="#4ade80"/><line x1="150" y1="90" x2="150" y2="210" stroke="#f0fdf4" stroke-width="3" stroke-dasharray="6,6"/>`
+    },
+    {
+      name: 'Telomere Chromosomal Protective Cap',
+      region: 'Eukaryotic Chromosome Termini (Universal Eukaryotic Origin)',
+      desc: 'Repetitive nucleotide sequences at the ends of linear chromosomes maintained by telomerase to protect genetic data from degradation during cell division cycles.',
+      bg: '#172554',
+      draw: () => `<rect x="110" y="110" width="80" height="80" rx="15" fill="#3b82f6"/><path d="M100,150 L200,150" stroke="#93c5fd" stroke-width="12"/><path d="M150,90 L150,210" stroke="#93c5fd" stroke-width="12"/><path d="M125,115 L175,185" stroke="#f43f5e" stroke-width="6"/>`
+    }
+  ];
+
+  function renderCurrent(){
+    const p = SPECIES[currentIndex];
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMid slice">
+        ${baseFrame(p.bg, currentIndex)}
+        ${p.draw()}
+        ${caption(p.name, p.region, p.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(currentIndex + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % SPECIES.length;
+    renderCurrent();
+
+    const overlay = document.getElementById('flashOverlay');
+    const indicator = document.getElementById('recIndicator');
+
+    if(overlay) {
+      overlay.classList.remove('go');
+      void overlay.offsetWidth;
+      overlay.classList.add('go');
+    }
+    if(indicator) {
+      indicator.classList.add('flash');
+      setTimeout(() => indicator.classList.remove('flash'), 500);
+    }
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderCurrent();
+})();
+</script>
+</body>
+</html>
