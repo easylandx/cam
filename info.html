@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Human Information Storage Edition</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #334155;
+    --focus: #7dd3fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #090d16 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 84px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #7dd3fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">ARCHIVE TECH-21 · INFORMATION STORAGE EDITION</p>
+    <h1>Human Information Storage</h1>
+    <p>Press shutter to examine 21 highly detailed archival storage vectors.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>HD-ARCHIVE-V2</span>
+      <span>f/1.4 &nbsp;·&nbsp; MACRO</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/2000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>DETAIL</span>
+        <span><span class="val">MAX</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to advance through high-detail vector models</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  const ACCENTS = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24', '#c084fc'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#070d1a"/>`;
+    s += `<rect x="0" y="0" width="300" height="210" fill="#0f172a" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="316" width="300" height="74" fill="#02060a" opacity="0.92"/>`;
+    s += `<rect x="20" y="16" width="260" height="286" fill="none" stroke="#1e293b" stroke-width="12"/>`;
+    s += `<rect x="20" y="16" width="260" height="286" fill="none" stroke="${glow}" stroke-width="1.5"/>`;
+    s += `<rect x="30" y="26" width="240" height="266" fill="#0b1320"/>`;
+    s += `<rect x="34" y="30" width="232" height="258" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="316" width="300" height="74" fill="#070d1a" opacity="0.98"/>`;
+    s += `<rect x="0" y="316" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="332" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="344" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="8.5" fill="#38bdf8">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 50) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${357 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  const STORAGE_ITEMS = [
+    {
+      name: 'Clay Cuneiform Tablets',
+      region: 'Uruk (Mesopotamia / Modern-day Iraq)',
+      desc: 'The earliest writing system, utilizing a reed stylus to impress wedge-shaped symbolic characters into wet clay, creating durable structural records of administrative and economic data.',
+      bg: '#221a12',
+      draw: () => `
+        <g transform="translate(60, 45)">
+          <!-- Tablet Body with 3D edge shading -->
+          <polygon points="15,10 165,0 175,185 25,195" fill="#713f12"/>
+          <polygon points="25,195 175,185 175,192 25,202" fill="#451a03"/>
+          <polygon points="165,0 175,185 182,180 172,0" fill="#854d0e"/>
+          <path d="M22,12 Q95,5 168,8 L170,182 Q95,190 25,180 Z" fill="#a16207" stroke="#ca8a04" stroke-width="2"/>
+          <!-- Cuneiform stylus impressions (wedge clusters) -->
+          <g fill="#292524" stroke="#451a03" stroke-width="0.5">
+            <path d="M45,35 l12,4 -10,8 z"/> <path d="M65,33 l10,6 -8,7 z"/> <path d="M85,36 l14,3 -12,7 z"/>
+            <path d="M45,60 l10,8 -6,6 z"/> <path d="M68,58 l12,5 -9,8 z"/> <path d="M90,62 l10,6 -7,9 z"/> <path d="M110,57 l13,4 -10,7 z"/>
+            <path d="M48,90 l12,5 -8,7 z"/> <path d="M72,88 l10,6 -7,8 z"/> <path d="M95,92 l11,4 -9,7 z"/>
+            <path d="M45,120 l11,6 -9,8 z"/> <path d="M70,118 l12,4 -10,7 z"/> <path d="M92,122 l10,5 -8,7 z"/> <path d="M115,119 l12,4 -10,7 z"/>
+            <path d="M48,150 l10,5 -8,7 z"/> <path d="M75,148 l12,4 -9,7 z"/> <path d="M100,152 l11,5 -9,7 z"/>
+          </g>
+          <!-- Surface cracks and texture highlights -->
+          <path d="M130,25 Q145,50 140,80" fill="none" stroke="#ca8a04" stroke-width="1.5" opacity="0.6"/>
+          <path d="M60,130 Q70,155 65,175" fill="none" stroke="#451a03" stroke-width="1.5" opacity="0.5"/>
+        </g>
+      `
+    },
+    {
+      name: 'Papyrus Roll Scrolls',
+      region: 'Nile River Delta (Ancient Egypt)',
+      desc: 'A flexible writing substrate manufactured from the woven, pressed pith of the Cyperus papyrus reed, enabling long-form literary and administrative record-keeping across the ancient Mediterranean.',
+      bg: '#1c1b12',
+      draw: () => `
+        <g transform="translate(50, 75)">
+          <!-- Left Rolled Cylinder -->
+          <ellipse cx="35" cy="70" rx="14" ry="32" fill="#ca8a04" stroke="#eab308" stroke-width="1.5"/>
+          <ellipse cx="35" cy="70" rx="8" ry="22" fill="#854d0e"/>
+          <!-- Right Rolled Cylinder -->
+          <ellipse cx="165" cy="70" rx="14" ry="32" fill="#ca8a04" stroke="#eab308" stroke-width="1.5"/>
+          <ellipse cx="165" cy="70" rx="8" ry="22" fill="#854d0e"/>
+          <!-- Unrolled Papyrus Sheet with Grid Lines & Hieratic Script -->
+          <rect x="35" y="38" width="130" height="64" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+          <!-- Horizontal & Vertical Pith Fibers -->
+          <g stroke="#eab308" stroke-width="0.5" opacity="0.7">
+            <line x1="35" y1="48" x2="165" y2="48"/><line x1="35" y1="58" x2="165" y2="58"/>
+            <line x1="35" y1="68" x2="165" y2="68"/><line x1="35" y1="78" x2="165" y2="78"/><line x1="35" y1="88" x2="165" y2="88"/>
+            <line x1="55" y1="38" x2="55" y2="102"/><line x1="85" y1="38" x2="85" y2="102"/><line x1="115" y1="38" x2="115" y2="102"/><line x1="145" y1="38" x2="145" y2="102"/>
+          </g>
+          <!-- Hieroglyphic / Hieratic Ink Columns -->
+          <g stroke="#78350f" stroke-width="1.5" stroke-linecap="round" fill="none">
+            <path d="M50,48 Q52,53 48,58 M49,53 L54,53"/>
+            <path d="M50,65 l4,6 m-2,-3 l5,2"/>
+            <path d="M70,46 l3,8 m-3,3 l6,-2"/>
+            <path d="M72,68 q4,4 2,8"/>
+            <path d="M95,47 q3,3 6,2 t3,5"/>
+            <path d="M94,66 l5,7 m-4,-3 l5,3"/>
+            <path d="M120,49 l4,6 m-2,-3 l4,4"/>
+            <path d="M122,67 q3,5 6,2"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Parchment and Vellum Codices',
+      region: 'Pergamon (Asia Minor / Modern-day Turkey)',
+      desc: 'Specially treated animal skin (calf, sheep, or goat) scraped and stretched to form durable folded codex pages, replacing fragile scrolls and revolutionizing durable bookbinding.',
+      bg: '#211d16',
+      draw: () => `
+        <g transform="translate(50, 50)">
+          <!-- Codex Binding Spine & Shadow -->
+          <path d="M100,20 Q105,80 100,160 Q110,80 100,20" fill="#44403c"/>
+          <!-- Left Open Pages -->
+          <path d="M100,20 Q60,10 20,25 L25,175 Q60,160 100,160 Z" fill="#f5f5f4" stroke="#d6d3d1" stroke-width="1.5"/>
+          <!-- Right Open Pages -->
+          <path d="M100,20 Q140,10 180,25 L175,175 Q140,160 100,160 Z" fill="#e7e5e4" stroke="#d6d3d1" stroke-width="1.5"/>
+          <!-- Page Thickness Shadow Layers -->
+          <path d="M20,28 L25,178 Q60,163 98,162 L98,22 Q60,12 20,28" fill="#d6d3d1" opacity="0.5"/>
+          <path d="M180,28 L175,178 Q140,163 102,162 L102,22 Q140,12 180,28" fill="#d6d3d1" opacity="0.5"/>
+          <!-- Manuscript Text & Illuminated Initial -->
+          <g stroke="#57534e" stroke-width="1.2" stroke-linecap="round">
+            <line x1="35" y1="45" x2="80" y2="48"/><line x1="35" y1="58" x2="85" y2="61"/><line x1="35" y1="71" x2="78" y2="74"/><line x1="35" y1="84" x2="82" y2="87"/>
+            <line x1="35" y1="97" x2="80" y2="100"/><line x1="35" y1="110" x2="84" y2="113"/><line x1="35" y1="123" x2="75" y2="126"/>
+            <!-- Right Page Text -->
+            <line x1="115" y1="45" x2="160" y2="48"/><line x1="115" y1="58" x2="165" y2="61"/><line x1="115" y1="71" x2="158" y2="74"/><line x1="115" y1="84" x2="162" y2="87"/>
+            <line x1="115" y1="97" x2="160" y2="100"/><line x1="115" y1="110" x2="164" y2="113"/><line x1="115" y1="123" x2="155" y2="126"/>
+          </g>
+          <!-- Red Illuminated Capital Letter -->
+          <rect x="33" y="38" width="14" height="18" fill="#dc2626" rx="2"/>
+        </g>
+      `
+    },
+    {
+      name: 'Oracle Bone Script',
+      region: 'Anyang, Henan Province (Shang Dynasty / China)',
+      desc: 'Pyromancy-based data storage involving turtle plastrons and bovine scapulae inscribed with early Chinese characters via heat-induced cracking and knife incisions.',
+      bg: '#181714',
+      draw: () => `
+        <g transform="translate(65, 35)">
+          <!-- Turtle Plastron Shell Shape with Scutes -->
+          <path d="M50,10 Q85,0 110,20 Q130,50 125,120 Q120,180 100,210 Q75,220 50,210 Q30,180 25,120 Q20,50 50,10 Z" fill="#d4d4d8" stroke="#78716c" stroke-width="3"/>
+          <!-- Shell Segment Lines -->
+          <path d="M50,10 L50,210 M35,60 Q75,70 115,55 M30,120 Q75,130 120,115 M38,170 Q75,175 112,165" fill="none" stroke="#a8a29e" stroke-width="1.5"/>
+          <!-- Heat Crack Lines (Pyromancy) -->
+          <path d="M75,90 L60,115 L80,135 L65,160" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+          <path d="M75,90 L95,105 M80,135 L100,140" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Inscribed Oracle Bone Characters (Oracle Bone Script) -->
+          <g stroke="#1c1917" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M55,40 L55,55 M48,45 L62,45 M50,60 L60,60"/>
+            <path d="M85,38 Q95,45 85,55 M90,42 L90,60"/>
+            <path d="M45,95 L55,95 M50,92 L50,108 M45,105 L55,105"/>
+            <path d="M90,85 L95,100 L105,95 M95,100 L95,112"/>
+            <path d="M52,140 L52,160 M46,145 L58,145 M46,155 L58,155"/>
+            <path d="M88,142 Q98,148 88,158 M93,145 L93,165"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Woodblock Printing (Xylography)',
+      region: 'Tang Dynasty (China / East Asia)',
+      desc: 'The earliest mass-printing technology utilizing carved wooden relief blocks coated with water-based ink to stamp text and imagery repeatedly onto paper substrates.',
+      bg: '#211810',
+      draw: () => `
+        <g transform="translate(60, 40)">
+          <!-- Wood Block Platform (3D block) -->
+          <polygon points="10,20 170,0 180,180 20,200" fill="#92400e"/>
+          <polygon points="20,200 180,180 180,192 20,212" fill="#78350f"/>
+          <polygon points="170,0 180,180 188,172 178,0" fill="#b45309"/>
+          <!-- Relief Carved Surface (Inverted Chinese characters & border) -->
+          <rect x="25" y="15" width="140" height="170" fill="#fef3c7" stroke="#b45309" stroke-width="2" rx="2"/>
+          <rect x="31" y="21" width="128" height="158" fill="none" stroke="#d97706" stroke-width="1"/>
+          <!-- Carved Relief Characters -->
+          <g stroke="#451a03" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <!-- Column 1 -->
+            <path d="M48,40 L68,40 M58,35 L58,70 M48,55 L68,55 M46,70 L70,70"/>
+            <path d="M48,85 L68,85 M58,80 L58,115 M48,100 L68,100 M46,115 L70,115"/>
+            <path d="M48,130 L68,130 M58,125 L58,160 M48,145 L68,145 M46,160 L70,160"/>
+            <!-- Column 2 -->
+            <path d="M98,40 L118,40 M108,35 L108,70 M98,55 L118,55 M96,70 L120,70"/>
+            <path d="M98,85 L118,85 M108,80 L108,115 M98,100 L118,100 M96,115 L120,115"/>
+            <path d="M98,130 L118,130 M108,125 L108,160 M98,145 L118,145 M96,160 L120,160"/>
+            <!-- Column 3 -->
+            <path d="M148,40 L168,40 M158,35 L158,70 M148,55 L168,55 M146,70 L170,70"/>
+            <path d="M148,85 L168,85 M158,80 L158,115 M148,100 L168,100 M146,115 L170,115"/>
+          </g>
+          <!-- Water-based Ink Roller / Gloss overlay -->
+          <path d="M25,15 L165,15 L165,80 L25,80 Z" fill="#1c1917" opacity="0.35"/>
+        </g>
+      `
+    },
+    {
+      name: 'Gutenberg Movable Metallic Type Press',
+      region: 'Mainz (Electorate of Mainz / Holy Roman Empire)',
+      desc: 'A revolutionary printing matrix utilizing durable lead-tin-antimony alloy cast type, oil-based ink, and a modified wooden screw wine press to mechanize mass literacy.',
+      bg: '#161c24',
+      draw: () => `
+        <g transform="translate(60, 25)">
+          <!-- Wooden Frame Structure -->
+          <rect x="20" y="10" width="18" height="220" fill="#78350f" rx="2"/>
+          <rect x="162" y="10" width="18" height="220" fill="#78350f" rx="2"/>
+          <rect x="15" y="10" width="170" height="22" fill="#92400e" rx="2"/>
+          <rect x="15" y="210" width="170" height="22" fill="#57534e" rx="2"/>
+          <!-- Large Wooden Screw Spindle -->
+          <rect x="94" y="32" width="12" height="110" fill="#a16207"/>
+          <path d="M94,45 L106,55 M94,60 L106,70 M94,75 L106,85 M94,90 L106,100 M94,105 L106,115 M94,120 L106,130" stroke="#78350f" stroke-width="2.5"/>
+          <!-- Screw Handle (Lever) -->
+          <rect x="50" y="55" width="100" height="12" fill="#78350f" rx="6"/>
+          <!-- Platen & Bed with Lead-Tin-Antimony Type Matrix -->
+          <rect x="40" y="142" width="120" height="16" fill="#44403c" rx="2"/>
+          <rect x="45" y="158" width="110" height="28" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+          <!-- Individual Cast Metallic Type Glyphs -->
+          <g fill="#1e293b">
+            <rect x="52" y="163" width="8" height="18" rx="1"/><rect x="63" y="163" width="8" height="18" rx="1"/><rect x="74" y="163" width="8" height="18" rx="1"/><rect x="85" y="163" width="8" height="18" rx="1"/>
+            <rect x="96" y="163" width="8" height="18" rx="1"/><rect x="107" y="163" width="8" height="18" rx="1"/><rect x="118" y="163" width="8" height="18" rx="1"/><rect x="129" y="163" width="8" height="18" rx="1"/><rect x="140" y="163" width="8" height="18" rx="1"/>
+          </g>
+          <!-- Paper Base -->
+          <rect x="42" y="186" width="116" height="12" fill="#f8fafc"/>
+        </g>
+      `
+    },
+    {
+      name: 'Punched Paper Jacquard Loom Cards',
+      region: 'Lyon (France / Western Europe)',
+      desc: 'The earliest programmable binary data storage medium, using sequences of punched holes on continuous paper cards to automate complex textile weaving patterns.',
+      bg: '#1b2224',
+      draw: () => `
+        <g transform="translate(45, 30)">
+          <!-- Chain of Linked Cards (Perspective sequence) -->
+          <g transform="translate(0, 15)">
+            <rect x="10" y="20" width="140" height="180" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" rx="4"/>
+            <!-- Metal Lacing Fasteners on sides -->
+            <circle cx="10" cy="40" r="4" fill="#64748b"/><circle cx="150" cy="40" r="4" fill="#64748b"/>
+            <circle cx="10" cy="110" r="4" fill="#64748b"/><circle cx="150" cy="110" r="4" fill="#64748b"/>
+            <circle cx="10" cy="180" r="4" fill="#64748b"/><circle cx="150" cy="180" r="4" fill="#64748b"/>
+            <!-- Binary Punched Hole Matrix Grid -->
+            <g fill="#0f172a">
+              <!-- Row 1 -->
+              <rect x="25" y="32" width="10" height="14" rx="3"/><rect x="45" y="32" width="10" height="14" rx="3"/><rect x="85" y="32" width="10" height="14" rx="3"/><rect x="125" y="32" width="10" height="14" rx="3"/>
+              <!-- Row 2 -->
+              <rect x="35" y="58" width="10" height="14" rx="3"/><rect x="65" y="58" width="10" height="14" rx="3"/><rect x="105" y="58" width="10" height="14" rx="3"/><rect x="125" y="58" width="10" height="14" rx="3"/>
+              <!-- Row 3 -->
+              <rect x="25" y="84" width="10" height="14" rx="3"/><rect x="55" y="84" width="10" height="14" rx="3"/><rect x="75" y="84" width="10" height="14" rx="3"/><rect x="115" y="84" width="10" height="14" rx="3"/>
+              <!-- Row 4 -->
+              <rect x="45" y="110" width="10" height="14" rx="3"/><rect x="85" y="110" width="10" height="14" rx="3"/><rect x="95" y="110" width="10" height="14" rx="3"/><rect x="135" y="110" width="10" height="14" rx="3"/>
+              <!-- Row 5 -->
+              <rect x="25" y="136" width="10" height="14" rx="3"/><rect x="65" y="136" width="10" height="14" rx="3"/><rect x="105" y="136" width="10" height="14" rx="3"/><rect x="125" y="136" width="10" height="14" rx="3"/>
+              <!-- Row 6 -->
+              <rect x="35" y="162" width="10" height="14" rx="3"/><rect x="55" y="162" width="10" height="14" rx="3"/><rect x="85" y="162" width="10" height="14" rx="3"/><rect x="115" y="162" width="10" height="14" rx="3"/>
+            </g>
+          </g>
+          <!-- Background Cascading Cards Stack -->
+          <g transform="translate(45, 0)" opacity="0.4">
+            <rect x="10" y="20" width="140" height="180" fill="#94a3b8" rx="4"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Babbage Analytical Engine Punch Cards',
+      region: 'London (England / United Kingdom)',
+      desc: 'The adaptation of Jacquard-style punched cards to store algorithmic instructions and numerical data for Charles Babbage’s unbuilt mechanical general-purpose computer.',
+      bg: '#171e28',
+      draw: () => `
+        <g transform="translate(50, 35)">
+          <!-- Victorian Heavy Cardstock Card with Rounded Corners -->
+          <rect x="15" y="10" width="170" height="200" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2" rx="8"/>
+          <!-- Top Brass Reinforced Border Header -->
+          <rect x="15" y="10" width="170" height="28" fill="#b45309" rx="8"/>
+          <text x="100" y="28" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#fef3c7">ANALYTICAL ENGINE · OP CODE</text>
+          <!-- Mathematical Instruction Grid & Rectangular Punched Slots -->
+          <g fill="#0f172a">
+            <!-- Col 1 -->
+            <rect x="35" y="55" width="12" height="22" rx="3"/><rect x="35" y="85" width="12" height="22" rx="3"/><rect x="35" y="145" width="12" height="22" rx="3"/>
+            <!-- Col 2 -->
+            <rect x="65" y="70" width="12" height="22" rx="3"/><rect x="65" y="115" width="12" height="22" rx="3"/><rect x="65" y="175" width="12" height="22" rx="3"/>
+            <!-- Col 3 -->
+            <rect x="95" y="55" width="12" height="22" rx="3"/><rect x="95" y="100" width="12" height="22" rx="3"/><rect x="95" y="145" width="12" height="22" rx="3"/>
+            <!-- Col 4 -->
+            <rect x="125" y="85" width="12" height="22" rx="3"/><rect x="125" y="130" width="12" height="22" rx="3"/><rect x="125" y="160" width="12" height="22" rx="3"/>
+            <!-- Col 5 -->
+            <rect x="155" y="55" width="12" height="22" rx="3"/><rect x="155" y="115" width="12" height="22" rx="3"/><rect x="155" y="175" width="12" height="22" rx="3"/>
+          </g>
+          <!-- Printed Grid Guidelines -->
+          <g stroke="#94a3b8" stroke-width="0.5" stroke-dasharray="2,2">
+            <line x1="25" y1="50" x2="175" y2="50"/><line x1="25" y1="90" x2="175" y2="90"/>
+            <line x1="25" y1="130" x2="175" y2="130"/><line x1="25" y1="170" x2="175" y2="170"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Morse Code Telegraphy',
+      region: 'Washington, D.C. & Baltimore (United States / North America)',
+      desc: 'A telecommunication binary encoding protocol translating alphanumeric characters into standardized sequences of electrical short and long pulses (dots and dashes).',
+      bg: '#101722',
+      draw: () => `
+        <g transform="translate(30, 50)">
+          <!-- Telegraph Sounder Brass Key & Apparatus Base -->
+          <rect x="10" y="120" width="220" height="35" fill="#451a03" rx="4" stroke="#78350f" stroke-width="2"/>
+          <!-- Brass Sounder Coils & Armature -->
+          <rect x="80" y="90" width="25" height="40" fill="#d97706" stroke="#b45309" stroke-width="1.5" rx="3"/>
+          <rect x="115" y="90" width="25" height="40" fill="#d97706" stroke="#b45309" stroke-width="1.5" rx="3"/>
+          <line x1="92" y1="90" x2="92" y2="75" stroke="#78350f" stroke-width="4"/>
+          <line x1="127" y1="90" x2="127" y2="75" stroke="#78350f" stroke-width="4"/>
+          <rect x="70" y="68" width="82" height="12" fill="#b45309" rx="2"/>
+          <!-- Telegraph Key Lever -->
+          <path d="M40,110 L160,80 L200,80" fill="none" stroke="#1e293b" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="185" cy="80" r="10" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+          <!-- Glowing Oscilloscope / Telegraph Tape Stream across top -->
+          <rect x="10" y="15" width="220" height="50" fill="#090d16" stroke="#334155" stroke-width="2" rx="4"/>
+          <!-- Paper Tape with Morse Code Pulses (Dots & Dashes) -->
+          <g stroke="#38bdf8" stroke-width="3" stroke-linecap="round">
+            <!-- Dot Dash Dot -->
+            <circle cx="35" cy="40" r="3.5" fill="#38bdf8"/>
+            <line x1="50" y1="40" x2="75" y2="40"/>
+            <circle cx="90" cy="40" r="3.5" fill="#38bdf8"/>
+            <!-- Dash Dash -->
+            <line x1="110" y1="40" x2="135" y2="40"/>
+            <line x1="145" y1="40" x2="170" y2="40"/>
+            <circle cx="185" cy="40" r="3.5" fill="#38bdf8"/>
+            <circle cx="200" cy="40" r="3.5" fill="#38bdf8"/>
+          </g>
+          <!-- Data Signal Waveform Overlay -->
+          <path d="M10,25 L35,25 L38,15 L41,35 L44,25 L230,25" fill="none" stroke="#f472b6" stroke-width="1.5" opacity="0.8"/>
+        </g>
+      `
+    },
+    {
+      name: 'Punched Paper Hollerith Tabulating Cards',
+      region: 'Washington, D.C. (United States / North America)',
+      desc: 'Rectangular cardstock media encoded with rectangular holes, invented for the 1890 U.S. Census to process mass demographic data via mechanical electrical-contact sorters.',
+      bg: '#221b14',
+      draw: () => `
+        <g transform="translate(30, 45)">
+          <!-- 1890 Hollerith Cardstock (Manila Buff) -->
+          <rect x="10" y="20" width="220" height="130" fill="#fde68a" stroke="#d97706" stroke-width="2" rx="4"/>
+          <text x="120" y="38" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#78350f">U.S. CENSUS 1890 — HOLLERITH TABULATING CARD</text>
+          <!-- Grid of Circular / Rectangular Punch Positions -->
+          <g fill="#451a03">
+            <!-- Row 1 -->
+            <rect x="25" y="52" width="6" height="10" rx="1"/><rect x="45" y="52" width="6" height="10" rx="1"/><rect x="75" y="52" width="6" height="10" rx="1"/><rect x="105" y="52" width="6" height="10" rx="1"/><rect x="145" y="52" width="6" height="10" rx="1"/><rect x="185" y="52" width="6" height="10" rx="1"/>
+            <!-- Row 2 -->
+            <rect x="35" y="70" width="6" height="10" rx="1"/><rect x="55" y="70" width="6" height="10" rx="1"/><rect x="85" y="70" width="6" height="10" rx="1"/><rect x="125" y="70" width="6" height="10" rx="1"/><rect x="165" y="70" width="6" height="10" rx="1"/><rect x="205" y="70" width="6" height="10" rx="1"/>
+            <!-- Row 3 -->
+            <rect x="25" y="88" width="6" height="10" rx="1"/><rect x="65" y="88" width="6" height="10" rx="1"/><rect x="95" y="88" width="6" height="10" rx="1"/><rect x="115" y="88" width="6" height="10" rx="1"/><rect x="155" y="88" width="6" height="10" rx="1"/><rect x="195" y="88" width="6" height="10" rx="1"/>
+            <!-- Row 4 -->
+            <rect x="45" y="106" width="6" height="10" rx="1"/><rect x="75" y="106" width="6" height="10" rx="1"/><rect x="105" y="106" width="6" height="10" rx="1"/><rect x="135" y="106" width="6" height="10" rx="1"/><rect x="175" y="106" width="6" height="10" rx="1"/><rect x="215" y="106" width="6" height="10" rx="1"/>
+            <!-- Row 5 -->
+            <rect x="35" y="124" width="6" height="10" rx="1"/><rect x="55" y="124" width="6" height="10" rx="1"/><rect x="85" y="124" width="6" height="10" rx="1"/><rect x="125" y="124" width="6" height="10" rx="1"/><rect x="165" y="124" width="6" height="10" rx="1"/><rect x="205" y="124" width="6" height="10" rx="1"/>
+          </g>
+          <!-- Faint grid guide lines -->
+          <g stroke="#d97706" stroke-width="0.3" opacity="0.4">
+            <line x1="20" y1="46" x2="220" y2="46"/>
+            <line x1="20" y1="65" x2="220" y2="65"/>
+            <line x1="20" y1="83" x2="220" y2="83"/>
+            <line x1="20" y1="101" x2="220" y2="101"/>
+            <line x1="20" y1="119" x2="220" y2="119"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Microfilm and Microfiche Archival Media',
+      region: 'Paris & London (France and United Kingdom)',
+      desc: 'A high-resolution photographic reduction technology pioneered by John Benjamin Dancer and René Dagron, scaling down printed documents onto miniaturized transparent film rolls or cards for space-saving institutional data archiving.',
+      bg: '#141d24',
+      draw: () => `
+        <g transform="translate(45, 30)">
+          <!-- Microfiche Card Frame (Blue Transparent Sheet) -->
+          <rect x="15" y="10" width="170" height="200" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-width="2" rx="4"/>
+          <!-- Top Title Header Banner -->
+          <rect x="15" y="10" width="170" height="28" fill="#0f172a" stroke="#38bdf8" stroke-width="1"/>
+          <text x="100" y="27" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#38bdf8">MICROFICHE ARCHIVAL INDEX — 98 FRAMES</text>
+          <!-- Grid of Miniature Document Frames -->
+          <g fill="#0284c7" fill-opacity="0.5" stroke="#7dd3fc" stroke-width="0.8">
+            <!-- Row 1 -->
+            <rect x="25" y="45" width="22" height="24" rx="1"/><rect x="52" y="45" width="22" height="24" rx="1"/><rect x="79" y="45" width="22" height="24" rx="1"/><rect x="106" y="45" width="22" height="24" rx="1"/><rect x="133" y="45" width="22" height="24" rx="1"/><rect x="160" y="45" width="18" height="24" rx="1"/>
+            <!-- Row 2 -->
+            <rect x="25" y="73" width="22" height="24" rx="1"/><rect x="52" y="73" width="22" height="24" rx="1"/><rect x="79" y="73" width="22" height="24" rx="1"/><rect x="106" y="73" width="22" height="24" rx="1"/><rect x="133" y="73" width="22" height="24" rx="1"/><rect x="160" y="73" width="18" height="24" rx="1"/>
+            <!-- Row 3 -->
+            <rect x="25" y="101" width="22" height="24" rx="1"/><rect x="52" y="101" width="22" height="24" rx="1"/><rect x="79" y="101" width="22" height="24" rx="1"/><rect x="106" y="101" width="22" height="24" rx="1"/><rect x="133" y="101" width="22" height="24" rx="1"/><rect x="160" y="101" width="18" height="24" rx="1"/>
+            <!-- Row 4 -->
+            <rect x="25" y="129" width="22" height="24" rx="1"/><rect x="52" y="129" width="22" height="24" rx="1"/><rect x="79" y="129" width="22" height="24" rx="1"/><rect x="106" y="129" width="22" height="24" rx="1"/><rect x="133" y="129" width="22" height="24" rx="1"/><rect x="160" y="129" width="18" height="24" rx="1"/>
+            <!-- Row 5 -->
+            <rect x="25" y="157" width="22" height="24" rx="1"/><rect x="52" y="157" width="22" height="24" rx="1"/><rect x="79" y="157" width="22" height="24" rx="1"/><rect x="106" y="157" width="22" height="24" rx="1"/><rect x="133" y="157" width="22" height="24" rx="1"/><rect x="160" y="157" width="18" height="24" rx="1"/>
+          </g>
+          <!-- Simulated miniature text lines inside first frame -->
+          <g stroke="#f8fafc" stroke-width="0.8" opacity="0.7">
+            <line x1="28" y1="50" x2="44" y2="50"/><line x1="28" y1="54" x2="42" y2="54"/><line x1="28" y1="58" x2="45" y2="58"/>
+            <line x1="55" y1="50" x2="71" y2="50"/><line x1="55" y1="54" x2="69" y2="54"/><line x1="55" y1="58" x2="72" y2="58"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Magnetic Wire Recording',
+      region: 'Copenhagen (Denmark / Europe)',
+      desc: 'The earliest magnetic data storage medium, invented by Valdemar Poulsen, which encoded audio signals as magnetic flux patterns along a moving steel wire.',
+      bg: '#151922',
+      draw: () => `
+        <g transform="translate(35, 45)">
+          <!-- Dual Precision Spools / Reels -->
+          <!-- Left Spool -->
+          <circle cx="50" cy="80" r="35" fill="#1e293b" stroke="#64748b" stroke-width="3"/>
+          <circle cx="50" cy="80" r="14" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+          <circle cx="50" cy="62" r="3" fill="#38bdf8"/><circle cx="50" cy="98" r="3" fill="#38bdf8"/>
+          <circle cx="32" cy="80" r="3" fill="#38bdf8"/><circle cx="68" cy="80" r="3" fill="#38bdf8"/>
+          <!-- Right Spool -->
+          <circle cx="150" cy="80" r="35" fill="#1e293b" stroke="#64748b" stroke-width="3"/>
+          <circle cx="150" cy="80" r="14" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+          <circle cx="150" cy="62" r="3" fill="#38bdf8"/><circle cx="150" cy="98" r="3" fill="#38bdf8"/>
+          <circle cx="132" cy="80" r="3" fill="#38bdf8"/><circle cx="168" cy="80" r="3" fill="#38bdf8"/>
+          <!-- Ultra-thin Magnetic Steel Wire Spanning between spools -->
+          <path d="M50,45 Q100,25 150,45" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+          <path d="M50,115 Q100,135 150,115" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+          <!-- Recording Electromagnetic Head Unit in Center -->
+          <rect x="90" y="65" width="20" height="30" fill="#b45309" stroke="#d97706" stroke-width="1.5" rx="2"/>
+          <line x1="100" y1="50" x2="100" y2="65" stroke="#78350f" stroke-width="3"/>
+          <!-- Magnetic Flux Waveform Glow -->
+          <path d="M70,80 Q85,65 100,80 T130,80" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        </g>
+      `
+    },
+    {
+      name: 'Punched Paper Computer Tape',
+      region: 'Bletchley Park (England / United Kingdom)',
+      desc: 'Continuous narrow paper tape punched with binary holes, utilized extensively by mid-20th-century electromechanical computers (such as the Colossus) for high-speed program and data input.',
+      bg: '#1c1c1c',
+      draw: () => `
+        <g transform="translate(25, 60)">
+          <!-- Continuous Paper Tape Strip (Angled perspective) -->
+          <polygon points="10,25 210,5 220,55 20,75" fill="#e5e5e5" stroke="#a3a3a3" stroke-width="1.5"/>
+          <!-- Sprocket Feed Hole Track (Center-small) -->
+          <g fill="#171717">
+            <circle cx="30" cy="48" r="2.5"/><circle cx="50" cy="46" r="2.5"/><circle cx="70" cy="44" r="2.5"/>
+            <circle cx="90" cy="42" r="2.5"/><circle cx="110" cy="40" r="2.5"/><circle cx="130" cy="38" r="2.5"/>
+            <circle cx="150" cy="36" r="2.5"/><circle cx="170" cy="34" r="2.5"/><circle cx="190" cy="32" r="2.5"/>
+          </g>
+          <!-- Binary Data Punched Holes (5-channel / 8-channel code) -->
+          <g fill="#0a0a0a">
+            <!-- Channel Top -->
+            <circle cx="35" cy="32" r="3.5"/><circle cx="70" cy="28" r="3.5"/><circle cx="90" cy="26" r="3.5"/><circle cx="130" cy="22" r="3.5"/><circle cx="170" cy="18" r="3.5"/>
+            <!-- Channel Bottom -->
+            <circle cx="50" cy="60" r="3.5"/><circle cx="70" cy="58" r="3.5"/><circle cx="110" cy="54" r="3.5"/><circle cx="150" cy="50" r="3.5"/><circle cx="190" cy="46" r="3.5"/>
+          </g>
+          <!-- Optical Reader Light Beam Effect -->
+          <polygon points="105,15 125,15 135,70 115,70" fill="#38bdf8" opacity="0.25"/>
+          <line x1="120" y1="15" x2="125" y2="70" stroke="#38bdf8" stroke-width="2"/>
+        </g>
+      `
+    },
+    {
+      name: 'Magnetic Core Memory',
+      region: 'Cambridge, Massachusetts (United States / North America)',
+      desc: 'Random-access computer memory (RAM) utilizing tiny ferromagnetic ceramic rings threaded on wire grids to store binary bits via magnetization polarity.',
+      bg: '#131b14',
+      draw: () => `
+        <g transform="translate(35, 30)">
+          <!-- Wire Grid Matrix (X-Y Copper Wires) -->
+          <g stroke="#94a3b8" stroke-width="1.5">
+            <line x1="30" y1="40" x2="170" y2="40"/><line x1="30" y1="80" x2="170" y2="80"/>
+            <line x1="30" y1="120" x2="170" y2="120"/><line x1="30" y1="160" x2="170" y2="160"/>
+            <line x1="50" y1="20" x2="50" y2="180"/><line x1="90" y1="20" x2="90" y2="180"/>
+            <line x1="130" y1="20" x2="130" y2="180"/><line x1="150" y1="20" x2="150" y2="180"/>
+          </g>
+          <!-- Ferromagnetic Ceramic Cores (Tiny Toroids at intersections) -->
+          <g>
+            <!-- Row 1 -->
+            <circle cx="50" cy="40" r="8" fill="#1e293b" stroke="#ef4444" stroke-width="3"/>
+            <circle cx="90" cy="40" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <circle cx="130" cy="40" r="8" fill="#1e293b" stroke="#ef4444" stroke-width="3"/>
+            <!-- Row 2 -->
+            <circle cx="50" cy="80" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <circle cx="90" cy="80" r="8" fill="#1e293b" stroke="#ef4444" stroke-width="3"/>
+            <circle cx="130" cy="80" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <!-- Row 3 -->
+            <circle cx="50" cy="120" r="8" fill="#1e293b" stroke="#ef4444" stroke-width="3"/>
+            <circle cx="90" cy="120" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <circle cx="130" cy="120" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <!-- Row 4 -->
+            <circle cx="50" cy="160" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+            <circle cx="90" cy="160" r="8" fill="#1e293b" stroke="#ef4444" stroke-width="3"/>
+            <circle cx="130" cy="160" r="8" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+          </g>
+          <!-- Sense Wire Diagonal Weave -->
+          <path d="M30,30 Q100,100 170,170" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4,2"/>
+        </g>
+      `
+    },
+    {
+      name: 'Magnetic Hard Disk Drive (IBM 305 RAMAC)',
+      region: 'San Jose, California (United States / North America)',
+      desc: 'The introduction of spinning magnetic aluminum disks coated with iron oxide, allowing random-access read/write operations for large-scale digital data storage.',
+      bg: '#111822',
+      draw: () => `
+        <g transform="translate(35, 30)">
+          <!-- Spindle Center Shaft -->
+          <rect x="94" y="20" width="12" height="170" fill="#475569" stroke="#94a3b8" stroke-width="1.5" rx="3"/>
+          <!-- Stack of Magnetic Aluminum Platters (Perspective Ellipses) -->
+          <ellipse cx="100" cy="40" rx="75" ry="18" fill="#64748b" stroke="#cbd5e1" stroke-width="2"/>
+          <ellipse cx="100" cy="70" rx="75" ry="18" fill="#64748b" stroke="#cbd5e1" stroke-width="2"/>
+          <ellipse cx="100" cy="100" rx="75" ry="18" fill="#64748b" stroke="#cbd5e1" stroke-width="2"/>
+          <ellipse cx="100" cy="130" rx="75" ry="18" fill="#64748b" stroke="#cbd5e1" stroke-width="2"/>
+          <ellipse cx="100" cy="160" rx="75" ry="18" fill="#64748b" stroke="#cbd5e1" stroke-width="2"/>
+          <!-- Disk Inner Hubs -->
+          <ellipse cx="100" cy="40" rx="14" ry="4" fill="#334155"/><ellipse cx="100" cy="70" rx="14" ry="4" fill="#334155"/>
+          <ellipse cx="100" cy="100" rx="14" ry="4" fill="#334155"/><ellipse cx="100" cy="130" rx="14" ry="4" fill="#334155"/>
+          <ellipse cx="100" cy="160" rx="14" ry="4" fill="#334155"/>
+          <!-- Magnetic Read/Write Actuator Arm Assembly -->
+          <g transform="translate(145, 50)">
+            <path d="M30,0 L0,50 L35,110" fill="none" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="30" cy="0" r="5" fill="#f8fafc"/>
+            <rect x="-8" y="45" width="22" height="6" fill="#38bdf8" rx="2"/>
+            <rect x="12" y="85" width="22" height="6" fill="#38bdf8" rx="2"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Audio Compact Cassette (Philips)',
+      region: 'Eindhoven (Netherlands / Western Europe)',
+      desc: 'A compact magnetic tape data and audio storage format enclosed in a plastic shell that democratized portable sound recording and early personal computing software distribution.',
+      bg: '#1c1b18',
+      draw: () => `
+        <g transform="translate(30, 45)">
+          <!-- Plastic Cassette Shell Housing -->
+          <rect x="10" y="15" width="180" height="120" fill="#27272a" stroke="#71717a" stroke-width="3" rx="10"/>
+          <!-- Transparent Central Window -->
+          <path d="M40,35 L160,35 L170,85 L30,85 Z" fill="#090d16" stroke="#52525b" stroke-width="2"/>
+          <!-- Left and Right Magnetic Tape Hub Spools -->
+          <circle cx="65" cy="62" r="20" fill="#18181b" stroke="#d4d4d8" stroke-width="2.5"/>
+          <circle cx="65" cy="62" r="8" fill="#71717a"/>
+          <circle cx="135" cy="62" r="28" fill="#18181b" stroke="#d4d4d8" stroke-width="2.5"/>
+          <circle cx="135" cy="62" r="8" fill="#71717a"/>
+          <!-- Dark Magnetic Tape Spooled Across -->
+          <path d="M65,42 Q100,50 135,34" fill="none" stroke="#78350f" stroke-width="3"/>
+          <path d="M65,82 Q100,75 135,90" fill="none" stroke="#78350f" stroke-width="3"/>
+          <!-- Lower Head Access Aperture Area -->
+          <path d="M60,135 L70,105 L130,105 L140,135 Z" fill="#18181b" stroke="#52525b" stroke-width="1.5"/>
+          <circle cx="85" cy="120" r="4" fill="#71717a"/>
+          <circle cx="115" cy="120" r="4" fill="#71717a"/>
+          <!-- Cassette Label Sticker Banner -->
+          <rect x="20" y="20" width="160" height="16" fill="#fef08a" rx="3"/>
+          <text x="100" y="32" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#78350f">PHILIPS COMPACT CASSETTE — 90 MIN</text>
+        </g>
+      `
+    },
+    {
+      name: 'Floppy Disk (8-inch and 3.5-inch Diskettes)',
+      region: 'San Jose, California (United States / North America)',
+      desc: 'A flexible magnetic storage medium encased in a protective plastic jacket, serving as the primary portable operating system and file transfer medium for early personal computers.',
+      bg: '#141c2e',
+      draw: () => `
+        <g transform="translate(45, 25)">
+          <!-- Rigid 3.5-inch Hard Plastic Shell (Cyan / Blue) -->
+          <rect x="15" y="10" width="170" height="190" fill="#1d4ed8" stroke="#3b82f6" stroke-width="2.5" rx="12"/>
+          <rect x="25" y="20" width="150" height="170" fill="#1e40af" rx="8"/>
+          <!-- Metal Shutter Plate at Top -->
+          <rect x="65" y="20" width="70" height="55" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.5" rx="2"/>
+          <rect x="85" y="20" width="12" height="40" fill="#475569" rx="1"/>
+          <!-- Center Metal Hub Assembly -->
+          <circle cx="100" cy="115" r="24" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+          <circle cx="100" cy="115" r="10" fill="#334155"/>
+          <rect x="94" y="105" width="12" height="20" fill="#64748b" rx="2"/>
+          <!-- Paper Write-Protect Notch & Label Area -->
+          <rect x="35" y="155" width="130" height="30" fill="#f8fafc" rx="4"/>
+          <text x="100" y="174" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="700" fill="#0f172a">HD 1.44MB · MS-DOS FORMAT</text>
+        </g>
+      `
+    },
+    {
+      name: 'Compact Disc (CD-Audio / CD-ROM)',
+      region: 'Eindhoven & Tokyo (Netherlands and Japan)',
+      desc: 'An optical digital data storage disc utilizing microscopic pits and lands read by a semiconductor laser, revolutionizing music distribution and digital data permanence.',
+      bg: '#171b24',
+      draw: () => `
+        <g transform="translate(35, 30)">
+          <!-- Outer Optical Disc Body (120mm Silver Disc with Rainbow IRidescence) -->
+          <circle cx="100" cy="100" r="85" fill="url(#bigcdgrad)" stroke="#94a3b8" stroke-width="3"/>
+          <!-- Transparent Center Spindle Hole -->
+          <circle cx="100" cy="100" r="18" fill="#0b1320" stroke="#cbd5e1" stroke-width="2"/>
+          <circle cx="100" cy="100" r="10" fill="#1e293b"/>
+          <!-- Concentric Data Track Rings (Microscopic Pits and Lands) -->
+          <g fill="none" stroke="#38bdf8" stroke-width="0.8" opacity="0.6">
+            <circle cx="100" cy="100" r="30"/><circle cx="100" cy="100" r="38"/><circle cx="100" cy="100" r="46"/>
+            <circle cx="100" cy="100" r="54"/><circle cx="100" cy="100" r="62"/><circle cx="100" cy="100" r="70"/>
+          </g>
+          <!-- Laser Pickup Head Diode & Reflected Beam Effect -->
+          <path d="M100,100 L155,145" stroke="#ef4444" stroke-width="2"/>
+          <circle cx="155" cy="145" r="6" fill="#ef4444" stroke="#f8fafc" stroke-width="1.5"/>
+          <defs>
+            <radialGradient id="bigcdgrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="25%" stop-color="#7dd3fc"/>
+              <stop offset="50%" stop-color="#c084fc"/>
+              <stop offset="75%" stop-color="#f472b6"/>
+              <stop offset="100%" stop-color="#64748b"/>
+            </radialGradient>
+          </defs>
+        </g>
+      `
+    },
+    {
+      name: 'NAND Flash Memory',
+      region: 'Tokyo (Japan / East Asia)',
+      desc: 'A non-volatile solid-state storage architecture utilizing floating-gate transistors to retain electrical charge states without power, forming the backbone of modern SSDs and mobile memory cards.',
+      bg: '#141b14',
+      draw: () => `
+        <g transform="translate(30, 35)">
+          <!-- Silicon Die & IC Chip Package Body -->
+          <rect x="20" y="20" width="160" height="140" fill="#1e293b" stroke="#334155" stroke-width="3" rx="8"/>
+          <!-- Gold Wire Bonding Lines & Internal Flash Controller Die -->
+          <rect x="50" y="45" width="100" height="90" fill="#0f172a" stroke="#0ea5e9" stroke-width="1.5" rx="4"/>
+          <!-- Floating-Gate Transistor Memory Cell Grid Matrix -->
+          <g stroke="#38bdf8" stroke-width="1.5" fill="none">
+            <line x1="65" y1="65" x2="135" y2="65"/><line x1="65" y1="85" x2="135" y2="85"/><line x1="65" y1="105" x2="135" y2="105"/>
+            <line x1="80" y1="50" x2="80" y2="125"/><line x1="100" y1="50" x2="100" y2="125"/><line x1="120" y1="50" x2="120" y2="125"/>
+          </g>
+          <!-- Gold Bond Wires to Pins -->
+          <g stroke="#fbbf24" stroke-width="1.5">
+            <path d="M50,45 L30,30"/><path d="M150,45 L170,30"/>
+            <path d="M50,135 L30,150"/><path d="M150,135 L170,150"/>
+          </g>
+          <!-- IC Gold Connector Pins (Bottom Row) -->
+          <g fill="#fbbf24">
+            <rect x="35" y="158" width="10" height="22" rx="2"/><rect x="55" y="158" width="10" height="22" rx="2"/>
+            <rect x="75" y="158" width="10" height="22" rx="2"/><rect x="95" y="158" width="10" height="22" rx="2"/>
+            <rect x="115" y="158" width="10" height="22" rx="2"/><rect x="135" y="158" width="10" height="22" rx="2"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Blu-ray Optical Disc',
+      region: 'Global Consortium (Japan / International)',
+      desc: 'High-density optical storage utilizing a shorter-wavelength blue-violet laser (405 nm) to achieve massively increased storage capacity for high-definition video and data archival.',
+      bg: '#0c1322',
+      draw: () => `
+        <g transform="translate(35, 30)">
+          <!-- Blu-ray Deep Indigo / Sapphire Disc Body -->
+          <circle cx="100" cy="100" r="85" fill="url(#bluraygrad)" stroke="#38bdf8" stroke-width="3"/>
+          <!-- Center Spindle Hub -->
+          <circle cx="100" cy="100" r="18" fill="#020617" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="100" cy="100" r="10" fill="#0f172a"/>
+          <!-- High-Density Nano-Pit Tracks -->
+          <g fill="none" stroke="#bae6fd" stroke-width="0.6" opacity="0.65">
+            <circle cx="100" cy="100" r="28"/><circle cx="100" cy="100" r="34"/><circle cx="100" cy="100" r="40"/>
+            <circle cx="100" cy="100" r="46"/><circle cx="100" cy="100" r="52"/><circle cx="100" cy="100" r="58"/>
+            <circle cx="100" cy="100" r="64"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="76"/>
+          </g>
+          <!-- 405nm Blue-Violet Laser Diode Beam & Glow -->
+          <path d="M100,100 L145,55" stroke="#38bdf8" stroke-width="2.5"/>
+          <circle cx="145" cy="55" r="7" fill="#38bdf8" stroke="#f8fafc" stroke-width="1.5"/>
+          <defs>
+            <radialGradient id="bluraygrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#e0f2fe"/>
+              <stop offset="35%" stop-color="#0284c7"/>
+              <stop offset="70%" stop-color="#1e3a8a"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </radialGradient>
+          </defs>
+        </g>
+      `
+    },
+    {
+      name: 'DNA Data Storage (Synthetic Oligonucleotides)',
+      region: 'Cambridge, Massachusetts (United States / North America)',
+      desc: 'The cutting-edge biotechnological frontier of translating digital binary files into synthetic DNA base sequences (A, T, C, G) for ultra-dense, multi-millennial physical data archiving.',
+      bg: '#111726',
+      draw: () => `
+        <g transform="translate(30, 20)">
+          <!-- Glowing Double-Helix DNA Molecular Structure -->
+          <g stroke-width="3.5" fill="none" stroke-linecap="round">
+            <!-- Strand 1 (Blue) -->
+            <path d="M30,30 Q65,80 100,30 T170,30" stroke="#38bdf8"/>
+            <!-- Strand 2 (Pink/Purple) -->
+            <path d="M30,130 Q65,80 100,130 T170,130" stroke="#f472b6"/>
+          </g>
+          <!-- Nitrogenous Base Pairs (A-T, C-G Rungs) -->
+          <g stroke="#94a3b8" stroke-width="2" stroke-dasharray="3,3">
+            <line x1="45" y1="52" x2="45" y2="108"/>
+            <line x1="75" y1="78" x2="75" y2="82"/>
+            <line x1="100" y1="30" x2="100" y2="130"/>
+            <line x1="125" y1="78" x2="125" y2="82"/>
+            <line x1="155" y1="52" x2="155" y2="108"/>
+          </g>
+          <!-- Base Pair Glowing Nodes (A, T, C, G) -->
+          <g>
+            <circle cx="45" cy="52" r="5" fill="#38bdf8"/><circle cx="45" cy="108" r="5" fill="#f472b6"/>
+            <circle cx="75" cy="65" r="5" fill="#34d399"/><circle cx="75" cy="95" r="5" fill="#fbbf24"/>
+            <circle cx="125" cy="65" r="5" fill="#fbbf24"/><circle cx="125" cy="95" r="5" fill="#34d399"/>
+            <circle cx="155" cy="52" r="5" fill="#f472b6"/><circle cx="155" cy="108" r="5" fill="#38bdf8"/>
+          </g>
+          <!-- Binary-to-DNA conversion sequence label -->
+          <rect x="25" y="152" width="150" height="22" fill="#1e293b" stroke="#38bdf8" stroke-width="1" rx="4"/>
+          <text x="100" y="167" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="700" fill="#38bdf8">ATCG · SYNTHETIC OLIGONUCLEOTIDE</text>
+        </g>
+      `
+    }
+  ];
+
+  function renderFrame(index){
+    const item = STORAGE_ITEMS[index];
+    const bg = item.bg;
+    let svgContent = baseFrame(bg, index);
+    svgContent += item.draw();
+    svgContent += caption(item.name, item.region, item.desc);
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390">${svgContent}</svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(index + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay go" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture(){
+    playShutterSound();
+    renderFrame(currentIndex);
+    currentIndex = (currentIndex + 1) % STORAGE_ITEMS.length;
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  renderFrame(0);
+})();
+</script>
+</body>
+</html>
