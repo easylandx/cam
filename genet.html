@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Gallery Booth — Hominin Genetics & Evolutionary Epigenetics</title>
+<style>
+  :root {
+    --body-dark: #121820;
+    --body-mid: #1b263b;
+    --body-light: #2b3a4a;
+    --screen-bg: #0d131a;
+    --cream: #e0e6ed;
+    --cream-dim: #94a3b8;
+    --shutter-orange: #0284c7;
+    --shutter-orange-dark: #0369a1;
+    --amber: #38bdf8;
+    --line: #334155;
+    --focus: #7dd3fc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #0f172a 0%, #090d16 55%, #020617 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(56,189,248,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .placeholder-text {
+    color: var(--amber);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+    opacity: 0.85;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .flash-overlay.go {
+    animation: flashPop 260ms ease-out;
+  }
+  @keyframes flashPop {
+    0% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #7dd3fc, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(56,189,248,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(56,189,248,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(56,189,248,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(56,189,248,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(56,189,248,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">GENOMICS & EPIGENETICS ARCHIVE</p>
+    <h1>Hominin Genetics & Epigenetics</h1>
+    <p>Press shutter to examine 21 elaborate molecular blueprints and loci.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>ARCHIVE-21</span>
+      <span>f/1.2 &nbsp;·&nbsp; BIO-LOCUS</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="placeholder-text hud-font" id="placeholderText">
+        VIEWFINDER READY<br>
+        press shutter to examine discovery
+      </div>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 000</div>
+      <div class="grain"></div>
+      <div class="flash-overlay" id="flashOverlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/4000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>MODE</span>
+        <span><span class="val">DETAILED</span></span>
+      </div>
+    </div>
+    <p class="hint">tap the blue shutter button to cycle through entries</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const placeholderText = document.getElementById('placeholderText');
+  const flashOverlay = document.getElementById('flashOverlay');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 0;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 0.9;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.7, 2400);
+    playClickBurst(0.07, 0.035, 0.55, 1600);
+  }
+
+  const ACCENTS = ['#38bdf8', '#34d399', '#f472b6', '#fbbf24', '#c084fc', '#38bdf8', '#34d399'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#070d1a"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#0f172a" opacity="0.6"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="6" rx="190" ry="90" fill="${glow}" opacity="0.15"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#02060a" opacity="0.8"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="#1e293b" stroke-width="14"/>`;
+    s += `<rect x="22" y="20" width="252" height="270" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="34" y="32" width="228" height="246" fill="#0b1320"/>`;
+    s += `<rect x="39" y="37" width="218" height="236" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, origin, desc){
+    let s = '';
+    s += `<rect x="0" y="318" width="300" height="72" fill="#070d1a" opacity="0.96"/>`;
+    s += `<rect x="0" y="318" width="300" height="2" fill="#38bdf8" opacity="0.8"/>`;
+    s += `<text x="150" y="335" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="347" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="8.5" fill="#38bdf8">${escapeXml(origin)}</text>`;
+    
+    let words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 52) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${360 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  const SPECIES = [
+    {
+      name: 'Chimpanzee-Human Genomic Divergence Baseline',
+      origin: 'Broad Institute & Global Consortia (USA/UK)',
+      desc: 'Comparative comparative sequencing revealing 98.8% identity, nucleotide polymorphism hotspots, and lineage split metrics.',
+      bg: '#101d2c',
+      draw: () => `
+        <g stroke="#38bdf8" stroke-width="2">
+          <path d="M50,80 Q90,140 150,80 Q210,20 250,80" fill="none"/>
+          <path d="M50,110 Q90,170 150,110 Q210,50 250,110" fill="none" stroke="#f472b6"/>
+          <path d="M50,140 Q90,200 150,140 Q210,80 250,140" fill="none" stroke="#34d399"/>
+          <line x1="80" y1="95" x2="80" y2="125" stroke="#fff" stroke-width="2"/>
+          <line x1="120" y1="120" x2="120" y2="150" stroke="#fff" stroke-width="2"/>
+          <line x1="180" y1="80" x2="180" y2="110" stroke="#fff" stroke-width="2"/>
+          <line x1="220" y1="65" x2="220" y2="95" stroke="#fff" stroke-width="2"/>
+        </g>
+        <circle cx="150" cy="180" r="28" fill="none" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,3"/>
+        <text x="150" y="184" text-anchor="middle" font-family="monospace" font-size="10" fill="#fbbf24">SNP MAP</text>
+        <rect x="60" y="210" width="180" height="35" rx="6" fill="#0b1320" stroke="#334155"/>
+        <line x1="75" y1="227" x2="225" y2="227" stroke="#38bdf8" stroke-width="3"/>
+        <circle cx="110" cy="227" r="5" fill="#f472b6"/>
+        <circle cx="170" cy="227" r="5" fill="#34d399"/>
+      `
+    },
+    {
+      name: 'FOXP2 Speech-Associated Mutation',
+      origin: 'Max Planck Institute for Evol. Anthro. (Germany)',
+      desc: 'Dual amino acid substitutions in the transcription factor regulating neural motor circuits for vocal articulation.',
+      bg: '#17172b',
+      draw: () => `
+        <rect x="75" y="70" width="150" height="130" rx="10" fill="#0f172a" stroke="#818cf8" stroke-width="2"/>
+        <path d="M90,100 C120,70 180,130 210,100" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <path d="M90,160 C120,130 180,190 210,160" fill="none" stroke="#f472b6" stroke-width="3"/>
+        <circle cx="120" cy="88" r="7" fill="#fbbf24"/>
+        <circle cx="180" cy="172" r="7" fill="#34d399"/>
+        <line x1="150" y1="85" x2="150" y2="185" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>
+        <rect x="90" y="215" width="120" height="30" rx="4" fill="#1e1e3f" stroke="#818cf8"/>
+        <text x="150" y="233" text-anchor="middle" font-family="monospace" font-size="9" fill="#e2e8f0">AMINO ACID SUB</text>
+      `
+    },
+    {
+      name: 'Denisovan High-Coverage Genome Architecture',
+      origin: 'Max Planck Institute for Evol. Anthro. (Germany)',
+      desc: 'High-throughput sequencing extraction revealing an archaic sister lineage divergent around 400,000 years ago.',
+      bg: '#131b26',
+      draw: () => `
+        <circle cx="150" cy="140" r="50" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="150" cy="140" r="35" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <circle cx="150" cy="140" r="20" fill="none" stroke="#f472b6" stroke-width="2"/>
+        <path d="M100,140 H200" stroke="#64748b" stroke-width="1"/>
+        <path d="M150,90 V190" stroke="#64748b" stroke-width="1"/>
+        <rect x="85" y="210" width="130" height="32" rx="6" fill="#0a1017" stroke="#38bdf8"/>
+        <text x="150" y="230" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">PHALANGEAL DNA</text>
+      `
+    },
+    {
+      name: 'Neanderthal Nuclear Introgression',
+      origin: 'Max Planck & Harvard Medical (Germany/USA)',
+      desc: 'Genomic proof of 1-2% archaic introgression in non-African cohorts resulting from ancient out-of-Africa contact.',
+      bg: '#211515',
+      draw: () => `
+        <rect x="70" y="90" width="160" height="90" rx="8" fill="#140a0a" stroke="#f87171" stroke-width="2"/>
+        <path d="M70,135 H230" stroke="#fbbf24" stroke-width="4"/>
+        <path d="M95,135 L120,110 L145,160 L170,110 L195,135" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <circle cx="120" cy="110" r="5" fill="#f87171"/>
+        <circle cx="170" cy="110" r="5" fill="#f87171"/>
+        <rect x="80" y="200" width="140" height="35" rx="6" fill="#1c0f0f" stroke="#f87171"/>
+        <text x="150" y="221" text-anchor="middle" font-family="monospace" font-size="9" fill="#f87171">1-2% INTROGRESSION</text>
+      `
+    },
+    {
+      name: 'Denisovan Introgression in Oceania & Asia',
+      origin: 'Harvard Medical School & Broad Institute (USA)',
+      desc: 'Detection of 4% to 6% Denisovan genetic ancestry preserved within modern indigenous Southeast Asian groups.',
+      bg: '#122420',
+      draw: () => `
+        <path d="M80,140 Q115,80 150,140 Q185,200 220,140" fill="none" stroke="#34d399" stroke-width="3"/>
+        <circle cx="115" cy="110" r="14" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <circle cx="185" cy="170" r="14" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        <line x1="115" y1="110" x2="150" y2="140" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3,3"/>
+        <line x1="185" y1="170" x2="150" y2="140" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3,3"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#091714" stroke="#34d399"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#34d399">4-6% ADMIXTURE PULSE</text>
+      `
+    },
+    {
+      name: 'EPAS1 High-Altitude Adaptation Allele',
+      origin: 'Qinghai-Tibet Plateau (China / East Asia)',
+      desc: 'Introgressed Denisovan-derived haplotype regulating hemoglobin production against chronic mountain sickness.',
+      bg: '#142230',
+      draw: () => `
+        <polygon points="150,75 220,195 80,195" fill="none" stroke="#38bdf8" stroke-width="3"/>
+        <polygon points="150,115 190,180 110,180" fill="#38bdf8" opacity="0.25"/>
+        <line x1="150" y1="75" x2="150" y2="195" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,4"/>
+        <path d="M110,150 Q130,130 150,150 Q170,170 190,150" fill="none" stroke="#f472b6" stroke-width="2"/>
+        <rect x="70" y="210" width="160" height="32" rx="6" fill="#0b1724" stroke="#38bdf8"/>
+        <text x="150" y="230" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">OXYGEN HOMEOSTASIS</text>
+      `
+    },
+    {
+      name: 'SLC24A5 Light Skin Pigmentation Mutation',
+      origin: 'Univ. of Copenhagen & Birmingham (Denmark/UK)',
+      desc: 'Major functional single-nucleotide polymorphism (A111T) responsible for West Eurasian agricultural depigmentation.',
+      bg: '#241b14',
+      draw: () => `
+        <circle cx="150" cy="135" r="45" fill="none" stroke="#fbbf24" stroke-width="3"/>
+        <path d="M105,135 H195" stroke="#f472b6" stroke-width="3"/>
+        <path d="M150,90 V180" stroke="#f472b6" stroke-width="3"/>
+        <circle cx="150" cy="135" r="10" fill="#38bdf8"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#17110c" stroke="#fbbf24"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">SNP A111T MUTATION</text>
+      `
+    },
+    {
+      name: 'LCT Lactase Persistence Allele (European)',
+      origin: 'University College London & Consortia (UK)',
+      desc: 'Genetic mapping of regulatory mutations upstream of LCT enabling adult lactose digestion via pastoralist dairying.',
+      bg: '#14221b',
+      draw: () => `
+        <rect x="75" y="90" width="150" height="90" rx="8" fill="#0b1712" stroke="#34d399" stroke-width="2"/>
+        <path d="M90,155 L120,115 L150,145 L180,105 L210,135" fill="none" stroke="#34d399" stroke-width="3"/>
+        <circle cx="180" cy="105" r="6" fill="#fbbf24"/>
+        <rect x="85" y="200" width="130" height="35" rx="6" fill="#0b1712" stroke="#34d399"/>
+        <text x="150" y="221" text-anchor="middle" font-family="monospace" font-size="9" fill="#34d399">UPSTREAM ENHANCER</text>
+      `
+    },
+    {
+      name: 'Lactase Persistence Alleles (East Africa)',
+      origin: 'University of Pennsylvania & Nairobi (USA/Kenya)',
+      desc: 'Independent, convergent single-nucleotide mutations in the enhancer region of LCT among nomadic pastoralists.',
+      bg: '#241a12',
+      draw: () => `
+        <circle cx="115" cy="135" r="30" fill="none" stroke="#fbbf24" stroke-width="2.5"/>
+        <circle cx="185" cy="135" r="30" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <path d="M145,135 H155" stroke="#f472b6" stroke-width="4"/>
+        <circle cx="115" cy="135" r="5" fill="#fbbf24"/>
+        <circle cx="185" cy="135" r="5" fill="#38bdf8"/>
+        <rect x="70" y="205" width="160" height="35" rx="6" fill="#17110b" stroke="#fbbf24"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">CONVERGENT MUTATION</text>
+      `
+    },
+    {
+      name: 'ABCC11 Earwax & Body Odor Polymorphism',
+      origin: 'Nagasaki University (Nagasaki, Japan)',
+      desc: 'Nonsynonymous SNP governing axillary apocrine gland secretions and cerumen texture across East Asian migration routes.',
+      bg: '#1c1424',
+      draw: () => `
+        <path d="M120,95 C165,95 185,135 165,165 C145,195 115,165 130,135 C135,125 145,115 150,115" fill="none" stroke="#c084fc" stroke-width="3.5"/>
+        <circle cx="148" cy="140" r="8" fill="#38bdf8"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#120c1a" stroke="#c084fc"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#c084fc">CERUMEN GENOTYPE</text>
+      `
+    },
+    {
+      name: 'CCR5-Delta 32 HIV-Resistance Mutation',
+      origin: 'University of California, Berkeley (USA)',
+      desc: '32-base-pair deletion in CCR5 chemokine receptor originating ~5,000 years ago in Europe, conferring viral resistance.',
+      bg: '#261414',
+      draw: () => `
+        <rect x="85" y="90" width="130" height="90" rx="8" fill="#170c0c" stroke="#f87171" stroke-width="2"/>
+        <line x1="85" y1="90" x2="215" y2="180" stroke="#f87171" stroke-width="3"/>
+        <circle cx="150" cy="135" r="12" fill="none" stroke="#fbbf24" stroke-width="2"/>
+        <text x="150" y="139" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">Δ32</text>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#170c0c" stroke="#f87171"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#f87171">RECEPTOR DELETION</text>
+      `
+    },
+    {
+      name: 'MHC Diversity & Archaic Immune Introgression',
+      origin: 'Stanford University & Max Planck (USA/Germany)',
+      desc: 'Modern humans inheriting functionally diverse Major Histocompatibility Complex alleles from archaic hominins.',
+      bg: '#142026',
+      draw: () => `
+        <circle cx="120" cy="135" r="30" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+        <circle cx="180" cy="135" r="30" fill="none" stroke="#34d399" stroke-width="2.5"/>
+        <path d="M135,115 Q150,155 165,115" fill="none" stroke="#fbbf24" stroke-width="2"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0c151a" stroke="#38bdf8"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">IMMUNE ALLELE POOL</text>
+      `
+    },
+    {
+      name: 'AMY1 Copy Number Variation (Salivary Amylase)',
+      origin: 'University at Buffalo (New York, USA)',
+      desc: 'High copy number variations in salivary amylase matching dietary shifts toward starch-heavy subsistence economies.',
+      bg: '#212114',
+      draw: () => `
+        <rect x="85" y="130" width="25" height="50" rx="4" fill="#fbbf24" opacity="0.8"/>
+        <rect x="120" y="110" width="25" height="70" rx="4" fill="#fbbf24"/>
+        <rect x="155" y="90" width="25" height="90" rx="4" fill="#f472b6"/>
+        <line x1="75" y1="180" x2="205" y2="180" stroke="#64748b" stroke-width="2"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#14140c" stroke="#fbbf24"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">AMYLASE EXPANSION</text>
+      `
+    },
+    {
+      name: 'EDAR V350M Ectodermal Development Variant',
+      origin: 'Harvard University & University of Tokyo (USA/Japan)',
+      desc: 'Missense mutation altering hair thickness, sweat gland density, and shovel-shaped incisors across East Asia/Americas.',
+      bg: '#172214',
+      draw: () => `
+        <path d="M95,115 Q150,195 205,115" fill="none" stroke="#34d399" stroke-width="3.5"/>
+        <circle cx="150" cy="140" r="10" fill="#38bdf8"/>
+        <path d="M135,140 L165,140" stroke="#fff" stroke-width="2"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0e170c" stroke="#34d399"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#34d399">ECTODERMAL VARIANT</text>
+      `
+    },
+    {
+      name: 'Neanderthal Adaptive Haplotypes (Skin/Immune)',
+      origin: 'Vanderbilt University (Nashville, USA)',
+      desc: 'Genome-wide scans showing Neanderthal segments enriched for keratin production and UV radiation protection.',
+      bg: '#21151c',
+      draw: () => `
+        <path d="M85,135 Q150,90 215,135 Q150,180 85,135 Z" fill="none" stroke="#f472b6" stroke-width="3"/>
+        <circle cx="150" cy="135" r="12" fill="#38bdf8" opacity="0.8"/>
+        <circle cx="130" cy="125" r="3" fill="#fff"/><circle cx="170" cy="145" r="3" fill="#fff"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#140d12" stroke="#f472b6"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#f472b6">KERATIN ENRICHED</text>
+      `
+    },
+    {
+      name: 'Ghost Lineage Introgression in West Africa',
+      origin: 'University of California, Los Angeles (USA)',
+      desc: 'Computational detection of deep archaic genetic material (2-19%) in modern West African populations.',
+      bg: '#131924',
+      draw: () => `
+        <circle cx="150" cy="135" r="45" fill="none" stroke="#818cf8" stroke-width="2" stroke-dasharray="6,4"/>
+        <circle cx="150" cy="135" r="22" fill="#818cf8" opacity="0.35"/>
+        <circle cx="150" cy="135" r="8" fill="#fbbf24"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0a0f17" stroke="#818cf8"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#818cf8">UNSEQUENCED GHOST</text>
+      `
+    },
+    {
+      name: 'DNA Methylation Epigenetic Maps of Archaic Hominins',
+      origin: 'Hebrew University of Jerusalem (Israel)',
+      desc: 'Molecular reconstruction of ancient DNA methylation patterns, uncovering differential gene expression in skeletal forms.',
+      bg: '#142124',
+      draw: () => `
+        <line x1="85" y1="105" x2="215" y2="105" stroke="#38bdf8" stroke-width="2.5"/>
+        <line x1="85" y1="135" x2="215" y2="135" stroke="#34d399" stroke-width="2.5"/>
+        <line x1="85" y1="165" x2="215" y2="165" stroke="#f472b6" stroke-width="2.5"/>
+        <circle cx="115" cy="105" r="5" fill="#fff"/>
+        <circle cx="165" cy="135" r="5" fill="#fff"/>
+        <circle cx="135" cy="165" r="5" fill="#fff"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0b1417" stroke="#38bdf8"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">EPIGENOME MAP</text>
+      `
+    },
+    {
+      name: 'ASPM and Microcephalin Brain Size Variants',
+      origin: 'University of Chicago (Chicago, USA)',
+      desc: 'Evolutionary analysis of rapidly evolving neurodevelopmental genes associated with cerebral cortex expansion.',
+      bg: '#1c1624',
+      draw: () => `
+        <circle cx="150" cy="135" r="38" fill="none" stroke="#c084fc" stroke-width="3"/>
+        <path d="M125,150 Q150,170 175,150" fill="none" stroke="#c084fc" stroke-width="2.5"/>
+        <circle cx="130" cy="120" r="4" fill="#fbbf24"/>
+        <circle cx="170" cy="120" r="4" fill="#fbbf24"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#120e17" stroke="#c084fc"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#c084fc">NEURODEVELOPMENT</text>
+      `
+    },
+    {
+      name: 'SLC45A2 Solute Carrier Pigmentation Variant',
+      origin: 'University of Oxford (Oxford, UK)',
+      desc: 'Major-effect amino acid substitution contributing to light skin and ocular pigmentation across European/Anatolian groups.',
+      bg: '#241c14',
+      draw: () => `
+        <ellipse cx="150" cy="135" rx="50" ry="25" fill="none" stroke="#fbbf24" stroke-width="3"/>
+        <circle cx="150" cy="135" r="14" fill="#38bdf8"/>
+        <path d="M135,135 H165" stroke="#fff" stroke-width="2"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#17120c" stroke="#fbbf24"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#fbbf24">PIGMENTATION LOCUS</text>
+      `
+    },
+    {
+      name: 'ADH1B Alcohol Metabolism Variant',
+      origin: 'Fudan University & NIH (Shanghai/Bethesda)',
+      desc: 'Protective variant in ADH1B surging across East Asia alongside the rise of wet-rice agricultural fermentation.',
+      bg: '#14241c',
+      draw: () => `
+        <rect x="125" y="95" width="50" height="80" rx="8" fill="#0b1712" stroke="#34d399" stroke-width="2"/>
+        <path d="M125,135 H175" stroke="#34d399" stroke-width="2"/>
+        <circle cx="150" cy="155" r="7" fill="#fbbf24"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0b1712" stroke="#34d399"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#34d399">ENZYME VARIANT</text>
+      `
+    },
+    {
+      name: 'SRGAP2C Synaptogenesis Gene Duplication',
+      origin: 'University of Colorado Denver (USA)',
+      desc: 'Human-specific partial genomic duplication occurring ~3.4 million years ago, slowing synaptic development.',
+      bg: '#131f26',
+      draw: () => `
+        <path d="M90,140 Q120,90 150,140 Q180,190 210,140" fill="none" stroke="#38bdf8" stroke-width="3.5"/>
+        <path d="M100,155 Q130,105 160,155 Q190,205 220,155" fill="none" stroke="#f472b6" stroke-width="2.5" opacity="0.8"/>
+        <rect x="75" y="205" width="150" height="35" rx="6" fill="#0a1014" stroke="#38bdf8"/>
+        <text x="150" y="226" text-anchor="middle" font-family="monospace" font-size="9" fill="#38bdf8">GENOMIC DUPLICATION</text>
+      `
+    }
+  ];
+
+  function updateView(idx) {
+    const item = SPECIES[idx];
+    viewfinder.innerHTML = `
+      ${baseFrame(item.bg, idx)}
+      <svg viewBox="0 0 300 390" style="position:absolute; inset:0; width:100%; height:100%;">
+        ${item.draw()}
+        ${caption(item.name, item.origin, item.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font flash" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(idx + 1).padStart(3, '0')}</div>
+      <div class="grain"></div>
+      <div class="flash-overlay go" id="flashOverlay"></div>
+    `;
+  }
+
+  function triggerCapture() {
+    playShutterSound();
+    frameNumber++;
+    currentIndex = (currentIndex + 1) % SPECIES.length;
+    updateView(currentIndex);
+  }
+
+  shutterBtn.addEventListener('click', () => {
+    if(autoActive) toggleAuto();
+    triggerCapture();
+  });
+
+  function toggleAuto() {
+    autoActive = !autoActive;
+    if(autoActive) {
+      autoBtn.classList.add('active');
+      autoBtn.setAttribute('aria-pressed', 'true');
+      autoLabel.textContent = 'AUTO SHUTTER · ACTIVE';
+      triggerCapture();
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoBtn.setAttribute('aria-pressed', 'false');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+      autoTimer = null;
+    }
+  }
+
+  autoBtn.addEventListener('click', toggleAuto);
+
+  updateView(0);
+  frameNumber = 1;
+  frameCountEl.textContent = 'NO. 001';
+})();
+</script>
+</body>
+</html>

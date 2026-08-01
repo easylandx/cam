@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 Master Archive Gallery — Detailed Symbolic Material Culture &amp; Spatial Expression</title>
+<style>
+  :root {
+    --body-dark: #0f141c;
+    --body-mid: #161f2e;
+    --body-light: #243044;
+    --screen-bg: #070b10;
+    --cream: #e2e8f0;
+    --cream-dim: #8b9bb4;
+    --shutter-orange: #d97706;
+    --shutter-orange-dark: #b45309;
+    --amber: #fbbf24;
+    --line: #334155;
+    --focus: #fde047;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #181512 0%, #0b0908 55%, #030508 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .hud-font {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  header {
+    text-align: center;
+  }
+  header .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin: 0 0 6px;
+  }
+  header h1 {
+    font-size: 21px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--cream-dim);
+  }
+
+  .camera-body {
+    width: 100%;
+    background: linear-gradient(180deg, var(--body-light), var(--body-dark) 70%);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow:
+      0 35px 70px -20px rgba(0,0,0,0.85),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 -6px 12px rgba(0,0,0,0.5);
+    border: 1px solid #1e293b;
+    position: relative;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6px 12px;
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+  .lens-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 1px rgba(251,191,36,0.8);
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .viewfinder {
+    position: relative;
+    background: var(--screen-bg);
+    border-radius: 12px;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 40px rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .viewfinder svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .reticle {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--focus);
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .reticle.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .reticle.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .reticle.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .reticle.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .rec-indicator {
+    position: absolute;
+    top: 12px;
+    left: 38px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: var(--amber);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .rec-indicator.flash { opacity: 1; }
+  .rec-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+  }
+
+  .frame-count {
+    position: absolute;
+    bottom: 12px;
+    right: 38px;
+    font-size: 10px;
+    color: var(--focus);
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 20px 6px 6px;
+  }
+
+  .shutter-btn {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 35% 30%, #fde047, var(--shutter-orange) 55%, var(--shutter-orange-dark) 100%);
+    box-shadow:
+      0 6px 0 var(--shutter-orange-dark),
+      0 10px 18px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .shutter-btn:active {
+    transform: translateY(5px);
+    box-shadow:
+      0 1px 0 var(--shutter-orange-dark),
+      0 2px 6px rgba(0,0,0,0.5),
+      inset 0 2px 4px rgba(255,255,255,0.3);
+  }
+  .shutter-btn::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .shutter-ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid #0f172a;
+  }
+  .shutter-wrap { position: relative; }
+
+  .side-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--cream-dim);
+    min-width: 74px;
+  }
+  .side-readout span.val { color: var(--focus); }
+
+  .hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cream-dim);
+    padding-top: 4px;
+  }
+
+  .auto-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--cream-dim);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .auto-btn:hover { border-color: var(--amber); }
+  .auto-btn.active {
+    background: rgba(251,191,36,0.16);
+    border-color: var(--shutter-orange);
+    color: var(--cream);
+  }
+  .auto-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+  .auto-btn.active .auto-dot {
+    background: var(--amber);
+    animation: autoPulse 1s ease-in-out infinite;
+  }
+  @keyframes autoPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.6); }
+    50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+  }
+
+  .easypagex-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #0f172a;
+    background: var(--amber);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px -6px rgba(251,191,36,0.55);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .easypagex-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -6px rgba(251,191,36,0.7);
+  }
+  .easypagex-btn:active { transform: translateY(0); }
+  .easypagex-btn svg { width: 16px; height: 16px; }
+
+  footer {}
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <p class="kicker hud-font">MASTER ARCHIVE · HIGH-FIDELITY PALAEOLITHIC VIZ</p>
+    <h1>Symbolic Material &amp; Spatial Culture</h1>
+    <p>21 deeply elaborated archaeological artifacts rendered in high-detail vector art.</p>
+  </header>
+
+  <div class="camera-body">
+    <div class="top-strip hud-font">
+      <span><span class="lens-dot"></span>HIGH-DEF RENDER</span>
+      <span>ISO 200 &nbsp;·&nbsp; PLEISTOCENE</span>
+    </div>
+
+    <div class="viewfinder" id="viewfinder">
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. 001</div>
+      <div class="grain"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="side-readout hud-font">
+        <span>SHUTTER</span>
+        <span><span class="val">1/1000</span></span>
+      </div>
+      <div class="shutter-wrap">
+        <div class="shutter-ring"></div>
+        <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+      </div>
+      <div class="side-readout hud-font" style="text-align:right;">
+        <span>INDEX</span>
+        <span><span class="val">01/21</span></span>
+      </div>
+    </div>
+    <p class="hint">tap shutter to cycle through elaborated artifacts</p>
+
+    <button class="auto-btn hud-font" id="autoBtn" aria-pressed="false">
+      <span class="auto-dot" id="autoDot"></span>
+      <span id="autoLabel">AUTO SHUTTER · OFF</span>
+    </button>
+  </div>
+
+  <a class="easypagex-btn" href="https://easylandx.github.io" target="_blank" rel="noopener noreferrer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    Visit EasyLandX
+  </a>
+
+  <footer></footer>
+</div>
+
+<script>
+(function(){
+  const shutterBtn = document.getElementById('shutterBtn');
+  const viewfinder = document.getElementById('viewfinder');
+  const recIndicator = document.getElementById('recIndicator');
+  const frameCountEl = document.getElementById('frameCount');
+  const autoBtn = document.getElementById('autoBtn');
+  const autoLabel = document.getElementById('autoLabel');
+
+  let frameNumber = 1;
+  let currentIndex = 0;
+  let autoActive = false;
+  let autoTimer = null;
+  const AUTO_INTERVAL_MS = 2200;
+
+  /* Audio Synthesizer */
+  let audioCtx = null;
+  function getCtx() {
+    if(!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClickBurst(delay, duration, gainPeak, freq) {
+    const ctx = getCtx();
+    const start = ctx.currentTime + delay;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = freq;
+    bandpass.Q.value = 1.2;
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(gainPeak, start + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+    noise.connect(bandpass).connect(gain).connect(ctx.destination);
+    noise.start(start);
+    noise.stop(start + duration + 0.02);
+  }
+
+  function playShutterSound() {
+    playClickBurst(0,    0.045, 0.75, 2600);
+    playClickBurst(0.065, 0.035, 0.6, 1800);
+  }
+
+  const ACCENTS = ['#fbbf24', '#f87171', '#34d399', '#60a5fa', '#c084fc', '#f472b6', '#38bdf8'];
+  function pickAccent(idx){ return ACCENTS[idx % ACCENTS.length]; }
+  function escapeXml(str){
+    return String(str).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]));
+  }
+
+  function baseFrame(bg, index){
+    let s = '';
+    s += `<rect x="0" y="0" width="300" height="390" fill="#04070d"/>`;
+    s += `<rect x="0" y="0" width="300" height="200" fill="#111827" opacity="0.5"/>`;
+    const glow = pickAccent(index);
+    s += `<ellipse cx="150" cy="8" rx="200" ry="100" fill="${glow}" opacity="0.18"/>`;
+    s += `<rect x="0" y="376" width="300" height="14" fill="#020408" opacity="0.9"/>`;
+    s += `<rect x="18" y="16" width="264" height="278" fill="none" stroke="#1e293b" stroke-width="12"/>`;
+    s += `<rect x="18" y="16" width="264" height="278" fill="none" stroke="${glow}" stroke-width="2"/>`;
+    s += `<rect x="30" y="28" width="240" height="254" fill="#0c1017"/>`;
+    s += `<rect x="35" y="33" width="230" height="244" fill="${bg}"/>`;
+    return s;
+  }
+
+  function caption(name, region, desc){
+    let s = '';
+    s += `<rect x="0" y="312" width="300" height="78" fill="#070b10" opacity="0.98"/>`;
+    s += `<rect x="0" y="312" width="300" height="2.5" fill="#fbbf24" opacity="0.9"/>`;
+    s += `<text x="150" y="330" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" fill="#f8fafc">${escapeXml(name)}</text>`;
+    s += `<text x="150" y="343" text-anchor="middle" font-family="'Segoe UI', Roboto, sans-serif" font-style="italic" font-size="9" fill="#fbbf24">${escapeXml(region)}</text>`;
+    
+    const words = desc.split(' ');
+    let lines = [];
+    let curLine = '';
+    words.forEach(w => {
+      if ((curLine + ' ' + w).length > 50) {
+        lines.push(curLine);
+        curLine = w;
+      } else {
+        curLine += (curLine ? ' ' : '') + w;
+      }
+    });
+    if(curLine) lines.push(curLine);
+    lines = lines.slice(0, 3);
+
+    lines.forEach((l, i) => {
+      s += `<text x="150" y="${357 + (i*10)}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" fill="#94a3b8">${escapeXml(l)}</text>`;
+    });
+
+    return s;
+  }
+
+  /* 21 Detailed Visual Definitions */
+  const TECHS = [
+    {
+      name: 'Engraved Geometric Ochre Slabs',
+      region: 'Blombos Cave (Western Cape / South Africa)',
+      desc: 'Cross-hatched abstract triangles and intersecting lines incised on silcrete stone blocks, marking early symbolic external memory.',
+      bg: '#1c100a',
+      draw: () => `
+        <defs>
+          <linearGradient id="ochreGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#b45309"/>
+            <stop offset="50%" stop-color="#78350f"/>
+            <stop offset="100%" stop-color="#451a03"/>
+          </linearGradient>
+          <filter id="shadow">
+            <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.6"/>
+          </filter>
+        </defs>
+        <!-- Rock body with irregular chipped edges -->
+        <path d="M85,100 C110,85 190,80 220,95 C240,110 245,175 225,200 C205,225 115,230 90,210 C70,190 75,120 85,100 Z" fill="url(#ochreGrad)" filter="url(#shadow)" stroke="#451a03" stroke-width="2"/>
+        <!-- Texture stippling & mineral veins -->
+        <path d="M100,120 Q130,150 110,180" fill="none" stroke="#271c12" stroke-width="1.5" stroke-dasharray="2,3"/>
+        <path d="M190,110 Q160,160 210,190" fill="none" stroke="#271c12" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <!-- Precise cross-hatch engraving lines -->
+        <g stroke="#fef08a" stroke-width="1.8" opacity="0.95" stroke-linecap="round">
+          <line x1="115" y1="120" x2="195" y2="185"/>
+          <line x1="125" y1="110" x2="205" y2="175"/>
+          <line x1="135" y1="105" x2="215" y2="165"/>
+          <line x1="105" y1="140" x2="185" y2="205"/>
+          <line x1="195" y1="120" x2="115" y2="185"/>
+          <line x1="205" y1="130" x2="125" y2="195"/>
+          <line x1="185" y1="110" x2="105" y2="175"/>
+          <line x1="215" y1="140" x2="135" y2="205"/>
+        </g>
+        <!-- Highlight refraction -->
+        <path d="M95,105 C130,95 180,95 210,105" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0.4"/>
+      `
+    },
+    {
+      name: 'Marine Shell Personal Adornment',
+      region: 'Blombos & Skhul (South Africa & Levant)',
+      desc: 'Pierced Nassarius kraussianus gastropod shells threaded on cordage with accumulated traces of red hematite contact.',
+      bg: '#0c1822',
+      draw: () => `
+        <defs>
+          <radialGradient id="shellGrad" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#f8fafc"/>
+            <stop offset="60%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#64748b"/>
+          </radialGradient>
+        </defs>
+        <!-- Cordage passing through shells -->
+        <path d="M50,120 Q120,70 190,140 T260,110" fill="none" stroke="#d97706" stroke-width="3.5" opacity="0.85"/>
+        <path d="M50,120 Q120,70 190,140 T260,110" fill="none" stroke="#fef08a" stroke-width="1.5"/>
+        <!-- Shell 1 -->
+        <g transform="translate(110,100) rotate(-15)">
+          <path d="M0,0 C30,-15 50,15 35,45 C20,60 -10,40 -15,20 Z" fill="url(#shellGrad)" stroke="#475569" stroke-width="1.5"/>
+          <circle cx="12" cy="18" r="7" fill="#090d16" stroke="#334155" stroke-width="1"/>
+          <path d="M5,10 Q25,5 28,30" fill="none" stroke="#94a3b8" stroke-width="1"/>
+          <!-- Ochre residue -->
+          <circle cx="28" cy="35" r="5" fill="#9a3412" opacity="0.8"/>
+        </g>
+        <!-- Shell 2 -->
+        <g transform="translate(170,125) rotate(25)">
+          <path d="M0,0 C30,-15 50,15 35,45 C20,60 -10,40 -15,20 Z" fill="url(#shellGrad)" stroke="#475569" stroke-width="1.5"/>
+          <circle cx="12" cy="18" r="7" fill="#090d16" stroke="#334155" stroke-width="1"/>
+          <path d="M5,10 Q25,5 28,30" fill="none" stroke="#94a3b8" stroke-width="1"/>
+          <circle cx="-5" cy="10" r="4" fill="#9a3412" opacity="0.8"/>
+        </g>
+      `
+    },
+    {
+      name: 'Red Ochre Processing Kits',
+      region: 'Wonderwerk & Blombos Caves (South Africa)',
+      desc: 'Grinding stones and abraded hematite nodules paired with hammerstones for high-volume pigment production.',
+      bg: '#1f130e',
+      draw: () => `
+        <!-- Lower grinding slab (Palette) -->
+        <ellipse cx="150" cy="175" rx="75" ry="35" fill="#44403c" stroke="#292524" stroke-width="2"/>
+        <ellipse cx="150" cy="170" rx="60" ry="25" fill="#1c1917"/>
+        <!-- Pigment smear on slab -->
+        <ellipse cx="140" cy="170" rx="35" ry="14" fill="#dc2626" opacity="0.85"/>
+        <ellipse cx="140" cy="168" rx="22" ry="8" fill="#f87171" opacity="0.7"/>
+        <!-- Ochre nodule being ground -->
+        <path d="M110,130 C125,115 155,120 165,140 C175,160 145,175 125,165 C105,155 95,140 110,130 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="2"/>
+        <!-- Hammerstone held above -->
+        <ellipse cx="160" cy="95" rx="32" ry="22" fill="#57534e" stroke="#292524" stroke-width="2" transform="rotate(-20 160 95)"/>
+        <path d="M145,85 Q160,80 175,90" fill="none" stroke="#a8a29e" stroke-width="1.5"/>
+      `
+    },
+    {
+      name: 'Deliberate Funerary Cavity Burial',
+      region: 'Sima de los Huesos, Atapuerca (Spain)',
+      desc: 'Deep vertical shaft cave deposit containing accumulated Homo heidelbergensis remains with the pristine Excalibur handaxe.',
+      bg: '#121214',
+      draw: () => `
+        <!-- Cave walls shaft -->
+        <path d="M80,50 L110,340 M220,50 L190,340" stroke="#27272a" stroke-width="6" fill="none"/>
+        <!-- Stalactites -->
+        <polygon points="110,50 120,90 130,50" fill="#3f3f46"/>
+        <polygon points="170,50 185,110 195,50" fill="#3f3f46"/>
+        <!-- Skeletal Cranium & bones at bottom -->
+        <circle cx="150" cy="240" r="18" fill="#d4d4d8" stroke="#71717a" stroke-width="1.5"/>
+        <circle cx="143" cy="236" r="3" fill="#18181b"/>
+        <circle cx="157" cy="236" r="3" fill="#18181b"/>
+        <path d="M130,260 Q150,270 170,255" fill="none" stroke="#d4d4d8" stroke-width="8" stroke-linecap="round"/>
+        <path d="M125,275 Q150,290 175,270" fill="none" stroke="#d4d4d8" stroke-width="6" stroke-linecap="round"/>
+        <!-- Excalibur Handaxe resting in red ochre soil near skull -->
+        <g transform="translate(130, 200) rotate(35)">
+          <polygon points="25,5 45,45 35,95 25,100 15,95 5,45" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+          <line x1="25" y1="10" x2="25" y2="95" stroke="#fff" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+        </g>
+      `
+    },
+    {
+      name: 'Acheulean Symmetry Maximization',
+      region: 'Wonderboom & Olorgesailie (South Africa & Kenya)',
+      desc: 'Hyper-symmetrical bifacial handaxes crafted with extreme aesthetic attention and precise edge-retouching.',
+      bg: '#14171c',
+      draw: () => `
+        <defs>
+          <linearGradient id="stoneGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#475569"/>
+            <stop offset="40%" stop-color="#94a3b8"/>
+            <stop offset="60%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#334155"/>
+          </linearGradient>
+        </defs>
+        <!-- Biface Handaxe -->
+        <polygon points="150,60 185,120 175,230 150,250 125,230 115,120" fill="url(#stoneGrad)" stroke="#0f172a" stroke-width="2.5"/>
+        <!-- Symmetry Axis Line -->
+        <line x1="150" y1="60" x2="150" y2="250" stroke="#fef08a" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.8"/>
+        <!-- Flaking scars (Chevron retouch patterns) -->
+        <g stroke="#1e293b" stroke-width="1.5" fill="none">
+          <path d="M150,75 L170,100 L150,115"/>
+          <path d="M150,75 L130,100 L150,115"/>
+          <path d="M150,115 L178,140 L150,165"/>
+          <path d="M150,115 L122,140 L150,165"/>
+          <path d="M150,165 L172,195 L150,220"/>
+          <path d="M150,165 L128,195 L150,220"/>
+        </g>
+      `
+    },
+    {
+      name: 'Avian Plumage Extraction',
+      region: 'Fumane Cave (Verona / Italy)',
+      desc: 'Neanderthal cut marks on raptor wing bones, indicating symbolic harvesting of dark feathers for personal adornment.',
+      bg: '#181514',
+      draw: () => `
+        <!-- Raptor Wing Bone -->
+        <path d="M100,210 Q120,130 200,90 Q215,82 220,95 Q210,115 120,230 Z" fill="#e2e8f0" stroke="#78716c" stroke-width="2"/>
+        <circle cx="112" cy="218" r="8" fill="#78716c"/>
+        <circle cx="205" cy="95" r="10" fill="#78716c"/>
+        <!-- Dark feathers floating above -->
+        <path d="M130,110 Q150,40 180,90 Q160,85 130,110 Z" fill="#292524" stroke="#57534e" stroke-width="1"/>
+        <line x1="155" y1="75" x2="165" y2="105" stroke="#78716c" stroke-width="1.5"/>
+        <path d="M165,100 Q190,50 215,105 Q195,100 165,100 Z" fill="#1c1917" stroke="#44403c" stroke-width="1"/>
+        <!-- Precise Neanderthal cut-marks perpendicular to bone axis -->
+        <g stroke="#dc2626" stroke-width="2.5" stroke-linecap="round">
+          <line x1="140" y1="165" x2="148" y2="155"/>
+          <line x1="152" y1="158" x2="160" y2="148"/>
+          <line x1="164" y1="151" x2="172" y2="141"/>
+        </g>
+      `
+    },
+    {
+      name: 'Abstract Cave Rock Art (El Castillo)',
+      region: 'El Castillo Cave, Cantabria (Spain)',
+      desc: 'Earliest known cave art featuring red disc motifs and negative hand stencils created by blowing pigment through tubes.',
+      bg: '#241010',
+      draw: () => `
+        <!-- Large red ochre blown disc -->
+        <circle cx="150" cy="150" r="75" fill="#ef4444" opacity="0.75"/>
+        <circle cx="150" cy="150" r="50" fill="#b91c1c" opacity="0.6"/>
+        <circle cx="150" cy="150" r="25" fill="#7f1d1d" opacity="0.5"/>
+        <!-- Negative Hand Stencil in center -->
+        <g fill="#241010">
+          <path d="M125,200 L125,130 C125,120 132,120 132,130 L132,190"/>
+          <path d="M138,205 L138,105 C138,95 145,95 145,105 L145,195"/>
+          <path d="M151,205 L151,100 C151,90 158,90 158,100 L158,195"/>
+          <path d="M164,200 L164,110 C164,100 171,100 171,110 L171,190"/>
+          <path d="M180,185 L180,135 C180,125 187,125 187,135 L187,175 C200,175 210,185 210,200 L110,200 C110,185 120,175 125,175 Z"/>
+        </g>
+      `
+    },
+    {
+      name: 'Engraved Talons & Eagle-Claw Jewelry',
+      region: 'Krapina Cave (Croatia / Central Europe)',
+      desc: 'White-tailed eagle talons modified with polished notches and suspension abrasions forming a Neanderthal pendant.',
+      bg: '#171512',
+      draw: () => `
+        <!-- Suspension Cord -->
+        <path d="M70,80 Q150,110 230,80" fill="none" stroke="#d97706" stroke-width="3"/>
+        <!-- Talon 1 (Curved powerful keratinous claw) -->
+        <g transform="translate(130, 95) rotate(15)">
+          <path d="M20,10 C50,20 80,70 90,120 C95,140 85,150 75,140 C65,125 55,80 30,50 C15,35 10,20 20,10 Z" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <!-- Notches carved into the proximal base -->
+          <g stroke="#451a03" stroke-width="2.5" stroke-linecap="round">
+            <line x1="22" y1="18" x2="28" y2="24"/>
+            <line x1="28" y1="26" x2="34" y2="32"/>
+            <line x1="34" y1="34" x2="40" y2="40"/>
+          </g>
+        </g>
+      `
+    },
+    {
+      name: 'Aurignacian Anthropomorphic Figurine',
+      region: 'Hohle Fels Cave, Swabian Jura (Germany)',
+      desc: 'Oldest known ivory figurine of the human form with exaggerated sexual attributes and a perforated suspension loop.',
+      bg: '#241c14',
+      draw: () => `
+        <defs>
+          <linearGradient id="ivoryGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#d97706"/>
+            <stop offset="50%" stop-color="#fef3c7"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </linearGradient>
+        </defs>
+        <!-- Suspension Loop at top -->
+        <circle cx="150" cy="72" r="8" fill="none" stroke="url(#ivoryGrad)" stroke-width="3"/>
+        <!-- Head sphere -->
+        <circle cx="150" cy="95" r="14" fill="url(#ivoryGrad)" stroke="#78350f" stroke-width="1.5"/>
+        <!-- Exaggerated Breasts and hips (fertility symbolism) -->
+        <circle cx="132" cy="135" r="18" fill="url(#ivoryGrad)" stroke="#78350f" stroke-width="1.5"/>
+        <circle cx="168" cy="135" r="18" fill="url(#ivoryGrad)" stroke="#78350f" stroke-width="1.5"/>
+        <!-- Massive swollen torso & thighs -->
+        <ellipse cx="150" cy="165" rx="32" ry="38" fill="url(#ivoryGrad)" stroke="#78350f" stroke-width="1.5"/>
+        <!-- Tapered legs -->
+        <path d="M130,195 L120,240 M170,195 L180,240" stroke="url(#ivoryGrad)" stroke-width="10" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Therianthropic Ivory Sculpture (Löwenmensch)',
+      region: 'Stadel Cave, Swabian Jura (Germany)',
+      desc: 'Masterwork of Upper Paleolithic imagination depicting a bipedal human-feline composite carved from mammoth ivory.',
+      bg: '#1c1b18',
+      draw: () => `
+        <defs>
+          <linearGradient id="lionGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e2e8f0"/>
+            <stop offset="50%" stop-color="#a1a1aa"/>
+            <stop offset="100%" stop-color="#71717a"/>
+          </linearGradient>
+        </defs>
+        <!-- Feline Head with carved ears -->
+        <polygon points="135,90 150,65 165,90 175,80 150,50 125,80" fill="url(#lionGrad)" stroke="#3f3f46" stroke-width="1.5"/>
+        <!-- Torso & arms -->
+        <rect x="132" y="95" width="36" height="85" rx="10" fill="url(#lionGrad)" stroke="#3f3f46" stroke-width="1.5"/>
+        <path d="M132,110 L105,140 M168,110 L195,140" stroke="url(#lionGrad)" stroke-width="10" stroke-linecap="round"/>
+        <!-- Incised parallel tally marks on left arm -->
+        <g stroke="#18181b" stroke-width="1.5">
+          <line x1="110" y1="125" x2="115" y2="135"/>
+          <line x1="114" y1="122" x2="119" y2="132"/>
+          <line x1="118" y1="119" x2="123" y2="129"/>
+          <line x1="122" y1="116" x2="127" y2="126"/>
+        </g>
+        <!-- Legs -->
+        <path d="M138,180 L130,235 M162,180 L170,235" stroke="url(#lionGrad)" stroke-width="12" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Paleolithic Spatial Hearth Zoning',
+      region: 'Dolni Vestonice (Moravia / Czech Republic)',
+      desc: 'Structured central open-air combustion hearth surrounded by curated activity zones, postholes, and clay-firing pits.',
+      bg: '#141210',
+      draw: () => `
+        <!-- Ground plan circle -->
+        <circle cx="150" cy="150" r="85" fill="#292524" stroke="#44403c" stroke-width="2" stroke-dasharray="4,4"/>
+        <!-- Central hearth with roaring flames -->
+        <circle cx="150" cy="150" r="24" fill="#7c2d12" stroke="#ea580c" stroke-width="2"/>
+        <path d="M150,135 Q140,115 150,95 Q160,115 150,135 Z" fill="#fbbf24"/>
+        <path d="M138,155 Q125,140 135,125 Q145,140 138,155 Z" fill="#f97316"/>
+        <path d="M162,155 Q175,140 165,125 Q155,140 162,155 Z" fill="#f97316"/>
+        <!-- Surrounding Hut postholes & lithic workstations -->
+        <circle cx="100" cy="100" r="8" fill="#52525b"/><circle cx="200" cy="100" r="8" fill="#52525b"/>
+        <circle cx="90" cy="170" r="8" fill="#52525b"/><circle cx="210" cy="170" r="8" fill="#52525b"/>
+        <circle cx="150" cy="215" r="8" fill="#52525b"/>
+        <!-- Artifact clusters (clay figurines & bones) -->
+        <path d="M115,125 Q120,115 125,125 Z" fill="#dc2626"/>
+        <path d="M180,175 Q185,165 190,175 Z" fill="#94a3b8"/>
+      `
+    },
+    {
+      name: 'Upper Paleolithic Parietal Cave Painting',
+      region: 'Chauvet-Pont-d\'Arc (Ardèche / France)',
+      desc: 'Breathtaking charcoal and ochre panel depicting a pride of cave lions and rhinoceroses with layered perspective.',
+      bg: '#121212',
+      draw: () => `
+        <!-- Limestone wall contour -->
+        <path d="M60,80 Q150,50 240,90 Q260,200 240,250 Q150,270 60,240 Z" fill="#1c1917" stroke="#44403c" stroke-width="3"/>
+        <!-- Cave Lion Pride in charcoal -->
+        <path d="M100,150 Q120,110 160,120 Q200,130 210,165 Q180,185 130,175 Z" fill="#27272a" stroke="#d4d4d8" stroke-width="2"/>
+        <circle cx="185" cy="132" r="3" fill="#fafafa"/>
+        <!-- Multiple layered rhinoceros heads (motion perspective) -->
+        <path d="M110,180 Q130,150 170,160 Q190,170 185,195 Q140,205 110,180 Z" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+        <path d="M170,160 L200,150" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Portable Venus Figurines of Russian Plain',
+      region: 'Kostenki & Mal\'ta (Russia)',
+      desc: 'Stylized steatite and mammoth-ivory female figurines emphasizing maternal abundance and incised ceremonial wraps.',
+      bg: '#1c1612',
+      draw: () => `
+        <defs>
+          <linearGradient id="venusGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#d6d3d1"/>
+            <stop offset="50%" stop-color="#a8a29e"/>
+            <stop offset="100%" stop-color="#78716c"/>
+          </linearGradient>
+        </defs>
+        <!-- Faceless bowed head -->
+        <circle cx="150" cy="85" r="12" fill="url(#venusGrad)" stroke="#292524" stroke-width="1.5"/>
+        <!-- Wrapped band / hood pattern -->
+        <path d="M138,80 Q150,70 162,80" fill="none" stroke="#292524" stroke-width="2"/>
+        <!-- Enormous rounded breasts & spherical belly -->
+        <circle cx="132" cy="130" r="16" fill="url(#venusGrad)" stroke="#292524" stroke-width="1.5"/>
+        <circle cx="168" cy="130" r="16" fill="url(#venusGrad)" stroke="#292524" stroke-width="1.5"/>
+        <ellipse cx="150" cy="160" rx="30" ry="32" fill="url(#venusGrad)" stroke="#292524" stroke-width="1.5"/>
+        <!-- Geometric incised apron / skirt -->
+        <g stroke="#292524" stroke-width="1.5" fill="none">
+          <line x1="135" y1="175" x2="165" y2="175"/>
+          <line x1="140" y1="183" x2="160" y2="183"/>
+          <line x1="145" y1="191" x2="155" y2="191"/>
+        </g>
+        <!-- Tapered legs -->
+        <path d="M135,188 L125,230 M165,188 L175,230" stroke="url(#venusGrad)" stroke-width="9" stroke-linecap="round"/>
+      `
+    },
+    {
+      name: 'Paleolithic Musical Instrumentation',
+      region: 'Hohle Fels Vulture-Bone Flutes (Germany)',
+      desc: 'Melodic bone flutes fashioned from griffon vulture radii with precision-punched digital stops for ritual music.',
+      bg: '#14181f',
+      draw: () => `
+        <defs>
+          <linearGradient id="boneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f1f5f9"/>
+            <stop offset="50%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#64748b"/>
+          </linearGradient>
+        </defs>
+        <!-- Long hollow avian bone tube -->
+        <rect x="85" y="135" width="130" height="30" rx="15" fill="url(#boneGrad)" stroke="#334155" stroke-width="2"/>
+        <!-- V-shaped or U-shaped mouthpiece notch at proximal end -->
+        <path d="M85,140 Q95,150 85,160" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <!-- 5 precisely drilled digital finger holes -->
+        <circle cx="120" cy="150" r="4.5" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <circle cx="140" cy="150" r="4.5" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <circle cx="160" cy="150" r="4.5" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <circle cx="180" cy="150" r="4.5" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <circle cx="200" cy="150" r="4.5" fill="#070b10" stroke="#334155" stroke-width="1.5"/>
+        <!-- Acoustic vibration waves emanating -->
+        <path d="M225,138 Q235,150 225,162" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+        <path d="M232,130 Q248,150 232,170" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      `
+    },
+    {
+      name: 'Perigordian / Gravettian Burial Inhumations',
+      region: 'Sungir Red Ochre Burials (Vladimir / Russia)',
+      desc: 'Elaborate double adolescent burial covered in thick red ochre powder with thousands of carved mammoth-ivory beads.',
+      bg: '#260f0f',
+      draw: () => `
+        <!-- Grave pit contour -->
+        <ellipse cx="150" cy="150" rx="75" ry="55" fill="#7f1d1d" opacity="0.85"/>
+        <ellipse cx="150" cy="150" rx="60" ry="40" fill="#991b1b" opacity="0.9"/>
+        <!-- Two skeletal bodies aligned head-to-head -->
+        <circle cx="115" cy="150" r="10" fill="#fca5a5" stroke="#7f1d1d" stroke-width="1"/>
+        <circle cx="185" cy="150" r="10" fill="#fca5a5" stroke="#7f1d1d" stroke-width="1"/>
+        <path d="M125,150 L175,150" stroke="#fca5a5" stroke-width="6" stroke-linecap="round"/>
+        <!-- Thousands of ivory bead rows mapped along limbs -->
+        <g fill="#fef08a">
+          <circle cx="110" cy="135" r="2"/><circle cx="115" cy="135" r="2"/><circle cx="120" cy="135" r="2"/>
+          <circle cx="180" cy="165" r="2"/><circle cx="185" cy="165" r="2"/><circle cx="190" cy="165" r="2"/>
+          <circle cx="140" cy="130" r="2"/><circle cx="160" cy="170" r="2"/>
+        </g>
+      `
+    },
+    {
+      name: 'Magdalenian Engraved Reindeer Antler Art',
+      region: 'La Madeleine, Dordogne (France)',
+      desc: 'Finely incised portable art depicting swimming reindeer in single-file migration across curved organic antler shafts.',
+      bg: '#1c1712',
+      draw: () => `
+        <defs>
+          <linearGradient id="antlerGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#d7ccc8"/>
+            <stop offset="50%" stop-color="#bcaaa4"/>
+            <stop offset="100%" stop-color="#8d6e63"/>
+          </linearGradient>
+        </defs>
+        <!-- Curved Antler Beam -->
+        <path d="M70,165 Q150,110 230,165 Q150,135 70,165 Z" fill="url(#antlerGrad)" stroke="#4e342e" stroke-width="2"/>
+        <!-- Swimming Reindeer 1 (Engraved profile) -->
+        <path d="M100,160 Q120,135 150,140 Q175,145 180,165 Q150,170 110,165 Z" fill="#3e2723" stroke="#fef08a" stroke-width="1.2"/>
+        <path d="M125,140 L115,120 M145,142 L140,115" stroke="#fef08a" stroke-width="1.5"/>
+        <!-- Swimming Reindeer 2 following -->
+        <path d="M160,163 Q175,140 200,145 Q220,150 222,166 Q200,172 170,167 Z" fill="#3e2723" stroke="#fef08a" stroke-width="1.2"/>
+        <path d="M180,145 L172,125" stroke="#fef08a" stroke-width="1.5"/>
+      `
+    },
+    {
+      name: 'Parietal Hand Stencils & Spatial Panels',
+      region: 'Grotte Cosquer (Marseille / France)',
+      desc: 'Submerged marine cave walls adorned with negative hand stencils and extinct fauna spray-painted in marine blue-black.',
+      bg: '#081c2e',
+      draw: () => `
+        <!-- Submerged water line gradient -->
+        <rect x="35" y="180" width="230" height="95" fill="#0369a1" opacity="0.35"/>
+        <line x1="35" y1="180" x2="265" y2="180" stroke="#38bdf8" stroke-width="2" stroke-dasharray="8,4"/>
+        <!-- Negative Hand Stencil -->
+        <g fill="#081c2e">
+          <path d="M120,170 L120,110 C120,100 127,100 127,110 L127,160"/>
+          <path d="M133,175 L133,90 C133,80 140,80 140,90 L140,165"/>
+          <path d="M146,175 L146,85 C146,75 153,75 153,85 L153,165"/>
+          <path d="M159,170 L159,95 C159,85 166,85 166,95 L166,160"/>
+          <path d="M175,155 L175,115 C175,105 182,105 182,115 L182,150 C195,150 205,160 205,175 L105,175 C105,160 115,150 120,150 Z"/>
+        </g>
+        <!-- Glowing aura around stencil -->
+        <path d="M110,140 Q150,70 190,140 Q215,180 100,180 Z" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.7"/>
+      `
+    },
+    {
+      name: 'Complex Pigmented Mortuary Rites',
+      region: 'Red Lady of Paviland (Gower Peninsula / UK)',
+      desc: 'Ceremonial burial of an adult male coated in brilliant red ochre accompanied by carved ivory rods and perforated periwinkle shells.',
+      bg: '#2b0c0c',
+      draw: () => `
+        <defs>
+          <radialGradient id="ochreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ef4444"/>
+            <stop offset="60%" stop-color="#b91c1c"/>
+            <stop offset="100%" stop-color="#7f1d1d"/>
+          </radialGradient>
+        </defs>
+        <!-- Rich Ochre Powder Burial Mound -->
+        <ellipse cx="150" cy="155" rx="55" ry="75" fill="url(#ochreGlow)"/>
+        <!-- Skeletal Frame coated in red -->
+        <circle cx="150" cy="100" r="14" fill="#fca5a5" stroke="#7f1d1d" stroke-width="1.5"/>
+        <rect x="138" y="115" width="24" height="60" rx="8" fill="#f87171" stroke="#7f1d1d" stroke-width="1.5" transform="rotate(-10 150 145)"/>
+        <!-- Ivory ritual rods placed alongside body -->
+        <rect x="180" y="90" width="8" height="95" rx="4" fill="#fef08a" stroke="#b45309" stroke-width="1.5" transform="rotate(15 180 90)"/>
+      `
+    },
+    {
+      name: 'Deep Cave Acoustic Topography',
+      region: 'Lascaux Chamber of Chants (Dordogne / France)',
+      desc: 'Acoustic mapping analysis proving Upper Paleolithic parietal art clusters precisely at maximum chamber resonance nodes for ritual chanting.',
+      bg: '#0c0f17',
+      draw: () => `
+        <!-- Cave chamber cross section -->
+        <path d="M50,220 Q70,70 150,70 Q230,70 250,220 Z" fill="#1e293b" stroke="#475569" stroke-width="2.5"/>
+        <!-- Soundwave resonance concentric ripples from acoustic node -->
+        <circle cx="150" cy="140" r="20" fill="none" stroke="#ef4444" stroke-width="2"/>
+        <circle cx="150" cy="140" r="45" fill="none" stroke="#f97316" stroke-width="2" stroke-dasharray="6,4"/>
+        <circle cx="150" cy="140" r="75" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="8,6"/>
+        <!-- Painted Bull at exact acoustic focal point -->
+        <path d="M120,135 Q140,115 170,120 Q190,125 185,150 Q160,160 130,150 Z" fill="#b45309" stroke="#fef08a" stroke-width="1.5"/>
+        <circle cx="178" cy="125" r="2.5" fill="#fff"/>
+      `
+    },
+    {
+      name: 'Epipaleolithic Rock Art Geometries',
+      region: 'Gobustan Petroglyphs (Absheron / Azerbaijan)',
+      desc: 'Thousands of sandstone cliff petroglyphs depicting ritual dances, solar symbols, cupules, and stylized boat flotillas.',
+      bg: '#241a12',
+      draw: () => `
+        <!-- Sandstone rock tablet -->
+        <rect x="75" y="70" width="150" height="180" rx="10" fill="#9a3412" stroke="#451a03" stroke-width="3"/>
+        <rect x="85" y="80" width="130" height="160" fill="#7c2d12"/>
+        <!-- Solar concentric ring motif -->
+        <circle cx="150" cy="130" r="30" fill="none" stroke="#fef08a" stroke-width="2.5"/>
+        <circle cx="150" cy="130" r="12" fill="#fef08a"/>
+        <!-- Stylized ritual dancers in linked line -->
+        <g stroke="#fef08a" stroke-width="2" stroke-linecap="round">
+          <line x1="100" y1="190" x2="110" y2="210"/><line x1="110" y1="210" x2="120" y2="190"/>
+          <line x1="120" y1="190" x2="130" y2="210"/><line x1="130" y1="210" x2="140" y2="190"/>
+          <line x1="140" y1="190" x2="150" y2="210"/><line x1="150" y1="210" x2="160" y2="190"/>
+          <line x1="160" y1="190" x2="170" y2="210"/><line x1="170" y1="210" x2="180" y2="190"/>
+          <line x1="105" y1="195" x2="175" y2="195"/>
+        </g>
+      `
+    },
+    {
+      name: 'Amber and Jet Zoomorphic Amulets',
+      region: 'Mesolithic Northern Europe (Scandinavia & Baltic)',
+      desc: 'Miniature carved amber and jet pendants depicting forest fauna (elk and bears) signifying personal totemism and long-distance trade.',
+      bg: '#1c140c',
+      draw: () => `
+        <defs>
+          <linearGradient id="amberGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f59e0b"/>
+            <stop offset="50%" stop-color="#d97706"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </linearGradient>
+        </defs>
+        <!-- Suspension cord -->
+        <path d="M80,90 Q150,130 220,90" fill="none" stroke="#451a03" stroke-width="2.5"/>
+        <!-- Zoomorphic Elk Pendant in glowing translucent amber -->
+        <g transform="translate(110, 110)">
+          <path d="M10,40 C10,25 35,10 65,15 C85,18 95,30 90,55 C85,75 75,85 50,85 C30,85 15,70 10,40 Z" fill="url(#amberGrad)" stroke="#78350f" stroke-width="2"/>
+          <!-- Carved antler protrusion -->
+          <path d="M55,18 Q75,0 85,10" fill="none" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="30" cy="32" r="3" fill="#451a03"/>
+          <!-- Perforation hole -->
+          <circle cx="60" cy="22" r="3.5" fill="#0c0f17" stroke="#b45309" stroke-width="1"/>
+        </g>
+      `
+    }
+  ];
+
+  function renderCurrent(){
+    const t = TECHS[currentIndex];
+    const bgSvg = t.draw();
+    viewfinder.innerHTML = `
+      <svg viewBox="0 0 300 390" preserveAspectRatio="none">
+        ${baseFrame(t.bg, currentIndex)}
+        ${bgSvg}
+        ${caption(t.name, t.region, t.desc)}
+      </svg>
+      <div class="reticle tl"></div>
+      <div class="reticle tr"></div>
+      <div class="reticle bl"></div>
+      <div class="reticle br"></div>
+      <div class="rec-indicator hud-font" id="recIndicator"><span class="rec-dot"></span>CAPTURED</div>
+      <div class="frame-count hud-font" id="frameCount">NO. ${String(frameNumber).padStart(3, '0')}</div>
+      <div class="grain"></div>
+    `;
+    const sideIdx = document.querySelector('.side-readout:nth-child(3) .val');
+    if(sideIdx) sideIdx.textContent = `${String(currentIndex + 1).padStart(2, '0')}/21`;
+  }
+
+  function triggerCapture(){
+    frameNumber = (frameNumber % 21) + 1;
+    currentIndex = (currentIndex + 1) % TECHS.length;
+    playShutterSound();
+    renderCurrent();
+
+    const ind = document.getElementById('recIndicator');
+    if(ind){
+      ind.classList.add('flash');
+      setTimeout(() => ind.classList.remove('flash'), 600);
+    }
+  }
+
+  shutterBtn.addEventListener('click', triggerCapture);
+
+  autoBtn.addEventListener('click', () => {
+    autoActive = !autoActive;
+    if(autoActive){
+      autoBtn.classList.add('active');
+      autoLabel.textContent = 'AUTO SHUTTER · ON (2.2s)';
+      autoTimer = setInterval(triggerCapture, AUTO_INTERVAL_MS);
+    } else {
+      autoBtn.classList.remove('active');
+      autoLabel.textContent = 'AUTO SHUTTER · OFF';
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Initial render
+  renderCurrent();
+
+})();
+</script>
+</body>
+</html>
